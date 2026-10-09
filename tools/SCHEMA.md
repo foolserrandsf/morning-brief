@@ -22,14 +22,15 @@ Add `"img": "<url>"` to a bottle question to show the label (e.g. "Which bottle 
  "stocks": {"n": 2, "title": "", "hook": "today's market/news tie-in with real numbers", "body": [], "key_terms": [{"term": "", "def": ""}], "quiz": []},
  "crypto": {"n": 2, "title": "", "hook": "", "body": [], "key_terms": [], "quiz": []},
  "filipino": {"n": 2, "lang": "Tagalog|Kapampangan", "phrase": "", "say_it": "pronunciation", "meaning": "", "breakdown": [{"word": "", "means": ""}], "use_it": "", "quiz": []},
+ "recs": {see Recs below — Tuesdays and Saturdays only; leave it out on other days},
  "sources": [{"title": "", "url": ""}]
 }
 ```
 
-# Recs JSON (`tools/publish.py recs FILE.json`)
+# Recs (the brief's "recs" field, Tuesdays and Saturdays)
 
 ```json
-{"posted": "Tue Oct 13 · 6 PM", "title": "Tuesday bottle recs",
+{"posted": "for tonight's shift", "title": "Tuesday bottle recs",
  "try":  [{"name": "Producer · Cuvée (vintage)", "price": "64", "why": "why she should taste it", "photo": "url"}],
  "push": [{"name": "", "pitch": "one-line guest pitch", "pair_with": "the guest it's for", "photo": "url"}]}
 ```

@@ -139,7 +139,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261009134008';
+var APP_BUILD='20261009135518';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -405,8 +405,8 @@ function buildCards(){
   cards.push({id:'fil',title:'Filipino daily',sub:esc(fl.lang||'Tagalog')+' · '+esc(fl.n?'lesson '+fl.n:''),color:'var(--teal)',tint:'#E4ECFF',min:2,
     body:'<div class="big" style="font-size:30px">'+esc(fl.phrase)+'</div>'+(fl.say_it?'<div class="small">say it: <b>'+esc(fl.say_it)+'</b></div>':'')+'<p><b>'+esc(fl.meaning)+'</b></p>'+(fl.breakdown&&fl.breakdown.length?'<div class="terms">'+fl.breakdown.map(function(x){return '<div><b>'+esc(x.word)+'</b> — '+esc(x.means)+'</div>'}).join('')+'</div>':'')+(fl.use_it?'<p><b>Use it today:</b> '+esc(fl.use_it)+'</p>':'')+quizHTML(withIds(fl,'filipino'),'Quick check')});
   /* 12 · bottle recs (Tue 6 PM / Sat 1:30 PM) */
-  var rc=S.state&&S.state.recs;
-  if(rc)cards.push({id:'recs',title:rc.title,sub:'Posted '+esc(rc.posted),color:'var(--rose)',tint:'#FFE6F1',min:2,
+  var rc=b.recs;
+  if(rc)cards.push({id:'recs',title:rc.title,sub:esc(rc.posted||''),color:'var(--rose)',tint:'#FFE6F1',min:2,
     body:'<p><b>Try these yourself</b></p><div class="list">'+(rc.try||[]).map(function(x){return '<div class="item">'+(x.photo?'<img class="label" style="max-height:180px" src="'+esc(x.photo)+'" alt="">':'')+'<div class="k">'+esc(x.name)+(x.price?' · $'+esc(x.price):'')+'</div><div class="m">'+esc(x.why)+'</div></div>'}).join('')+'</div><p style="margin-top:14px"><b>Push these on shift</b></p><div class="list">'+(rc.push||[]).map(function(x){return '<div class="item">'+(x.photo?'<img class="label" style="max-height:180px" src="'+esc(x.photo)+'" alt="">':'')+'<div class="k">'+esc(x.name)+'</div><div class="m">'+esc(x.pitch)+'</div>'+(x.pair_with?'<div class="m">For the guest who likes: '+esc(x.pair_with)+'</div>':'')+'</div>'}).join('')+'</div>'});
   /* 13 · quizzes */
   if(wd===0){
