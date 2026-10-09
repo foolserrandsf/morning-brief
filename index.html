@@ -122,7 +122,7 @@ details.past summary{font-weight:800;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261009124713';
+var APP_BUILD='20261009125936';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -184,7 +184,11 @@ function mergeIn(r){
 function pruneDone(){var cut=new Date(Date.now()-120*864e5).toISOString().slice(0,10);Object.keys(DONE).forEach(function(d){if(d<cut)delete DONE[d]})}
 function syncLabel(){return {off:'',ok:'☁️',busy:'☁️…',err:'☁️⚠️'}[SY.state]||''}
 function setSync(st){SY.state=st;var e=$('syncchip');if(e)e.textContent=syncLabel()}
-async function pull(){
+/* every sync step runs one at a time, so quick answers never race each other */
+var SQ=Promise.resolve();
+function serial(fn){var r=SQ.then(fn,fn);SQ=r.catch(function(){});return r}
+function pull(){return serial(pullNow)}
+async function pullNow(){
   if(!syncURL()||!S.raw)return false;
   setSync('busy');
   var r=await (await fetch(syncURL()+'?token='+(await syncToken())+'&t='+Date.now())).json();
@@ -196,21 +200,29 @@ async function pull(){
     localExtra=Object.keys(P).some(function(id){var x=(remote.P||{})[id];return !x||(P[id].t||0)>(x.t||0)})||
       Object.keys(DONE).some(function(d){return Object.keys(DONE[d]).some(function(c){return !((remote.DONE||{})[d]||{})[c]})});
   }else localExtra=Object.keys(P).length>0||Object.keys(DONE).length>0;
-  setSync('ok');
+  setSync(SY.dirty?'busy':'ok');
   if(localExtra)queueSync(10);
   return changed;
 }
-async function push(retry){
+function push(){clearTimeout(SY.timer);return serial(pushNow)}
+async function pushNow(){
   if(!syncURL()||!S.raw)return;
-  clearTimeout(SY.timer);setSync('busy');
+  setSync('busy');
   try{
-    pruneDone();
-    var body=JSON.stringify({token:await syncToken(),base:SY.rev,blob:await encBlob({P:P,DONE:DONE,at:Date.now()})});
-    var r=await (await fetch(syncURL(),{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:body,keepalive:body.length<60000})).json();
-    if(r.conflict&&!retry){await pull();return push(true)}
-    if(!r.ok)throw new Error(r.error||'sync');
-    SY.rev=r.rev;SY.dirty=false;setSync('ok');
-  }catch(e){SY.dirty=true;setSync('err')}
+    for(var tries=0;tries<4;tries++){
+      pruneDone();SY.dirty=false;
+      var body=JSON.stringify({token:await syncToken(),base:SY.rev,blob:await encBlob({P:P,DONE:DONE,at:Date.now()})});
+      var r=await (await fetch(syncURL(),{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:body,keepalive:body.length<60000})).json();
+      if(r.ok){SY.rev=r.rev;SY.fails=0;setSync(SY.dirty?'busy':'ok');return}
+      if(!r.conflict)throw new Error(r.error||'sync');
+      await pullNow();            // someone else saved first: merge theirs, then try again
+    }
+    throw new Error('conflict');
+  }catch(e){
+    SY.dirty=true;SY.fails=(SY.fails||0)+1;
+    setSync(SY.fails>2?'err':'busy');      // quiet retries first; only warn if it keeps failing
+    clearTimeout(SY.timer);SY.timer=setTimeout(push,Math.min(60000,3000*SY.fails));
+  }
 }
 function queueSync(ms){if(!syncURL())return;SY.dirty=true;clearTimeout(SY.timer);SY.timer=setTimeout(push,ms==null?1500:ms)}
 
@@ -253,7 +265,7 @@ async function boot(){
   }
   syncNow();
 }
-async function syncNow(){try{if(await pull()&&S.brief){if(!S.touched)S._landed=0;build()}}catch(e){setSync('err')}}
+async function syncNow(){try{if(await pull()&&S.brief){if(!S.touched)S._landed=0;build()}}catch(e){SY.fails=(SY.fails||0)+1;setSync(SY.fails>2?'err':'busy');clearTimeout(SY.timer);SY.timer=setTimeout(syncNow,5000)}}
 
 /* ---------- quiz engine ---------- */
 var QN=0;
