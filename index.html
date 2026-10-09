@@ -139,7 +139,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261009135518';
+var APP_BUILD='20261009135918';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -241,6 +241,34 @@ async function pushNow(){
     setSync(SY.fails>2?'err':'busy');      // quiet retries first; only warn if it keeps failing
     clearTimeout(SY.timer);SY.timer=setTimeout(push,Math.min(60000,3000*SY.fails));
   }
+}
+/* ---------- morning notifications from the mug icon ---------- */
+function pushState(){
+  if(!('serviceWorker' in navigator)||!('PushManager' in window)||!window.MB_PUSH_KEY||!syncURL())return 'unsupported';
+  var standalone=window.navigator.standalone||window.matchMedia('(display-mode: standalone)').matches;
+  if(!standalone)return 'install';
+  if(Notification.permission==='denied')return 'denied';
+  return ls('mb_push')?'on':'off';
+}
+async function enablePush(){
+  try{
+    var perm=await Notification.requestPermission();
+    if(perm!=='granted'){toast('Notifications are off — you can allow them in Settings → Notifications.');render();return}
+    var reg=await navigator.serviceWorker.ready;
+    var sub=await reg.pushManager.getSubscription()||await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64urlBytes(window.MB_PUSH_KEY)});
+    var r=await (await fetch(syncURL(),{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({token:await syncToken(),sub:sub.toJSON()})})).json();
+    if(!r.ok)throw new Error(r.error||'save');
+    ls('mb_push',1);toast('Morning notifications are on');render();
+  }catch(e){toast('Couldn\'t turn on notifications — try again in a minute.')}
+}
+function b64urlBytes(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';return b64d(s)}
+function pushPanel(){
+  var st=pushState();
+  if(st==='on')return '<p class="small" style="margin-top:12px">Morning notifications are on for this phone.</p>';
+  if(st==='off')return '<div class="foot" style="margin-top:12px"><button class="btn sun" onclick="enablePush()">Turn on morning notifications</button></div><p class="small">You\'ll get one notification from this app when your brief is ready, around 6:30.</p>';
+  if(st==='install')return '<p class="small" style="margin-top:12px">To get morning notifications from this app, open it from its home-screen icon (Share → Add to Home Screen in Safari).</p>';
+  if(st==='denied')return '<p class="small" style="margin-top:12px">Notifications are blocked for this app. Turn them on in iPhone Settings → Notifications → Morning Brief.</p>';
+  return '';
 }
 function queueSync(ms){if(!syncURL())return;SY.dirty=true;clearTimeout(SY.timer);SY.timer=setTimeout(push,ms==null?1500:ms)}
 
@@ -362,6 +390,7 @@ function buildCards(){
   /* 1 · good morning */
   var w=b.weather||{},f=b.focus||{},jp=b.japan;
   var gm='<div class="big">'+esc(b.greeting||'Let\'s go, Denise!')+'</div>';
+  if(pushState()==='off')gm+='<div class="item" style="margin:0 0 12px"><div class="k">Get this every morning from the mug icon</div>'+pushPanel()+'</div>';
   if(f.one_thing)gm+='<div class="focus"><div class="lbl">One thing that matters today</div><div class="one">'+esc(f.one_thing)+'</div>'+(f.why?'<div class="small">'+esc(f.why)+'</div>':'')+(f.first_step?'<p style="margin:.5em 0 0"><b>Tiny first step:</b> '+esc(f.first_step)+'</p>':'')+'<div class="foot" style="margin-top:10px"><button class="btn sun" onclick="sprint()">Start a 5-min sprint</button></div><div id="sprint"></div></div>';
   if(w.hi!=null)gm+='<div class="wx"><span class="temp">'+esc(w.now||w.hi+'°')+'</span><span><b>'+esc(w.sky||'')+'</b><br><span class="small">'+esc((w.place||'San Francisco')+' · H '+w.hi+'° / L '+w.lo+'°'+(w.rain?' · rain '+w.rain:''))+'</span></span></div>'+(w.wear?'<p><b>Wear:</b> '+esc(w.wear)+'</p>':'');
   if(jp&&jp.active)gm+='<div class="item" style="background:var(--wash);margin-top:12px"><div class="k">'+esc(jp.day||'Japan trip')+' · <span id="jst"></span> in Japan</div><div class="m">'+esc(jp.today||'')+'</div>'+(jp.phrase?'<p style="margin:.6em 0 0"><span class="jp" style="font-size:19px;font-weight:600">'+esc(jp.phrase.jp)+'</span><br><span class="small">'+esc(jp.phrase.romaji)+'</span><br>'+esc(jp.phrase.en)+'</p>'+(jp.phrase.notes&&jp.phrase.notes.length?'<div class="jpnote">'+jp.phrase.notes.map(function(n){return '<div><b class="jp">'+esc(n.bit)+'</b> '+esc(n.means)+'</div>'}).join('')+'</div>':''):'')+(jp.tip?'<p class="small">'+esc(jp.tip)+'</p>':'')+'</div>';
@@ -466,7 +495,7 @@ function extras(){
   var past=(st.dates||[]).slice().reverse().map(function(d){return '<a href="#" style="display:inline-block;margin:4px 10px 4px 0" onclick="openDay(\''+d+'\');return false">'+esc(d)+'</a>'}).join('');
   var src=(S.brief.sources||[]).map(function(s){return linkify(s.url,s.title)}).join(' · ');
   return '<div class="card" style="margin-top:14px"><h2>Your progress</h2><p class="small">Quiz questions mastered (3 right in a row). '+(syncURL()?(SY.state==='err'?'Sync couldn\'t reach Google — answers are saved here and sync when it can.':'Synced across your devices.'):'Sync isn\'t switched on yet — progress is saved on this device only.')+'</p><div class="prog">'+rows+'</div>'+
-    '<details class="past"><summary>Past briefs</summary>'+past+'</details>'+(src?'<div class="src">Sources: '+src+'</div>':'')+
+    pushPanel()+'<details class="past"><summary>Past briefs</summary>'+past+'</details>'+(src?'<div class="src">Sources: '+src+'</div>':'')+
     '<p class="small" style="margin-top:12px"><a href="#" onclick="if(confirm(\'Lock this phone? You\\\'ll need the passphrase again.\')){localStorage.removeItem(\'mb_key\');location.reload()}return false">Lock this phone</a></p></div>';
 }
 function setMode(m,q){S.mode=m;S.quick=q;S.i=0;var done=DONE[S.brief.date]||{},cs=visible();for(var i=0;i<cs.length;i++){if(!done[cs[i].id]){S.i=i;break}}render()}
