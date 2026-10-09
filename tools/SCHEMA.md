@@ -7,10 +7,10 @@ Add `"img": "<url>"` to a bottle question to show the label (e.g. "Which bottle 
 ```json
 {
  "date": "YYYY-MM-DD", "edition": 2,
- "greeting": "short upbeat line (one emoji max)",
+ "greeting": "short warm line, no emoji",
  "focus": {"one_thing": "the single most important thing today", "why": "...", "first_step": "a 2-minute first step"},
  "weather": {"place": "San Francisco", "now": "62°", "hi": 66, "lo": 55, "sky": "...", "rain": "10%", "wear": "what to wear + any alert"},
- "japan": {"active": true, "day": "Day 3 of 16 · Tokyo", "today": "plans for today", "phrase": {"jp": "", "romaji": "", "en": ""}, "tip": "..."} or null,
+ "japan": {"active": true, "day": "Day 3 of 16 · Tokyo", "today": "plans for today", "phrase": {"jp": "", "romaji": "", "en": "", "notes": [{"bit": "grammar/vocab chunk", "means": "what it does"}]}, "tip": "..."} or null,
  "calendar": [{"time": "9:00 AM", "end": "10:00 AM", "title": "", "where": "", "note": ""}],
  "inbox": [{"account": "gmail" | "fe", "from": "", "subject": "", "ask": "what they need from her", "by": "deadline or ''", "url": "Gmail viewUrl"}],
  "inbox_note": "optional",

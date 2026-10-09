@@ -1,14 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
     <radialGradient id="bg" cx="50%" cy="28%" r="80%">
-      <stop offset="0" stop-color="#FFE48A"/>
-      <stop offset="0.55" stop-color="#FFB547"/>
-      <stop offset="1" stop-color="#FF7A45"/>
+      <stop offset="0" stop-color="#3B4E7E"/>
+      <stop offset="0.55" stop-color="#25335A"/>
+      <stop offset="1" stop-color="#1A2340"/>
     </radialGradient>
     <linearGradient id="mug" x1="0" x2="1">
-      <stop offset="0" stop-color="#FF5E57"/>
-      <stop offset="0.45" stop-color="#FF8A6B"/>
-      <stop offset="1" stop-color="#E8433E"/>
+      <stop offset="0" stop-color="#D65A2E"/>
+      <stop offset="0.45" stop-color="#EE7C4E"/>
+      <stop offset="1" stop-color="#C24D25"/>
     </linearGradient>
     <radialGradient id="crema" cx="45%" cy="40%" r="65%">
       <stop offset="0" stop-color="#E9B27A"/>
@@ -22,7 +22,7 @@
   </defs>
   <rect width="512" height="512" fill="url(#bg)"/>
   <!-- sun rays -->
-  <g fill="#FFF3C4" opacity="0.35">
+  <g fill="#F4C9A8" opacity="0.12">
     <circle cx="256" cy="150" r="118"/>
   </g>
   <!-- steam -->
@@ -32,24 +32,17 @@
     <path d="M316 214 C296 180 336 160 316 124 C302 98 320 80 326 70"/>
   </g>
   <!-- saucer -->
-  <ellipse cx="248" cy="430" rx="190" ry="38" fill="#B23A35" opacity="0.35"/>
+  <ellipse cx="248" cy="430" rx="190" ry="38" fill="#0E1426" opacity="0.5"/>
   <ellipse cx="248" cy="418" rx="184" ry="36" fill="#FFFDF7"/>
   <ellipse cx="248" cy="414" rx="120" ry="20" fill="#F1E6D6"/>
   <!-- handle -->
-  <path d="M356 278 C430 270 440 370 352 378" fill="none" stroke="#E8433E" stroke-width="34" stroke-linecap="round"/>
-  <path d="M356 278 C430 270 440 370 352 378" fill="none" stroke="#FF8A6B" stroke-width="12" stroke-linecap="round" opacity="0.6"/>
+  <path d="M356 278 C430 270 440 370 352 378" fill="none" stroke="#C24D25" stroke-width="34" stroke-linecap="round"/>
+  <path d="M356 278 C430 270 440 370 352 378" fill="none" stroke="#EE7C4E" stroke-width="12" stroke-linecap="round" opacity="0.6"/>
   <!-- mug body -->
   <path d="M120 248 L376 248 L362 384 C358 410 332 424 300 424 L196 424 C164 424 138 410 134 384 Z" fill="url(#mug)"/>
   <path d="M150 268 C146 320 152 370 166 404" fill="none" stroke="#fff" stroke-width="14" stroke-linecap="round" opacity="0.35"/>
-  <!-- heart on mug -->
-  <path d="M256 360 C226 338 218 318 232 306 C242 298 252 302 256 310 C260 302 270 298 280 306 C294 318 286 338 256 360 Z" fill="#FFF3C4" opacity="0.9"/>
   <!-- rim + coffee -->
   <ellipse cx="248" cy="248" rx="128" ry="30" fill="#FFFDF7"/>
   <ellipse cx="248" cy="250" rx="112" ry="22" fill="url(#crema)"/>
   <path d="M248 262 C226 250 222 240 232 236 C240 233 246 237 248 242 C250 237 256 233 264 236 C274 240 270 250 248 262 Z" fill="#FFF1DC"/>
-  <!-- sparkles -->
-  <g fill="#FFFDF7">
-    <path d="M402 120 l8 20 20 8 -20 8 -8 20 -8 -20 -20 -8 20 -8z"/>
-    <path d="M110 150 l5 13 13 5 -13 5 -5 13 -5 -13 -13 -5 13 -5z"/>
-  </g>
 </svg>
