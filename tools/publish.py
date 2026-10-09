@@ -18,7 +18,7 @@ from cryptography.hazmat.primitives import hashes
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, 'data')
-ITER = 310000
+ITER = 1000000
 TRACKS = {'kanji', 'bottle', 'wset', 'stocks', 'crypto', 'filipino'}
 
 
