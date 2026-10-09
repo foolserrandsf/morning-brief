@@ -10,6 +10,9 @@ Commands
   brief FILE.json       validate a day's brief, add its quiz items to the pool, encrypt + write
   recs FILE.json        publish a Tue/Sat bottle-recs card (shows in the app until replaced)
   check                 decrypt every file to prove the passphrase and files are good
+  progress FILE         decrypt the synced quiz progress (the joined column A of the "sync" tab
+                        in the "Morning Brief Sync" sheet, saved to FILE) and list what she
+                        struggles with, so the brief can revisit it
 """
 import base64, json, os, sys, hashlib, datetime, re
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
@@ -172,6 +175,25 @@ def cmd_state():
     print(json.dumps(out, ensure_ascii=False, indent=1))
 
 
+def cmd_progress(path):
+    j = json.loads(open(path).read().strip())
+    prog = json.loads(AESGCM(key()).decrypt(base64.b64decode(j['n']), base64.b64decode(j['c']), None))
+    st = load_state()
+    P = prog.get('P', {})
+    rows = []
+    for iid, p in P.items():
+        it = st['pool'].get(iid)
+        if it:
+            rows.append((p.get('wrong', 0), p.get('box', 0), it['track'], it['ref'], it['q']))
+    struggling = sorted([r for r in rows if r[0] > 0 and r[1] < 3], reverse=True)
+    mastered = [r for r in rows if r[1] >= 3]
+    print(json.dumps({
+        'answered': len(rows), 'mastered': len(mastered),
+        'struggling': [{'track': t, 'ref': ref, 'q': q, 'misses': w} for w, b, t, ref, q in struggling[:20]],
+        'days_with_cards_done': sorted(prog.get('DONE', {}).keys())[-14:],
+    }, ensure_ascii=False, indent=1))
+
+
 def cmd_check():
     for f in ['state.enc'] + ['briefs/' + x for x in sorted(os.listdir(os.path.join(DATA, 'briefs')))]:
         dec(os.path.join(DATA, f))
@@ -183,4 +205,5 @@ if __name__ == '__main__':
     if not a:
         sys.exit(__doc__)
     {'state': lambda: cmd_state(), 'check': lambda: cmd_check(),
-     'brief': lambda: cmd_brief(a[1]), 'recs': lambda: cmd_recs(a[1])}[a[0]]()
+     'brief': lambda: cmd_brief(a[1]), 'recs': lambda: cmd_recs(a[1]),
+     'progress': lambda: cmd_progress(a[1])}[a[0]]()

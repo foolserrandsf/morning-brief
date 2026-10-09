@@ -120,8 +120,9 @@ details.past summary{font-weight:800;cursor:pointer}
 <canvas id="confetti"></canvas>
 <div class="wrap" id="app"></div>
 <div class="toast" id="toast"></div>
+<script src="config.js"></script>
 <script>
-var APP_BUILD='20261009123530';
+var APP_BUILD='20261009124001';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -142,7 +143,7 @@ async function deriveKey(pass){
   var bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt:b64d(sj.salt),iterations:sj.iter,hash:'SHA-256'},base,256);
   return b64e(bits);
 }
-async function importKey(raw){return crypto.subtle.importKey('raw',b64d(raw),'AES-GCM',false,['decrypt'])}
+async function importKey(raw){S.raw=raw;return crypto.subtle.importKey('raw',b64d(raw),'AES-GCM',false,['encrypt','decrypt'])}
 async function decFile(path,v){
   var r=await fetch(path+'?v='+v,{cache:'no-store'});if(!r.ok)throw new Error('missing '+path);
   var j=await r.json();
@@ -150,14 +151,69 @@ async function decFile(path,v){
   return JSON.parse(new TextDecoder().decode(p));
 }
 
-/* ---------- progress (on this phone) ---------- */
-var P=ls('mb_prog')||{};          // itemId -> {box, wrong, last}
-var DONE=ls('mb_done')||{};       // date -> {cardId:true}
+/* ---------- progress (synced across devices) ---------- */
+var P=ls('mb_prog')||{};          // itemId -> {box, wrong, last, t}
+var DONE=ls('mb_done')||{};       // date -> {cardId: timestamp}
 function record(id,right){
   var p=P[id]||{box:0,wrong:0,last:null};
   if(right){p.box=Math.min(4,p.box+1)}else{p.box=0;p.wrong++}
-  p.last=todayPT();P[id]=p;ls('mb_prog',P);
+  p.last=todayPT();p.t=Date.now();P[id]=p;ls('mb_prog',P);queueSync();
 }
+
+/* Sync: progress is encrypted on the phone with the same key as the brief, then stored as
+   ciphertext in Denise's "Morning Brief Sync" Google Sheet through its Apps Script web app. */
+var SY={rev:0,timer:null,state:'off',dirty:false};
+function syncURL(){return window.MB_SYNC_URL||''}
+async function syncToken(){
+  var a=b64d(S.raw),b=new TextEncoder().encode('mb-sync'),u=new Uint8Array(a.length+b.length);u.set(a);u.set(b,a.length);
+  var h=new Uint8Array(await crypto.subtle.digest('SHA-256',u));
+  return Array.prototype.map.call(h,function(x){return ('0'+x.toString(16)).slice(-2)}).join('');
+}
+async function encBlob(o){
+  var n=crypto.getRandomValues(new Uint8Array(12));
+  var c=await crypto.subtle.encrypt({name:'AES-GCM',iv:n},S.key,new TextEncoder().encode(JSON.stringify(o)));
+  return JSON.stringify({n:b64e(n),c:b64e(c)});
+}
+async function decBlob(s){var j=JSON.parse(s);var p=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64d(j.n)},S.key,b64d(j.c));return JSON.parse(new TextDecoder().decode(p))}
+function mergeIn(r){
+  var changed=false;
+  Object.keys(r.P||{}).forEach(function(id){var x=r.P[id],y=P[id];if(!y||(x.t||0)>(y.t||0)){P[id]=x;changed=true}});
+  Object.keys(r.DONE||{}).forEach(function(d){var x=r.DONE[d],y=DONE[d]=DONE[d]||{};Object.keys(x).forEach(function(c){if(!y[c]){y[c]=x[c];changed=true}})});
+  ls('mb_prog',P);ls('mb_done',DONE);return changed;
+}
+function pruneDone(){var cut=new Date(Date.now()-120*864e5).toISOString().slice(0,10);Object.keys(DONE).forEach(function(d){if(d<cut)delete DONE[d]})}
+function syncLabel(){return {off:'',ok:'☁️',busy:'☁️…',err:'☁️⚠️'}[SY.state]||''}
+function setSync(st){SY.state=st;var e=$('syncchip');if(e)e.textContent=syncLabel()}
+async function pull(){
+  if(!syncURL()||!S.raw)return false;
+  setSync('busy');
+  var r=await (await fetch(syncURL()+'?token='+(await syncToken())+'&t='+Date.now())).json();
+  if(!r.ok)throw new Error(r.error||'sync');
+  SY.rev=r.rev||0;
+  var changed=false,localExtra;
+  if(r.blob){
+    var remote=await decBlob(r.blob);changed=mergeIn(remote);
+    localExtra=Object.keys(P).some(function(id){var x=(remote.P||{})[id];return !x||(P[id].t||0)>(x.t||0)})||
+      Object.keys(DONE).some(function(d){return Object.keys(DONE[d]).some(function(c){return !((remote.DONE||{})[d]||{})[c]})});
+  }else localExtra=Object.keys(P).length>0||Object.keys(DONE).length>0;
+  setSync('ok');
+  if(localExtra)queueSync(10);
+  return changed;
+}
+async function push(retry){
+  if(!syncURL()||!S.raw)return;
+  clearTimeout(SY.timer);setSync('busy');
+  try{
+    pruneDone();
+    var body=JSON.stringify({token:await syncToken(),base:SY.rev,blob:await encBlob({P:P,DONE:DONE,at:Date.now()})});
+    var r=await (await fetch(syncURL(),{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:body,keepalive:body.length<60000})).json();
+    if(r.conflict&&!retry){await pull();return push(true)}
+    if(!r.ok)throw new Error(r.error||'sync');
+    SY.rev=r.rev;SY.dirty=false;setSync('ok');
+  }catch(e){SY.dirty=true;setSync('err')}
+}
+function queueSync(ms){if(!syncURL())return;SY.dirty=true;clearTimeout(SY.timer);SY.timer=setTimeout(push,ms==null?1500:ms)}
+
 function mastered(id){return (P[id]||{}).box>=3}
 
 /* ---------- unlock ---------- */
@@ -169,7 +225,7 @@ function lockScreen(msg){
   var go=async function(){
     var v=$('pass').value.trim().toLowerCase();if(!v)return;
     $('go').textContent='Brewing…';
-    try{var raw=await deriveKey(v);S.key=await importKey(raw);await load(true);ls('mb_key',raw)}
+    try{var raw=await deriveKey(v);S.key=await importKey(raw);await load(true);ls('mb_key',raw);syncNow()}
     catch(e){S.key=null;lockScreen('That passphrase didn\'t open it. Try again (dashes included).')}
   };
   $('go').onclick=go;$('pass').onkeydown=function(e){if(e.key==='Enter')go()};
@@ -190,11 +246,14 @@ async function boot(){
   if(!raw){lockScreen();return}
   S.key=await importKey(raw);
   try{await load()}catch(e){
+    if(e&&e.name==='OperationError'){localStorage.removeItem('mb_key');lockScreen('Your passphrase changed — type the new one.');return}
     var c=ls('mb_cache');
     if(c&&c.brief){S.brief=c.brief;S.state=c.state;S.latest=c.latest;build();toast('Offline — showing your last brief')}
     else lockScreen('Couldn\'t load today\'s brief. Check your connection, or re-enter the passphrase.');
   }
+  syncNow();
 }
+async function syncNow(){try{if(await pull()&&S.brief){if(!S.touched)S._landed=0;build()}}catch(e){setSync('err')}}
 
 /* ---------- quiz engine ---------- */
 var QN=0;
@@ -353,7 +412,7 @@ function streak(){
 function header(){
   var cs=visible(),done=DONE[S.brief.date]||{},n=cs.filter(function(c){return done[c.id]}).length,mins=cs.filter(function(c){return !done[c.id]}).reduce(function(a,c){return a+(c.min||1)},0);
   var stale=S.brief.date!==todayPT();
-  return '<div class="top"><img src="icons/icon-192.png" alt=""><div class="t"><b>Morning Brief</b><span>'+n+'/'+cs.length+' done · ~'+mins+' min left'+(stale?' · from '+esc(S.brief.date):'')+'</span></div><span class="chip">🔥 '+streak()+'</span><button class="iconbtn" aria-label="Refresh" onclick="refresh()">↻</button></div>'+
+  return '<div class="top"><img src="icons/icon-192.png" alt=""><div class="t"><b>Morning Brief</b><span>'+n+'/'+cs.length+' done · ~'+mins+' min left'+(stale?' · from '+esc(S.brief.date):'')+'</span></div><span class="chip">🔥 '+streak()+' <span id="syncchip" title="Progress sync">'+syncLabel()+'</span></span><button class="iconbtn" aria-label="Refresh" onclick="refresh()">↻</button></div>'+
   '<div class="modes"><button class="'+(S.mode==='flow'&&!S.quick?'on':'')+'" onclick="setMode(\'flow\',false)">One at a time</button><button class="'+(S.quick?'on':'')+'" onclick="setMode(\'flow\',true)">2-min musts</button><button class="'+(S.mode==='all'?'on':'')+'" onclick="setMode(\'all\',false)">Overview</button></div>';
 }
 function render(){
@@ -374,15 +433,15 @@ function extras(){
   var rows=Object.keys(TRACK_NAME).map(function(t){var all=pool.filter(function(p){return p.track===t}),m=all.filter(function(p){return mastered(p.id)}).length;return '<div class="row"><span style="width:118px">'+TRACK_NAME[t]+'</span><span class="track"><i style="width:'+(all.length?Math.round(m/all.length*100):0)+'%"></i></span><span class="small">'+m+'/'+all.length+'</span></div>'}).join('');
   var past=(st.dates||[]).slice().reverse().map(function(d){return '<a href="#" style="display:inline-block;margin:4px 10px 4px 0" onclick="openDay(\''+d+'\');return false">'+esc(d)+'</a>'}).join('');
   var src=(S.brief.sources||[]).map(function(s){return linkify(s.url,s.title)}).join(' · ');
-  return '<div class="card" style="margin-top:14px"><h2>Your progress</h2><p class="small">Quiz questions mastered (3 right in a row).</p><div class="prog">'+rows+'</div>'+
+  return '<div class="card" style="margin-top:14px"><h2>Your progress</h2><p class="small">Quiz questions mastered (3 right in a row). '+(syncURL()?(SY.state==='err'?'⚠️ Sync couldn\'t reach Google — answers are saved here and sync when it can.':'☁️ Synced across your devices.'):'Sync isn\'t switched on yet — progress is saved on this device only.')+'</p><div class="prog">'+rows+'</div>'+
     '<details class="past"><summary>Past briefs</summary>'+past+'</details>'+(src?'<div class="src">Sources: '+src+'</div>':'')+
     '<p class="small" style="margin-top:12px"><a href="#" onclick="if(confirm(\'Lock this phone? You\\\'ll need the passphrase again.\')){localStorage.removeItem(\'mb_key\');location.reload()}return false">Lock this phone</a></p></div>';
 }
 function setMode(m,q){S.mode=m;S.quick=q;S.i=0;var done=DONE[S.brief.date]||{},cs=visible();for(var i=0;i<cs.length;i++){if(!done[cs[i].id]){S.i=i;break}}render()}
-function jump(i){S.mode='flow';S.quick=false;S.i=i;render()}
-function mark(){var cs=visible(),c=cs[S.i];var d=DONE[S.brief.date]=DONE[S.brief.date]||{};d[c.id]=true;ls('mb_done',DONE)}
-function gotIt(){mark();burst(14);S.i++;render()}
-function later(){var cs=visible();if(S.quick){S.i++;render();return}var c=S.cards.splice(S.cards.indexOf(cs[S.i]),1)[0];S.cards.push(c);render();toast('Saved it for later 👍')}
+function jump(i){S.touched=1;S.mode='flow';S.quick=false;S.i=i;render()}
+function mark(){var cs=visible(),c=cs[S.i];var d=DONE[S.brief.date]=DONE[S.brief.date]||{};if(!d[c.id]){d[c.id]=Date.now();ls('mb_done',DONE);queueSync()}}
+function gotIt(){S.touched=1;mark();burst(14);S.i++;render()}
+function later(){S.touched=1;var cs=visible();if(S.quick){S.i++;render();return}var c=S.cards.splice(S.cards.indexOf(cs[S.i]),1)[0];S.cards.push(c);render();toast('Saved it for later 👍')}
 function finish(){
   var done=DONE[S.brief.date]||{},left=S.cards.filter(function(c){return !done[c.id]});
   burst(160);
@@ -408,7 +467,7 @@ function burst(n){
 }
 /* updates: new build → reload shell */
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(function(){});
-document.addEventListener('visibilitychange',function(){if(!document.hidden&&S.latest){fetch('data/latest.json?'+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(lt){if(lt.v!==S.latest.v){S._landed=0;load()}}).catch(function(){})}});
+document.addEventListener('visibilitychange',function(){if(document.hidden&&SY.dirty){push()}if(!document.hidden&&S.key){syncNow()}if(!document.hidden&&S.latest){fetch('data/latest.json?'+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(lt){if(lt.v!==S.latest.v){S._landed=0;load()}}).catch(function(){})}});
 boot();
 </script>
 </body>
