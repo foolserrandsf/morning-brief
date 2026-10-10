@@ -14,7 +14,7 @@ function handle_(p) {
   if (p.token !== TOKEN) return { ok: false, error: 'bad token' };
   if (p.sub) return saveSub_(p.sub);
   if (p.remind) return remind_(p.remind);
-  if (p.cancel) return cancel_(p.cancel);
+  if (p.cancel) return cancel_(p.cancel, p.key);
   var ss = SpreadsheetApp.getActive();
   var sh = ss.getSheetByName('sync') || ss.insertSheet('sync');
   var lock = LockService.getScriptLock();
@@ -50,37 +50,42 @@ function saveSub_(sub) {
   return { ok: true };
 }
 
-// "Finish later": the morning writer leaves 3 pre-encrypted reminders per phone marked
-// hold:<date>:<n>. The app picks a time; this releases the next held one for that time.
+// "Remind me later": the morning writer leaves pre-encrypted reminders per phone, tagged
+// hold:<date>:<key>:<n> (key = focus, in0, in1, …; older focus rows are hold:<date>:<n>).
+// The app picks a time; this releases the next held one for that time (column F = send after,
+// column G = key).
+function holdKey_(tag, date) {
+  var m = String(tag).match(/^hold:(\d{4}-\d{2}-\d{2}):(?:([a-z]+\d*):)?\d+$/);
+  return m && m[1] === date ? (m[2] || 'focus') : null;
+}
 function remind_(o) {
-  var ob = SpreadsheetApp.getActive().getSheetByName('outbox');
+  var ob = SpreadsheetApp.getActive().getSheetByName('outbox'), key = o.key || 'focus';
   if (!ob || !ob.getLastRow() || !o.date || !o.at) return { ok: true, reminded: 0 };
   var lock = LockService.getScriptLock(); lock.waitLock(15000);
   try {
-    var rows = ob.getRange(1, 1, ob.getLastRow(), 6).getValues(), done = {}, n = 0;
-    cancelPending_(ob, rows, o.date);
+    var rows = ob.getRange(1, 1, ob.getLastRow(), 7).getValues(), done = {}, n = 0;
+    cancelPending_(ob, rows, o.date, key);
     for (var i = 0; i < rows.length; i++) {
-      var tag = String(rows[i][4]);
-      if (tag.indexOf('hold:' + o.date + ':') !== 0 || done[rows[i][1]]) continue;
-      ob.getRange(i + 1, 5, 1, 2).setValues([['', o.at]]);
+      if (holdKey_(rows[i][4], o.date) !== key || done[rows[i][1]]) continue;
+      ob.getRange(i + 1, 5, 1, 3).setValues([['', o.at, key]]);
       done[rows[i][1]] = 1; n++;
     }
     return { ok: true, reminded: n };
   } finally { lock.releaseLock(); }
 }
-function cancel_(date) {
+function cancel_(date, key) {
   var ob = SpreadsheetApp.getActive().getSheetByName('outbox');
   if (!ob || !ob.getLastRow()) return { ok: true, cancelled: 0 };
-  var rows = ob.getRange(1, 1, ob.getLastRow(), 6).getValues();
-  return { ok: true, cancelled: cancelPending_(ob, rows, date) };
+  var rows = ob.getRange(1, 1, ob.getLastRow(), 7).getValues();
+  return { ok: true, cancelled: cancelPending_(ob, rows, date, key || 'focus') };
 }
-// a released reminder that hasn't gone out yet is cancelled (Done, or a new time picked)
-function cancelPending_(ob, rows, date) {
-  var n = 0, now = new Date();
+// a released reminder that hasn't gone out yet is cancelled (Done, unchecked, or a new time picked)
+function cancelPending_(ob, rows, date, key) {
+  var n = 0, now = new Date(), tz = SpreadsheetApp.getActive().getSpreadsheetTimeZone();
   for (var i = 0; i < rows.length; i++) {
-    if (String(rows[i][0]).slice(0, 10) === String(date) || (rows[i][0] instanceof Date && Utilities.formatDate(rows[i][0], SpreadsheetApp.getActive().getSpreadsheetTimeZone(), 'yyyy-MM-dd') === date)) {
-      if (!rows[i][4] && rows[i][5] && new Date(rows[i][5]) > now) { ob.getRange(i + 1, 5).setValue('cancelled'); rows[i][4] = 'cancelled'; n++; }
-    }
+    var d = rows[i][0] instanceof Date ? Utilities.formatDate(rows[i][0], tz, 'yyyy-MM-dd') : String(rows[i][0]).slice(0, 10);
+    if (d !== String(date) || (rows[i][6] || 'focus') !== key) continue;
+    if (!rows[i][4] && rows[i][5] && new Date(rows[i][5]) > now) { ob.getRange(i + 1, 5).setValue('cancelled'); rows[i][4] = 'cancelled'; n++; }
   }
   return n;
 }

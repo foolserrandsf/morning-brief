@@ -158,7 +158,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261010123610';
+var APP_BUILD='20261010124600';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -410,7 +410,7 @@ function buildCards(){
   var w=b.weather||{},f=b.focus||{},jp=b.japan;
   var gm='<div class="big">'+esc(b.greeting||'Let\'s go, Denise!')+'</div>';
   if(pushState()==='off')gm+='<div class="item" style="margin:0 0 12px"><div class="k">Get this every morning from the mug icon</div>'+pushPanel()+'</div>';
-  if(f.one_thing)gm+='<div class="focus"><div class="lbl">One thing that matters today</div><div class="one">'+esc(f.one_thing)+'</div>'+(f.why?'<div class="small">'+esc(f.why)+'</div>':'')+(f.first_step?'<p style="margin:.5em 0 0"><b>Tiny first step:</b> '+esc(f.first_step)+'</p>':'')+'<div class="frow"><button class="btn sun" onclick="sprint()">Start a 5-min sprint</button><label class="ck"><input type="checkbox" id="fdone" onchange="focusDone(this.checked)"'+(focusState().s==='done'?' checked':'')+'>Done</label><label class="ck"><input type="checkbox" id="flater" onchange="focusLater(this.checked)"'+(focusState().s==='later'?' checked':'')+'>Finish later</label></div><div id="fpick"></div><div class="fstat" id="fstat">'+focusStatus()+'</div><div id="sprint"></div></div>';
+  if(f.one_thing)gm+='<div class="focus"><div class="lbl">One thing that matters today</div><div class="one">'+esc(f.one_thing)+'</div>'+(f.why?'<div class="small">'+esc(f.why)+'</div>':'')+(f.first_step?'<p style="margin:.5em 0 0"><b>Tiny first step:</b> '+esc(f.first_step)+'</p>':'')+tChecks('focus','Finish: '+f.one_thing,f.first_step,'<button class="btn sun" onclick="sprint()">Start a 5-min sprint</button>')+'<div id="sprint"></div></div>';
   if(w.hi!=null)gm+='<div class="wx"><span class="temp">'+esc(w.now||w.hi+'°')+'</span><span><b>'+esc(w.sky||'')+'</b><br><span class="small">'+esc((w.place||'San Francisco')+' · H '+w.hi+'° / L '+w.lo+'°'+(w.rain?' · rain '+w.rain:''))+'</span></span></div>'+(w.wear?'<p><b>Wear:</b> '+esc(w.wear)+'</p>':'');
   if(jp&&jp.active)gm+='<div class="item" style="background:var(--wash);margin-top:12px"><div class="k">'+esc(jp.day||'Japan trip')+' · <span id="jst"></span> in Japan</div><div class="m">'+esc(jp.today||'')+'</div>'+(jp.phrase?'<p style="margin:.6em 0 0"><span class="jp" style="font-size:19px;font-weight:600">'+esc(jp.phrase.jp)+'</span><br><span class="small">'+esc(jp.phrase.romaji)+'</span><br>'+esc(jp.phrase.en)+'</p>'+(jp.phrase.notes&&jp.phrase.notes.length?'<div class="jpnote">'+jp.phrase.notes.map(function(n){return '<div><b class="jp">'+esc(n.bit)+'</b> '+esc(n.means)+'</div>'}).join('')+'</div>':''):'')+(jp.tip?'<p class="small">'+esc(jp.tip)+'</p>':'')+'</div>';
   cards.push({id:'gm',title:'Good morning, Denise',sub:'Edition '+(b.edition||1),color:'var(--persimmon)',tint:'#FFF1CF',min:1,must:1,body:gm});
@@ -421,7 +421,7 @@ function buildCards(){
   /* 3 · inbox */
   var ib=b.inbox||[];
   cards.push({id:'inbox',title:'Needs you',sub:ib.length?ib.length+' email'+(ib.length>1?'s':'')+' waiting on you':'Inbox zero-ish',color:'var(--coral)',tint:'#FFE7E3',min:2,must:1,
-    body:(ib.length?'<div class="list">'+ib.map(function(m){return '<div class="item"><span class="tag" style="'+(m.account==='fe'?'background:#E6F2F1;color:var(--teal);border-color:#CDE4E2':'')+'">'+(m.account==='fe'?'Fool\'s Errand':'Gmail')+'</span>'+(m.by?'<span class="tag" style="background:var(--persimmon-wash);color:var(--persimmon);border-color:#F6D5C6">by '+esc(m.by)+'</span>':'')+'<div class="k">'+esc(m.from)+' — '+esc(m.subject)+'</div><div class="m">'+esc(m.ask)+'</div>'+(m.url?'<div class="m">'+linkify(m.url,'Open email →')+'</div>':'')+'</div>'}).join('')+'</div>':'<p class="empty">Nothing in either inbox needs a reply from you today.</p>')+(b.inbox_note?'<p class="small">'+esc(b.inbox_note)+'</p>':'')});
+    body:(ib.length?'<div class="list">'+ib.map(function(m,i){return '<div class="item"><span class="tag" style="'+(m.account==='fe'?'background:#E6F2F1;color:var(--teal);border-color:#CDE4E2':'')+'">'+(m.account==='fe'?'Fool\'s Errand':'Gmail')+'</span>'+(m.by?'<span class="tag" style="background:var(--persimmon-wash);color:var(--persimmon);border-color:#F6D5C6">by '+esc(m.by)+'</span>':'')+'<div class="k">'+esc(m.from)+' — '+esc(m.subject)+'</div><div class="m">'+esc(m.ask)+'</div>'+(m.url?'<div class="m">'+linkify(m.url,'Open email →')+'</div>':'')+tChecks('in'+i,'Reply: '+m.from+' — '+m.subject,m.ask+(m.url?'\n'+m.url:''))+'</div>'}).join('')+'</div>':'<p class="empty">Nothing in either inbox needs a reply from you today.</p>')+(b.inbox_note?'<p class="small">'+esc(b.inbox_note)+'</p>':'')});
   /* 4 · football */
   var fb=b.football||{};
   if(fb.games&&fb.games.length)cards.push({id:'fb',title:'Game day',sub:fb.games.length+' game'+(fb.games.length>1?'s':'')+' to know',color:'var(--leaf)',tint:'#E4F7E8',min:1,must:1,
@@ -562,38 +562,52 @@ async function refresh(){toast('Checking for a fresh brief…');try{S._landed=0;
 function tickJST(){var e=$('jst');if(!e)return;e.textContent=new Date().toLocaleTimeString('en-US',{timeZone:'Asia/Tokyo',hour:'numeric',minute:'2-digit'})}
 setInterval(tickJST,30000);
 var SPR=null;
-/* one-thing check-off: Done, or Finish later with a reminder from the app */
+/* check-offs for the one thing and each "Needs you" email: Done / Remind me later (app notification) / Add to Google Calendar */
+var TK={};
 function fkeyDate(){return S.brief.date}
-function focusState(){var x=(DONE[fkeyDate()]||{}),best={s:'',t:0};Object.keys(x).forEach(function(k){if(k.slice(0,2)==='f_'){var v=x[k];if(v&&(v.t||0)>best.t)best=v}});return best}
-function focusEvent(o){o.t=Date.now();var d=DONE[fkeyDate()]=DONE[fkeyDate()]||{};d['f_'+o.t]=o;ls('mb_done',DONE);queueSync(300)}
+function tState(k){var x=(DONE[fkeyDate()]||{}),best={s:'',t:0};Object.keys(x).forEach(function(n){if(n.slice(0,2)==='f_'){var v=x[n];if(v&&(v.k||'focus')===k&&(v.t||0)>best.t)best=v}});return best}
+function focusState(){return tState('focus')}
+function tEvent(k,o){o.k=k;o.t=Date.now();var d=DONE[fkeyDate()]=DONE[fkeyDate()]||{};d['f_'+o.t]=o;ls('mb_done',DONE);queueSync(300)}
 function fmtTime(iso){return new Date(iso).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}
-function focusStatus(){var f=focusState();if(f.s==='done')return '<b>Done.</b> That was the one that mattered today.';if(f.s==='later'&&f.at)return (Date.parse(f.at)>Date.now()?'Reminder set for <b>'+fmtTime(f.at)+'</b>.':'Your <b>'+fmtTime(f.at)+'</b> reminder has passed. Still on your plate?')+(f.cal?' <a href="'+esc(f.cal)+'" target="_blank" rel="noopener">Add it to Google Calendar</a>':'');return ''}
-function refreshFocus(){var a=$('fdone'),b=$('flater'),f=focusState();if(a)a.checked=f.s==='done';if(b)b.checked=f.s==='later';var st=$('fstat');if(st)st.innerHTML=focusStatus()}
-async function remindCall(o){if(!syncURL())return null;try{var body=JSON.stringify(Object.assign({token:await syncToken()},o));return await (await fetch(syncURL(),{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:body})).json()}catch(e){return null}}
-function focusDone(on){
-  $('fpick').innerHTML='';
-  if(on){focusEvent({s:'done'});burst(60);if(navigator.vibrate)navigator.vibrate(20);remindCall({cancel:fkeyDate()})}else focusEvent({s:'undo'});
-  refreshFocus();
+function tStatus(k){
+  var f=tState(k),cal=f.cal?' <a href="'+esc(f.cal)+'" target="_blank" rel="noopener">'+(f.s==='cal'?'Open it again':'Add it to Google Calendar')+'</a>':'';
+  if(f.s==='done')return k==='focus'?'<b>Done.</b> That was the one that mattered today.':'<b>Done.</b>';
+  if(f.s==='later'&&f.at)return (Date.parse(f.at)>Date.now()?'Reminder set for <b>'+fmtTime(f.at)+'</b>.':'Your <b>'+fmtTime(f.at)+'</b> reminder has passed. Still on your plate?')+cal;
+  if(f.s==='cal'&&f.at)return 'On your Google Calendar for <b>'+fmtTime(f.at)+'</b>.'+cal;
+  return '';
 }
-function focusLater(on){
-  var pk=$('fpick');if(!on){pk.innerHTML='';focusEvent({s:'undo'});remindCall({cancel:fkeyDate()});refreshFocus();return}
-  $('fdone').checked=false;
+function tChecks(k,title,step,lead){
+  TK[k]={title:title,step:step||''};var s=tState(k).s;
+  var box=function(kind,label,on){return '<label class="ck"><input type="checkbox" id="tk-'+kind+'-'+k+'" onchange="tToggle(\''+k+'\',\''+kind+'\',this.checked)"'+(on?' checked':'')+'>'+label+'</label>'};
+  return '<div class="frow">'+(lead||'')+box('done','Done',s==='done')+box('later','Remind me later',s==='later')+box('cal','Add to Google Calendar',s==='cal')+'</div><div id="tk-pick-'+k+'"></div><div class="fstat" id="tk-stat-'+k+'">'+tStatus(k)+'</div>';
+}
+function tRefresh(k){var s=tState(k).s;['done','later','cal'].forEach(function(x){var e=$('tk-'+x+'-'+k);if(e)e.checked=s===x});var st=$('tk-stat-'+k);if(st)st.innerHTML=tStatus(k)}
+async function remindCall(o){if(!syncURL())return null;try{var body=JSON.stringify(Object.assign({token:await syncToken()},o));return await (await fetch(syncURL(),{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:body})).json()}catch(e){return null}}
+function tToggle(k,kind,on){
+  var pk=$('tk-pick-'+k);pk.innerHTML='';
+  if(!on){tEvent(k,{s:'undo'});remindCall({cancel:fkeyDate(),key:k});tRefresh(k);return}
+  ['done','later','cal'].forEach(function(x){if(x!==kind){var e=$('tk-'+x+'-'+k);if(e)e.checked=false}});
+  if(kind==='done'){tEvent(k,{s:'done'});burst(k==='focus'?60:30);if(navigator.vibrate)navigator.vibrate(20);remindCall({cancel:fkeyDate(),key:k});tRefresh(k);return}
   var now=new Date(),opts=[['In 1 hour',new Date(Date.now()+36e5)]];
   [[12,'Noon'],[14,'2 PM'],[17,'5 PM'],[20,'8 PM']].forEach(function(h){var d=new Date(now);d.setHours(h[0],0,0,0);if(d-now>30*6e4)opts.push([h[1],d])});
-  window._fopts=opts;
-  pk.innerHTML='<div class="small" style="margin-top:8px">When should I remind you?</div><div class="picks">'+opts.map(function(o,i){return '<button onclick="setReminder('+i+')">'+o[0]+'</button>'}).join('')+'</div>';
+  var tm=new Date(now);tm.setDate(tm.getDate()+1);tm.setHours(10,0,0,0);opts.push(['Tomorrow 10 AM',tm]);
+  if(kind==='later')opts=opts.filter(function(o){return o[1]-now<20*36e5});
+  window['_opts_'+k]=opts;
+  pk.innerHTML='<div class="small" style="margin-top:8px">'+(kind==='later'?'When should I remind you?':'Put it on your calendar for:')+'</div><div class="picks">'+opts.map(function(o,i){return '<button onclick="tPick(\''+k+'\',\''+kind+'\','+i+')">'+o[0]+'</button>'}).join('')+'</div>';
 }
 function plainText(t){return String(t||'').replace(/\{([^{}|]+)\|[^{}]*\}/g,'$1')}
-function calLink(at){
-  var f=function(d){return d.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'')},e=new Date(at.getTime()+15*6e4);
-  return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent('Finish: '+plainText((S.brief.focus||{}).one_thing||'today\'s one thing'))+'&dates='+f(at)+'/'+f(e)+'&details='+encodeURIComponent('From your Morning Brief. '+plainText((S.brief.focus||{}).first_step||''));
+function calLink(k,at){
+  var t=TK[k]||{},f=function(d){return d.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'')},e=new Date(at.getTime()+15*6e4);
+  return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(plainText(t.title||'Morning Brief to-do'))+'&dates='+f(at)+'/'+f(e)+'&details='+encodeURIComponent(plainText(t.step||'')+'\n\nFrom your Morning Brief.');
 }
-async function setReminder(i){
-  var at=window._fopts[i][1];$('fpick').innerHTML='<div class="small" style="margin-top:8px">Setting it…</div>';
-  var r=pushState()==='on'?await remindCall({remind:{date:fkeyDate(),at:at.toISOString()}}):null;
+async function tPick(k,kind,i){
+  var at=window['_opts_'+k][i][1],pk=$('tk-pick-'+k),link=calLink(k,at);
+  if(kind==='cal'){window.open(link,'_blank','noopener');tEvent(k,{s:'cal',at:at.toISOString(),cal:link});remindCall({cancel:fkeyDate(),key:k});pk.innerHTML='';tRefresh(k);return}
+  pk.innerHTML='<div class="small" style="margin-top:8px">Setting it…</div>';
+  var r=pushState()==='on'?await remindCall({remind:{date:fkeyDate(),at:at.toISOString(),key:k}}):null;
   var ok=!!(r&&r.reminded>0);
-  focusEvent({s:'later',at:at.toISOString(),cal:ok?'':calLink(at)});
-  $('fpick').innerHTML='';refreshFocus();
+  tEvent(k,{s:'later',at:at.toISOString(),cal:ok?'':link});
+  pk.innerHTML='';tRefresh(k);
   toast(ok?'I\'ll nudge you at '+fmtTime(at.toISOString()):'Tap “Add it to Google Calendar” so your phone reminds you');
 }
 function sprint(){

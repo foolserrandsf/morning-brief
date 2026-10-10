@@ -9,9 +9,10 @@ and the sheet's Apps Script delivers them.
   MB_VAPID=<private key> python3 tools/push.py build SUBS.json "Title" "Body" [url]
       SUBS.json = rows from the sheet's "push" tab: [[endpoint, p256dh, auth], ...]
       prints outbox rows: [[date, endpoint, body_b64, authorization, ""], ...]
-  MB_VAPID=... python3 tools/push.py hold SUBS.json "Title" "Body" BRIEF_DATE [url]
-      same, but 3 held rows per phone tagged hold:BRIEF_DATE:n, signed for 23 h; the sheet only
-      sends one after the app's "Finish later" sets its time
+  MB_VAPID=... python3 tools/push.py hold SUBS.json "Title" "Body" BRIEF_DATE URL [KEY] [COPIES]
+      same, but held rows tagged hold:BRIEF_DATE:KEY:n (KEY focus = the one thing, 3 copies;
+      in0, in1, … = the "Needs you" emails in order, 1 copy), signed for 23 h; the sheet only
+      sends one after the app's "Remind me later" sets its time
   python3 tools/push.py pubkey      print the public key that goes in config.js
 """
 import base64, datetime, hashlib, hmac, json, os, re, struct, sys, time
@@ -63,7 +64,7 @@ def vapid_header(endpoint, key, hours=12):
     return f'vapid t={jwt}, k={b64u(raw_pub(key.public_key()))}'
 
 
-def build(subs_path, title, body, url='./', hold=None, copies=1):
+def build(subs_path, title, body, url='./', hold=None, copies=1, key='focus'):
     key = vapid_key()
     subs = json.load(open(subs_path))
     body = re.sub(r'\{([^{}|]+)\|[^{}]*\}', r'\1', body)
@@ -77,7 +78,7 @@ def build(subs_path, title, body, url='./', hold=None, copies=1):
         for i in range(copies):
             # held rows stay unsent until the app asks for a reminder (sheet script sets a send time)
             rows.append([hold or today, row[0], base64.b64encode(encrypt(row[1], row[2], payload)).decode(),
-                         vapid_header(row[0], key, 23 if hold else 12), f'hold:{hold}:{i + 1}' if hold else ''])
+                         vapid_header(row[0], key, 23 if hold else 12), f'hold:{hold}:{key}:{i + 1}' if hold else ''])
     print(json.dumps(rows))
 
 
@@ -88,6 +89,8 @@ if __name__ == '__main__':
     elif len(a) >= 4 and a[0] == 'build':
         build(a[1], a[2], a[3], a[4] if len(a) > 4 else './')
     elif len(a) >= 5 and a[0] == 'hold':
-        build(a[1], a[2], a[3], a[5] if len(a) > 5 else './', hold=a[4], copies=3)
+        key = a[6] if len(a) > 6 else 'focus'
+        build(a[1], a[2], a[3], a[5] if len(a) > 5 else './', hold=a[4],
+              copies=int(a[7]) if len(a) > 7 else (3 if key == 'focus' else 1), key=key)
     else:
         sys.exit(__doc__)
