@@ -65,6 +65,9 @@ button{font:inherit;cursor:pointer;border:0;color:inherit}
 .item{border:1px solid var(--line);border-radius:12px;padding:11px 13px;background:var(--paper)}
 .item .k{font-weight:600}
 .item .m{color:var(--soft);font-size:14.5px}
+.item.news{padding:13px 14px}
+.nsum{margin:.45em 0;font-size:15.5px;line-height:1.55}
+.nwhy{background:#F1EEFC;border-radius:9px;padding:8px 10px;margin-top:8px;font-size:14.5px}
 .tag{display:inline-block;font-size:12px;font-weight:600;border-radius:6px;padding:1px 7px;margin:0 4px 3px 0;background:var(--wash);color:var(--soft);border:1px solid var(--line)}
 .empty{color:var(--soft)}
 .foot{display:flex;gap:10px;margin-top:16px}
@@ -139,7 +142,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261009135918';
+var APP_BUILD='20261009170527';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -409,8 +412,8 @@ function buildCards(){
     body:'<div class="list">'+fb.games.map(function(g){return '<div class="fb"><span class="tag">'+esc(g.league)+'</span><div class="mu">'+esc(g.matchup)+'</div><div class="row"><span class="chip">'+esc(g.kickoff)+'</span><span class="chip">'+esc(g.tv)+'</span>'+(g.spread?'<span class="chip">'+esc(g.spread)+'</span>':'')+'</div>'+(g.pick?'<div class="pick">Brief pick: '+esc(g.pick)+'</div>':'')+(g.your_bet?'<div class="bet">Your bet: '+esc(g.your_bet)+'</div>':'')+'</div>'}).join('')+'</div>'+(fb.link?'<p>'+linkify(fb.link,'Full Football Brief →')+'</p>':'')});
   /* 5 · news */
   var nw=b.news||[];
-  cards.push({id:'news',title:'The news, fast',sub:'Bloomberg · Morning Brew · SF Standard + your inbox',color:'var(--grape)',tint:'#EEE8FF',min:3,
-    body:'<div class="list">'+nw.map(function(n){return '<div class="item"><span class="tag">'+esc(n.source)+'</span><div class="k">'+esc(n.headline)+'</div>'+(n.why?'<div class="m">'+esc(n.why)+'</div>':'')+'<div class="m">'+linkify(n.url,'Read →')+'</div></div>'}).join('')+'</div>'});
+  cards.push({id:'news',title:'The news',sub:'Bloomberg, Morning Brew, SF Standard, Ground News',color:'var(--grape)',tint:'#EEE8FF',min:6,
+    body:'<div class="list">'+nw.map(function(n){var sm=n.summary?(Array.isArray(n.summary)?n.summary:[n.summary]):[];return '<div class="item news"><span class="tag">'+esc(n.source)+'</span><div class="k">'+esc(n.headline)+'</div>'+sm.map(function(p){return '<p class="nsum">'+esc(p)+'</p>'}).join('')+(n.coverage?'<div class="m" style="margin-top:6px"><b>Coverage:</b> '+esc(n.coverage)+'</div>':'')+(n.why?'<div class="nwhy"><b>Why it matters to you:</b> '+esc(n.why)+'</div>':'')+(n.url?'<div class="m" style="margin-top:6px">'+linkify(n.url,'Full article')+'</div>':'')+'</div>'}).join('')+'</div>'});
   /* 6 · kanji */
   var k=b.kanji||{};
   cards.push({id:'kanji',title:'Kanji of the day',sub:'#'+esc(k.n)+' of 270 · KEIRO deck',color:'#D2453A',tint:'#FFE7E3',min:2,
