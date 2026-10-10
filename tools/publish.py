@@ -9,6 +9,7 @@ Commands
   state                 print the decrypted learning state (what's been taught, counters)
   brief FILE.json       validate a day's brief, add its quiz items to the pool, encrypt + write
   recs FILE.json        publish a Tue/Sat bottle-recs card (shows in the app until replaced)
+  birthdays FILE        save her phone's Birthdays calendar (YYYY-MM-DD|Title lines) into the encrypted state
   check                 decrypt every file to prove the passphrase and files are good
   progress FILE         decrypt the synced quiz progress (the joined column A of the "sync" tab
                         in the "Morning Brief Sync" sheet, saved to FILE) and list what she
@@ -208,7 +209,9 @@ def cmd_recs(path):
 
 def cmd_state():
     st = load_state()
+    today = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=-7))).strftime('%Y-%m-%d')
     out = {
+        'birthdays_next_3_days': birthdays_near(st, today),
         'counters': st['counters'],
         'dates': st['dates'][-10:],
         'pool_size': len(st['pool']),
@@ -237,6 +240,34 @@ def cmd_progress(path):
     }, ensure_ascii=False, indent=1))
 
 
+def cmd_birthdays(path):
+    """Store her phone's Birthdays calendar (lines 'YYYY-MM-DD|Name's 39th Birthday') as month-day + name + birth year."""
+    out = []
+    for line in open(path, encoding='utf-8'):
+        if '|' not in line:
+            continue
+        d, title = line.strip().split('|', 1)
+        m = re.match(r"^(.*?)[\u2019']s?(?: (\d+)(?:st|nd|rd|th))? Birthday$", title)
+        name, age = (m.group(1), m.group(2)) if m else (title, None)
+        out.append({'md': d[5:], 'name': name.strip(), 'born': int(d[:4]) - int(age) if age else None})
+    st = load_state()
+    st['birthdays'] = out
+    save_state(st)
+    print(f'Saved {len(out)} birthdays')
+
+
+def birthdays_near(st, d, days=3):
+    base = datetime.date.fromisoformat(d)
+    hits = []
+    for b in st.get('birthdays', []):
+        for k in range(days + 1):
+            day = base + datetime.timedelta(days=k)
+            if day.strftime('%m-%d') == b['md']:
+                age = f" (turns {day.year - b['born']})" if b.get('born') else ''
+                hits.append(('today' if k == 0 else day.strftime('%a %b ') + str(day.day)) + f": {b['name']}{age}")
+    return hits
+
+
 def cmd_check():
     for f in ['state.enc'] + ['briefs/' + x for x in sorted(os.listdir(os.path.join(DATA, 'briefs')))]:
         dec(os.path.join(DATA, f))
@@ -249,4 +280,4 @@ if __name__ == '__main__':
         sys.exit(__doc__)
     {'state': lambda: cmd_state(), 'check': lambda: cmd_check(),
      'brief': lambda: cmd_brief(a[1]), 'recs': lambda: cmd_recs(a[1]),
-     'progress': lambda: cmd_progress(a[1])}[a[0]]()
+     'progress': lambda: cmd_progress(a[1]), 'birthdays': lambda: cmd_birthdays(a[1])}[a[0]]()
