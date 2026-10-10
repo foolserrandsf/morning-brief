@@ -124,7 +124,20 @@ button{font:inherit;cursor:pointer;border:0;color:inherit}
 .prog{display:grid;gap:8px;margin-top:10px}
 .prog .row{display:flex;align-items:center;gap:8px;font-weight:500;font-size:15px}
 .prog .track{flex:1;height:6px;background:#E4E8EE;border-radius:6px;overflow:hidden}
-.prog .track i{display:block;height:100%;background:var(--sage)}
+.prog .track{position:relative}
+.prog .track i{position:absolute;left:0;top:0;display:block;height:100%;background:var(--sage)}
+.prog .track i.lrn{background:color-mix(in srgb,var(--sage) 35%,#fff)}
+.prog .n{font-size:13.5px;opacity:.75;white-space:nowrap;min-width:86px;text-align:right}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.frow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:10px}
+.ck{display:inline-flex;align-items:center;gap:7px;font-weight:600;font-size:15px;cursor:pointer;user-select:none}
+.ck input{appearance:none;-webkit-appearance:none;width:22px;height:22px;border:2px solid var(--persimmon);border-radius:6px;background:#fff;display:grid;place-content:center;margin:0;cursor:pointer}
+.ck input:checked{background:var(--persimmon)}
+.ck input:checked::after{content:'';width:6px;height:11px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.picks{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.picks button{border:1px solid #FFD9C6;background:#fff;border-radius:999px;padding:7px 12px;font-weight:600;font-size:14px;color:var(--ink);cursor:pointer}
+.fstat{font-size:14px;margin-top:8px}
 .small{font-size:14px;color:var(--soft)}
 .src{font-size:13px;color:var(--soft);margin-top:12px}
 .src a{color:var(--soft)}
@@ -145,7 +158,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261010090615';
+var APP_BUILD='20261010123610';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -397,7 +410,7 @@ function buildCards(){
   var w=b.weather||{},f=b.focus||{},jp=b.japan;
   var gm='<div class="big">'+esc(b.greeting||'Let\'s go, Denise!')+'</div>';
   if(pushState()==='off')gm+='<div class="item" style="margin:0 0 12px"><div class="k">Get this every morning from the mug icon</div>'+pushPanel()+'</div>';
-  if(f.one_thing)gm+='<div class="focus"><div class="lbl">One thing that matters today</div><div class="one">'+esc(f.one_thing)+'</div>'+(f.why?'<div class="small">'+esc(f.why)+'</div>':'')+(f.first_step?'<p style="margin:.5em 0 0"><b>Tiny first step:</b> '+esc(f.first_step)+'</p>':'')+'<div class="foot" style="margin-top:10px"><button class="btn sun" onclick="sprint()">Start a 5-min sprint</button></div><div id="sprint"></div></div>';
+  if(f.one_thing)gm+='<div class="focus"><div class="lbl">One thing that matters today</div><div class="one">'+esc(f.one_thing)+'</div>'+(f.why?'<div class="small">'+esc(f.why)+'</div>':'')+(f.first_step?'<p style="margin:.5em 0 0"><b>Tiny first step:</b> '+esc(f.first_step)+'</p>':'')+'<div class="frow"><button class="btn sun" onclick="sprint()">Start a 5-min sprint</button><label class="ck"><input type="checkbox" id="fdone" onchange="focusDone(this.checked)"'+(focusState().s==='done'?' checked':'')+'>Done</label><label class="ck"><input type="checkbox" id="flater" onchange="focusLater(this.checked)"'+(focusState().s==='later'?' checked':'')+'>Finish later</label></div><div id="fpick"></div><div class="fstat" id="fstat">'+focusStatus()+'</div><div id="sprint"></div></div>';
   if(w.hi!=null)gm+='<div class="wx"><span class="temp">'+esc(w.now||w.hi+'°')+'</span><span><b>'+esc(w.sky||'')+'</b><br><span class="small">'+esc((w.place||'San Francisco')+' · H '+w.hi+'° / L '+w.lo+'°'+(w.rain?' · rain '+w.rain:''))+'</span></span></div>'+(w.wear?'<p><b>Wear:</b> '+esc(w.wear)+'</p>':'');
   if(jp&&jp.active)gm+='<div class="item" style="background:var(--wash);margin-top:12px"><div class="k">'+esc(jp.day||'Japan trip')+' · <span id="jst"></span> in Japan</div><div class="m">'+esc(jp.today||'')+'</div>'+(jp.phrase?'<p style="margin:.6em 0 0"><span class="jp" style="font-size:19px;font-weight:600">'+esc(jp.phrase.jp)+'</span><br><span class="small">'+esc(jp.phrase.romaji)+'</span><br>'+esc(jp.phrase.en)+'</p>'+(jp.phrase.notes&&jp.phrase.notes.length?'<div class="jpnote">'+jp.phrase.notes.map(function(n){return '<div><b class="jp">'+esc(n.bit)+'</b> '+esc(n.means)+'</div>'}).join('')+'</div>':''):'')+(jp.tip?'<p class="small">'+esc(jp.tip)+'</p>':'')+'</div>';
   cards.push({id:'gm',title:'Good morning, Denise',sub:'Edition '+(b.edition||1),color:'var(--persimmon)',tint:'#FFF1CF',min:1,must:1,body:gm});
@@ -499,7 +512,7 @@ function build(){
 function visible(){return S.quick?S.cards.filter(function(c){return c.must}):S.cards}
 function streak(){
   var n=0,d=new Date(todayPT()+'T12:00:00');
-  for(;;){var k=d.toISOString().slice(0,10),x=DONE[k];if(x&&Object.keys(x).length>=3){n++;d.setDate(d.getDate()-1)}else break}
+  for(;;){var k=d.toISOString().slice(0,10),x=DONE[k];if(x&&Object.keys(x).filter(function(k){return k.slice(0,2)!=='f_'}).length>=3){n++;d.setDate(d.getDate()-1)}else break}
   return n;
 }
 function header(){
@@ -523,10 +536,14 @@ function render(){
 }
 function extras(){
   var st=S.state||{},pool=Object.values(st.pool||{});
-  var rows=Object.keys(TRACK_NAME).map(function(t){var all=pool.filter(function(p){return p.track===t}),m=all.filter(function(p){return mastered(p.id)}).length;return '<div class="row"><span style="width:118px">'+TRACK_NAME[t]+'</span><span class="track"><i style="width:'+(all.length?Math.round(m/all.length*100):0)+'%"></i></span><span class="small">'+m+'/'+all.length+'</span></div>'}).join('');
+  var tot={a:0,r:0,m:0};
+  var rows=Object.keys(TRACK_NAME).map(function(t){
+    var all=pool.filter(function(p){return p.track===t}),seen=all.filter(function(p){return P[p.id]}),r=seen.filter(function(p){return P[p.id].box>=1}).length,m=all.filter(function(p){return mastered(p.id)}).length;
+    tot.a+=seen.length;tot.r+=r;tot.m+=m;var w=function(x){return all.length?Math.round(x/all.length*100):0};
+    return '<div class="row"><span style="width:112px">'+TRACK_NAME[t]+'</span><span class="track"><i class="lrn" style="width:'+w(r)+'%"></i><i style="width:'+w(m)+'%"></i></span><span class="n">'+r+' right · '+m+' ✓</span></div>'}).join('');
   var past=(st.dates||[]).slice().reverse().map(function(d){return '<a href="#" style="display:inline-block;margin:4px 10px 4px 0" onclick="openDay(\''+d+'\');return false">'+esc(d)+'</a>'}).join('');
   var src=(S.brief.sources||[]).map(function(s){return linkify(s.url,s.title)}).join(' · ');
-  return '<div class="card" style="margin-top:14px"><h2>Your progress</h2><p class="small">Quiz questions mastered (3 right in a row). '+(syncURL()?(SY.state==='err'?'Sync couldn\'t reach Google — answers are saved here and sync when it can.':'Synced across your devices.'):'Sync isn\'t switched on yet — progress is saved on this device only.')+'</p><div class="prog">'+rows+'</div>'+
+  return '<div class="card" style="margin-top:14px"><h2>Your progress</h2><p><b>'+tot.a+' questions answered, '+tot.r+' right'+(tot.m?', '+tot.m+' mastered':'')+'.</b></p><p class="small">A question is <b>mastered (✓)</b> once you get it right on 3 different days. The recall quizzes bring each one back, so the dark green fills in over the coming week. Light green = right so far. '+(syncURL()?(SY.state==='err'?'Sync couldn\'t reach Google — answers are saved here and sync when it can.':'Synced across your devices.'):'Sync isn\'t switched on yet — progress is saved on this device only.')+'</p><div class="prog">'+rows+'</div><div class="legend"><span><i style="background:color-mix(in srgb,var(--sage) 35%,#fff)"></i>Right so far</span><span><i style="background:var(--sage)"></i>Mastered</span></div>'+
     pushPanel()+'<details class="past"><summary>Past briefs</summary>'+past+'</details>'+(src?'<div class="src">Sources: '+src+'</div>':'')+
     '<p class="small" style="margin-top:12px"><a href="#" onclick="if(confirm(\'Lock this phone? You\\\'ll need the passphrase again.\')){localStorage.removeItem(\'mb_key\');location.reload()}return false">Lock this phone</a></p></div>';
 }
@@ -545,6 +562,40 @@ async function refresh(){toast('Checking for a fresh brief…');try{S._landed=0;
 function tickJST(){var e=$('jst');if(!e)return;e.textContent=new Date().toLocaleTimeString('en-US',{timeZone:'Asia/Tokyo',hour:'numeric',minute:'2-digit'})}
 setInterval(tickJST,30000);
 var SPR=null;
+/* one-thing check-off: Done, or Finish later with a reminder from the app */
+function fkeyDate(){return S.brief.date}
+function focusState(){var x=(DONE[fkeyDate()]||{}),best={s:'',t:0};Object.keys(x).forEach(function(k){if(k.slice(0,2)==='f_'){var v=x[k];if(v&&(v.t||0)>best.t)best=v}});return best}
+function focusEvent(o){o.t=Date.now();var d=DONE[fkeyDate()]=DONE[fkeyDate()]||{};d['f_'+o.t]=o;ls('mb_done',DONE);queueSync(300)}
+function fmtTime(iso){return new Date(iso).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}
+function focusStatus(){var f=focusState();if(f.s==='done')return '<b>Done.</b> That was the one that mattered today.';if(f.s==='later'&&f.at)return (Date.parse(f.at)>Date.now()?'Reminder set for <b>'+fmtTime(f.at)+'</b>.':'Your <b>'+fmtTime(f.at)+'</b> reminder has passed. Still on your plate?')+(f.cal?' <a href="'+esc(f.cal)+'" target="_blank" rel="noopener">Add it to Google Calendar</a>':'');return ''}
+function refreshFocus(){var a=$('fdone'),b=$('flater'),f=focusState();if(a)a.checked=f.s==='done';if(b)b.checked=f.s==='later';var st=$('fstat');if(st)st.innerHTML=focusStatus()}
+async function remindCall(o){if(!syncURL())return null;try{var body=JSON.stringify(Object.assign({token:await syncToken()},o));return await (await fetch(syncURL(),{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:body})).json()}catch(e){return null}}
+function focusDone(on){
+  $('fpick').innerHTML='';
+  if(on){focusEvent({s:'done'});burst(60);if(navigator.vibrate)navigator.vibrate(20);remindCall({cancel:fkeyDate()})}else focusEvent({s:'undo'});
+  refreshFocus();
+}
+function focusLater(on){
+  var pk=$('fpick');if(!on){pk.innerHTML='';focusEvent({s:'undo'});remindCall({cancel:fkeyDate()});refreshFocus();return}
+  $('fdone').checked=false;
+  var now=new Date(),opts=[['In 1 hour',new Date(Date.now()+36e5)]];
+  [[12,'Noon'],[14,'2 PM'],[17,'5 PM'],[20,'8 PM']].forEach(function(h){var d=new Date(now);d.setHours(h[0],0,0,0);if(d-now>30*6e4)opts.push([h[1],d])});
+  window._fopts=opts;
+  pk.innerHTML='<div class="small" style="margin-top:8px">When should I remind you?</div><div class="picks">'+opts.map(function(o,i){return '<button onclick="setReminder('+i+')">'+o[0]+'</button>'}).join('')+'</div>';
+}
+function plainText(t){return String(t||'').replace(/\{([^{}|]+)\|[^{}]*\}/g,'$1')}
+function calLink(at){
+  var f=function(d){return d.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'')},e=new Date(at.getTime()+15*6e4);
+  return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent('Finish: '+plainText((S.brief.focus||{}).one_thing||'today\'s one thing'))+'&dates='+f(at)+'/'+f(e)+'&details='+encodeURIComponent('From your Morning Brief. '+plainText((S.brief.focus||{}).first_step||''));
+}
+async function setReminder(i){
+  var at=window._fopts[i][1];$('fpick').innerHTML='<div class="small" style="margin-top:8px">Setting it…</div>';
+  var r=pushState()==='on'?await remindCall({remind:{date:fkeyDate(),at:at.toISOString()}}):null;
+  var ok=!!(r&&r.reminded>0);
+  focusEvent({s:'later',at:at.toISOString(),cal:ok?'':calLink(at)});
+  $('fpick').innerHTML='';refreshFocus();
+  toast(ok?'I\'ll nudge you at '+fmtTime(at.toISOString()):'Tap “Add it to Google Calendar” so your phone reminds you');
+}
 function sprint(){
   var el=$('sprint');if(!el)return;clearInterval(SPR);var end=Date.now()+300000;
   var t=function(){var s=Math.max(0,Math.round((end-Date.now())/1000));el.innerHTML='<div class="timer">'+Math.floor(s/60)+':'+String(s%60).padStart(2,'0')+'</div>';if(!s){clearInterval(SPR);el.innerHTML='<div class="timer">Sprint done.</div>';burst(80);if(navigator.vibrate)navigator.vibrate([80,60,80])}};

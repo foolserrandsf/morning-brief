@@ -237,7 +237,17 @@ def cmd_progress(path):
         'answered': len(rows), 'mastered': len(mastered),
         'struggling': [{'track': t, 'ref': ref, 'q': q, 'misses': w} for w, b, t, ref, q in struggling[:20]],
         'days_with_cards_done': sorted(prog.get('DONE', {}).keys())[-14:],
+        'one_thing': {d: last_focus(v) for d, v in sorted(prog.get('DONE', {}).items())[-3:]},
     }, ensure_ascii=False, indent=1))
+
+
+def last_focus(day):
+    """What she did with that day's one thing: done / later (with reminder time) / undo / not touched."""
+    ev = [v for k, v in day.items() if k.startswith('f_') and isinstance(v, dict)]
+    if not ev:
+        return 'not checked off'
+    e = max(ev, key=lambda v: v.get('t', 0))
+    return {'done': 'done', 'later': f"finish later (reminder {e.get('at', '')})", 'undo': 'unchecked'}.get(e.get('s'), '?')
 
 
 def cmd_birthdays(path):

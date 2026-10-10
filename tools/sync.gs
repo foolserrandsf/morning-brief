@@ -13,6 +13,8 @@ function doPost(e) {
 function handle_(p) {
   if (p.token !== TOKEN) return { ok: false, error: 'bad token' };
   if (p.sub) return saveSub_(p.sub);
+  if (p.remind) return remind_(p.remind);
+  if (p.cancel) return cancel_(p.cancel);
   var ss = SpreadsheetApp.getActive();
   var sh = ss.getSheetByName('sync') || ss.insertSheet('sync');
   var lock = LockService.getScriptLock();
@@ -48,16 +50,52 @@ function saveSub_(sub) {
   return { ok: true };
 }
 
+// "Finish later": the morning writer leaves 3 pre-encrypted reminders per phone marked
+// hold:<date>:<n>. The app picks a time; this releases the next held one for that time.
+function remind_(o) {
+  var ob = SpreadsheetApp.getActive().getSheetByName('outbox');
+  if (!ob || !ob.getLastRow() || !o.date || !o.at) return { ok: true, reminded: 0 };
+  var lock = LockService.getScriptLock(); lock.waitLock(15000);
+  try {
+    var rows = ob.getRange(1, 1, ob.getLastRow(), 6).getValues(), done = {}, n = 0;
+    cancelPending_(ob, rows, o.date);
+    for (var i = 0; i < rows.length; i++) {
+      var tag = String(rows[i][4]);
+      if (tag.indexOf('hold:' + o.date + ':') !== 0 || done[rows[i][1]]) continue;
+      ob.getRange(i + 1, 5, 1, 2).setValues([['', o.at]]);
+      done[rows[i][1]] = 1; n++;
+    }
+    return { ok: true, reminded: n };
+  } finally { lock.releaseLock(); }
+}
+function cancel_(date) {
+  var ob = SpreadsheetApp.getActive().getSheetByName('outbox');
+  if (!ob || !ob.getLastRow()) return { ok: true, cancelled: 0 };
+  var rows = ob.getRange(1, 1, ob.getLastRow(), 6).getValues();
+  return { ok: true, cancelled: cancelPending_(ob, rows, date) };
+}
+// a released reminder that hasn't gone out yet is cancelled (Done, or a new time picked)
+function cancelPending_(ob, rows, date) {
+  var n = 0, now = new Date();
+  for (var i = 0; i < rows.length; i++) {
+    if (String(rows[i][0]).slice(0, 10) === String(date) || (rows[i][0] instanceof Date && Utilities.formatDate(rows[i][0], SpreadsheetApp.getActive().getSpreadsheetTimeZone(), 'yyyy-MM-dd') === date)) {
+      if (!rows[i][4] && rows[i][5] && new Date(rows[i][5]) > now) { ob.getRange(i + 1, 5).setValue('cancelled'); rows[i][4] = 'cancelled'; n++; }
+    }
+  }
+  return n;
+}
+
 // Runs every 5 minutes: delivers notifications the morning writer left in "outbox"
-// ([date, endpoint, body_b64, authorization, result]).
+// ([date, endpoint, body_b64, authorization, result, send_after]).
 function sendOutbox() {
   var ss = SpreadsheetApp.getActive();
   var ob = ss.getSheetByName('outbox');
   if (!ob || !ob.getLastRow()) return;
-  var rows = ob.getRange(1, 1, ob.getLastRow(), 5).getValues();
+  var rows = ob.getRange(1, 1, ob.getLastRow(), 6).getValues(), now = new Date();
   for (var i = 0; i < rows.length; i++) {
     var r = rows[i];
     if (!r[1] || r[4]) continue;
+    if (r[5] && new Date(r[5]) > now) continue;
     var res = UrlFetchApp.fetch(r[1], {
       method: 'post', contentType: 'application/octet-stream', muteHttpExceptions: true,
       payload: Utilities.base64Decode(r[2]),

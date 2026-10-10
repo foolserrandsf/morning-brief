@@ -9,6 +9,9 @@ and the sheet's Apps Script delivers them.
   MB_VAPID=<private key> python3 tools/push.py build SUBS.json "Title" "Body" [url]
       SUBS.json = rows from the sheet's "push" tab: [[endpoint, p256dh, auth], ...]
       prints outbox rows: [[date, endpoint, body_b64, authorization, ""], ...]
+  MB_VAPID=... python3 tools/push.py hold SUBS.json "Title" "Body" BRIEF_DATE [url]
+      same, but 3 held rows per phone tagged hold:BRIEF_DATE:n, signed for 23 h; the sheet only
+      sends one after the app's "Finish later" sets its time
   python3 tools/push.py pubkey      print the public key that goes in config.js
 """
 import base64, datetime, hashlib, hmac, json, os, re, struct, sys, time
@@ -50,9 +53,9 @@ def encrypt(p256dh, auth, data, salt=None, as_key=None):
     return salt + struct.pack('>I', 4096) + bytes([len(as_pub)]) + as_pub + ct
 
 
-def vapid_header(endpoint, key):
+def vapid_header(endpoint, key, hours=12):
     u = urlparse(endpoint)
-    claims = {'aud': f'{u.scheme}://{u.netloc}', 'exp': int(time.time()) + 12 * 3600, 'sub': CONTACT}
+    claims = {'aud': f'{u.scheme}://{u.netloc}', 'exp': int(time.time()) + hours * 3600, 'sub': CONTACT}
     head = b64u(json.dumps({'typ': 'JWT', 'alg': 'ES256'}, separators=(',', ':')).encode())
     body = b64u(json.dumps(claims, separators=(',', ':')).encode())
     r, s = decode_dss_signature(key.sign(f'{head}.{body}'.encode(), ec.ECDSA(hashes.SHA256())))
@@ -60,7 +63,7 @@ def vapid_header(endpoint, key):
     return f'vapid t={jwt}, k={b64u(raw_pub(key.public_key()))}'
 
 
-def build(subs_path, title, body, url='./'):
+def build(subs_path, title, body, url='./', hold=None, copies=1):
     key = vapid_key()
     subs = json.load(open(subs_path))
     body = re.sub(r'\{([^{}|]+)\|[^{}]*\}', r'\1', body)
@@ -71,7 +74,10 @@ def build(subs_path, title, body, url='./'):
         if len(row) < 3 or not row[0] or row[0] in seen:
             continue
         seen.add(row[0])
-        rows.append([today, row[0], base64.b64encode(encrypt(row[1], row[2], payload)).decode(), vapid_header(row[0], key), ''])
+        for i in range(copies):
+            # held rows stay unsent until the app asks for a reminder (sheet script sets a send time)
+            rows.append([hold or today, row[0], base64.b64encode(encrypt(row[1], row[2], payload)).decode(),
+                         vapid_header(row[0], key, 23 if hold else 12), f'hold:{hold}:{i + 1}' if hold else ''])
     print(json.dumps(rows))
 
 
@@ -81,5 +87,7 @@ if __name__ == '__main__':
         print(b64u(raw_pub(vapid_key().public_key())))
     elif len(a) >= 4 and a[0] == 'build':
         build(a[1], a[2], a[3], a[4] if len(a) > 4 else './')
+    elif len(a) >= 5 and a[0] == 'hold':
+        build(a[1], a[2], a[3], a[5] if len(a) > 5 else './', hold=a[4], copies=3)
     else:
         sys.exit(__doc__)
