@@ -2,6 +2,8 @@
 
 Every lesson section MUST end with `quiz`: 2–4 items `{"q": "...", "o": ["4 options"], "a": <index of right option>, "w": "one-line why"}`.
 Wrong options should be real, plausible neighbours (other bottles on our shelves, other kanji, other terms) so recall actually trains discrimination.
+FURIGANA: every kanji she hasn't learned yet needs a reading, written as `{漢字|かんじ}` (kana only) anywhere it appears — phrase, notes, tip, inbox subjects, kanji examples, quiz text. Learned = number kanji + every kanji taught so far (`python3 tools/publish.py state` → taught.kanji) + today's kanji. Mark whole words, not single characters inside a word (`{特大|とくだい}`, `{予約|よやく}`; okurigana stays outside: `{届|とど}いたら`). When a quiz question or option is testing that very reading (or a reading would give the answer away), write `{今日|-}` to keep it bare on purpose. The publisher rejects any unlearned kanji without markup.
+
 Add `"img": "<url>"` to a bottle question to show the label (e.g. "Which bottle is this?").
 
 ```json

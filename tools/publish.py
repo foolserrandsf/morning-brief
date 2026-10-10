@@ -24,6 +24,46 @@ DATA = os.path.join(ROOT, 'data')
 ITER = 1000000
 TRACKS = {'kanji', 'bottle', 'wset', 'stocks', 'crypto', 'filipino'}
 
+# Furigana markup: {漢字|かんじ} shows kana under the kanji; {漢字|-} keeps it bare on purpose
+# (used when a quiz is testing that very reading). Kanji she has learned never need it.
+NUMBERS = set('一二三四五六七八九十百千万')
+RUBY = re.compile(r'\{([^{}|]+)\|([^{}]*)\}')
+KANJI = re.compile(r'[\u4e00-\u9fff\u3005]')
+KANA = re.compile(r'^[\u3040-\u30ff\u30fc・ー\s]+$')
+SKIP_KEYS = {'url', 'photo', 'img', 'ref'}
+
+
+def plain(t):
+    return RUBY.sub(lambda m: m.group(1), t)
+
+
+def learned_kanji(st, upto):
+    have = set(NUMBERS)
+    for x in st.get('taught', {}).get('kanji', []):
+        if x['date'] <= upto:
+            have.update(KANJI.findall(x.get('ref', '')))
+    return have
+
+
+def check_furigana(b, have, errs):
+    def walk(o, path):
+        if isinstance(o, dict):
+            for k, v in o.items():
+                if k in SKIP_KEYS or path + '.' + k == '.kanji.kanji':
+                    continue
+                walk(v, path + '.' + k)
+        elif isinstance(o, list):
+            for i, v in enumerate(o):
+                walk(v, f'{path}[{i}]')
+        elif isinstance(o, str):
+            for m in RUBY.finditer(o):
+                if m.group(2) != '-' and not KANA.match(m.group(2)):
+                    errs.append(f'{path}: reading for {m.group(1)} must be kana: {m.group(2)}')
+            bare = [c for c in KANJI.findall(RUBY.sub('', o)) if c not in have]
+            if bare:
+                errs.append(f'{path}: add furigana for unlearned kanji {"".join(dict.fromkeys(bare))} in: {o[:60]}')
+    walk(b, '')
+
 
 def b64(b): return base64.b64encode(b).decode()
 
@@ -113,16 +153,19 @@ def validate(b):
 def cmd_brief(path):
     b = json.load(open(path))
     errs = validate(b)
-    if errs:
-        sys.exit('Brief not published:\n  ' + '\n  '.join(errs))
     st = load_state()
     d = b['date']
+    have = learned_kanji(st, d)
+    have.update(KANJI.findall(b.get('kanji', {}).get('kanji', '')))
+    check_furigana(b, have, errs)
+    if errs:
+        sys.exit('Brief not published:\n  ' + '\n  '.join(errs))
     added = 0
     for track in ('kanji', 'bottle', 'wset', 'stocks', 'crypto', 'filipino'):
         sec = b[track]
         ref = sec.get('ref') or sec.get('title') or track
         for i, q in enumerate(sec['quiz']):
-            iid = hashlib.sha1(f'{track}|{ref}|{q["q"]}'.encode()).hexdigest()[:12]
+            iid = hashlib.sha1(f'{track}|{ref}|{plain(q["q"])}'.encode()).hexdigest()[:12]
             item = dict(q, id=iid, track=track, date=d, ref=ref, title=sec.get('title', ''))
             if track == 'bottle' and sec.get('photo'):
                 item.setdefault('img', sec['photo'])

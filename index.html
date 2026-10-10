@@ -131,6 +131,9 @@ button{font:inherit;cursor:pointer;border:0;color:inherit}
 .jpnote{display:grid;gap:5px;margin-top:8px}
 .jpnote div{font-size:14.5px}
 #confetti{position:fixed;inset:0;pointer-events:none;z-index:8}
+ruby{ruby-position:under;-webkit-ruby-position:after;ruby-align:center}
+rt{font:500 .52em/1.1 var(--sans);color:var(--soft);letter-spacing:.02em}
+.card p,.item,.q,.why,.jpnote div{line-height:1.75}
 details.past{margin-top:10px}
 details.past summary{font-weight:600;cursor:pointer}
 @media (prefers-reduced-motion:reduce){.card{animation:none}}
@@ -142,7 +145,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261010131710';
+var APP_BUILD='20261010083933';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -342,7 +345,7 @@ function wireQuizzes(root){
           var j=+b.dataset.j,ok=j===q.a;
           b.classList.add(ok?'right':'wrong');
           if(!ok)qd.querySelectorAll('.opt')[q.a].classList.add('right');
-          if(q.w){var w=document.createElement('div');w.className='why';w.innerHTML=(ok?'':'')+esc(q.w);qd.appendChild(w)}
+          if(q.w){var w=document.createElement('div');w.className='why';w.innerHTML=esc(q.w);qd.appendChild(w);furi(w)}
           if(q.id)record(q.id,ok);
           answered++;if(ok)right++;
           if(navigator.vibrate)navigator.vibrate(ok?15:[30,40,30]);
@@ -458,6 +461,32 @@ function buildCards(){
 function recallQ(p){var q=Object.assign({},p);q.q='['+TRACK_NAME[p.track]+'] '+p.q;return q}
 function kanjiQ(p){return p}
 
+/* ---------- furigana: {漢字|かんじ} → kana under kanji she hasn't learned ---------- */
+var NUMK='一二三四五六七八九十百千万';
+function learnedSet(){
+  var set={},d=S.brief&&S.brief.date;
+  NUMK.split('').forEach(function(c){set[c]=1});
+  ((S.state&&S.state.taught&&S.state.taught.kanji)||[]).forEach(function(x){if(!d||x.date<=d)(x.ref||'').replace(/[\u4e00-\u9fff]/g,function(c){set[c]=1})});
+  return set;
+}
+function furi(root){
+  if(!root)return;var have=learnedSet(),re=/\{([^{}|]+)\|([^{}]*)\}/g;
+  var w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null),nodes=[],n;
+  while(n=w.nextNode()){if(n.nodeValue.indexOf('{')>-1&&n.nodeValue.indexOf('|')>-1)nodes.push(n)}
+  nodes.forEach(function(t){
+    var txt=t.nodeValue,frag=document.createDocumentFragment(),last=0,m;re.lastIndex=0;
+    while(m=re.exec(txt)){
+      if(m.index>last)frag.appendChild(document.createTextNode(txt.slice(last,m.index)));
+      var base=m[1],rd=m[2],need=rd&&rd!=='-'&&(base.match(/[\u4e00-\u9fff\u3005]/g)||[]).some(function(c){return !have[c]});
+      if(need){var r=document.createElement('ruby');r.appendChild(document.createTextNode(base));var rt=document.createElement('rt');rt.textContent=rd;r.appendChild(rt);frag.appendChild(r)}
+      else frag.appendChild(document.createTextNode(base));
+      last=re.lastIndex;
+    }
+    if(last<txt.length)frag.appendChild(document.createTextNode(txt.slice(last)));
+    t.parentNode.replaceChild(frag,t);
+  });
+}
+
 /* ---------- render ---------- */
 function build(){
   QN=0;S.cards=buildCards();
@@ -482,7 +511,7 @@ function header(){
 function render(){
   var app=$('app'),cs=visible(),done=DONE[S.brief.date]||{};
   if(S.mode==='all'){
-    app.innerHTML=header()+'<div class="ov">'+S.cards.map(function(c,i){return '<button class="'+(done[c.id]?'done':'')+'" onclick="jump('+i+')"><span class="ic'+(c.id==='kanji'?' k':'')+'" style="width:34px;height:34px;font-size:17px;border-radius:10px;background:'+tint(c.color)+';color:'+c.color+'">'+(ICON[c.id]||'•')+'</span><span class="n">'+esc(c.title)+'</span><span class="m">'+(done[c.id]?'Done':'~'+c.min+' min')+'</span></button>'}).join('')+'</div>'+extras();
+    app.innerHTML=header()+'<div class="ov">'+S.cards.map(function(c,i){return '<button class="'+(done[c.id]?'done':'')+'" onclick="jump('+i+')"><span class="ic'+(c.id==='kanji'?' k':'')+'" style="width:34px;height:34px;font-size:17px;border-radius:10px;background:'+tint(c.color)+';color:'+c.color+'">'+(ICON[c.id]||'•')+'</span><span class="n">'+esc(c.title)+'</span><span class="m">'+(done[c.id]?'Done':'~'+c.min+' min')+'</span></button>'}).join('')+'</div>'+extras();furi(app);
     return;
   }
   if(S.i>=cs.length){finish();return}
@@ -490,7 +519,7 @@ function render(){
   app.innerHTML=header()+'<div class="bar">'+cs.map(function(x,i){return '<i class="'+(i===S.i&&!done[x.id]?'now':'')+'"'+(done[x.id]?' style="background:'+x.color+'"':'')+'></i>'}).join('')+'</div>'+card(c)+
     '<div class="foot"><button class="btn ghost" onclick="later()">Later ↷</button><button class="btn" onclick="gotIt()">'+(S.i===cs.length-1?'Finish':'Got it')+'</button></div>'+
     (S.i>0?'<p class="center"><a href="#" onclick="S.i--;render();return false">← back</a></p>':'');
-  wireQuizzes(app);tickJST();window.scrollTo({top:0,behavior:'smooth'});
+  furi(app);wireQuizzes(app);tickJST();window.scrollTo({top:0,behavior:'smooth'});
 }
 function extras(){
   var st=S.state||{},pool=Object.values(st.pool||{});
@@ -509,7 +538,7 @@ function later(){S.touched=1;var cs=visible();if(S.quick){S.i++;render();return}
 function finish(){
   var done=DONE[S.brief.date]||{},left=S.cards.filter(function(c){return !done[c.id]});
   burst(160);
-  $('app').innerHTML=header()+'<div class="card done-wrap"><img src="icons/icon-192.png" alt="" style="width:72px;height:72px;border-radius:16px;margin-bottom:6px"><div class="big">'+(left.length?'Musts done!':'Brief complete!')+'</div><p>'+(left.length?left.length+' cards are waiting whenever you want them.':'You showed up for yourself this morning. That counts.')+'</p><div class="foot">'+(left.length?'<button class="btn sun" onclick="setMode(\'flow\',false)">Keep going</button>':'')+'<button class="btn ink" onclick="setMode(\'all\',false)">Overview</button></div></div>'+extras();
+  $('app').innerHTML=header()+'<div class="card done-wrap"><img src="icons/icon-192.png" alt="" style="width:72px;height:72px;border-radius:16px;margin-bottom:6px"><div class="big">'+(left.length?'Musts done!':'Brief complete!')+'</div><p>'+(left.length?left.length+' cards are waiting whenever you want them.':'You showed up for yourself this morning. That counts.')+'</p><div class="foot">'+(left.length?'<button class="btn sun" onclick="setMode(\'flow\',false)">Keep going</button>':'')+'<button class="btn ink" onclick="setMode(\'all\',false)">Overview</button></div></div>'+extras();furi($('app'));
 }
 async function openDay(d){try{S.brief=await decFile('data/briefs/'+d+'.enc',S.latest.v);S._landed=0;S.mode='flow';S.quick=false;build()}catch(e){toast('Couldn\'t open that day')}}
 async function refresh(){toast('Checking for a fresh brief…');try{S._landed=0;await load();toast('Up to date')}catch(e){toast('Offline — try again soon')}}

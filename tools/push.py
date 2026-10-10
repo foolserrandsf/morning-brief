@@ -11,7 +11,7 @@ and the sheet's Apps Script delivers them.
       prints outbox rows: [[date, endpoint, body_b64, authorization, ""], ...]
   python3 tools/push.py pubkey      print the public key that goes in config.js
 """
-import base64, datetime, hashlib, hmac, json, os, struct, sys, time
+import base64, datetime, hashlib, hmac, json, os, re, struct, sys, time
 from urllib.parse import urlparse
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric.utils import decode_dss_signature
@@ -63,6 +63,7 @@ def vapid_header(endpoint, key):
 def build(subs_path, title, body, url='./'):
     key = vapid_key()
     subs = json.load(open(subs_path))
+    body = re.sub(r'\{([^{}|]+)\|[^{}]*\}', r'\1', body)
     payload = json.dumps({'title': title, 'body': body, 'url': url}, ensure_ascii=False).encode()
     today = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=-7))).strftime('%Y-%m-%d')
     rows, seen = [], set()
