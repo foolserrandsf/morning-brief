@@ -64,7 +64,7 @@ def vapid_header(endpoint, key, hours=12):
     return f'vapid t={jwt}, k={b64u(raw_pub(key.public_key()))}'
 
 
-def build(subs_path, title, body, url='./', hold=None, copies=1, key='focus'):
+def build(subs_path, title, body, url='./', hold=None, copies=1, tag='focus'):
     key = vapid_key()
     subs = json.load(open(subs_path))
     body = re.sub(r'\{([^{}|]+)\|[^{}]*\}', r'\1', body)
@@ -78,7 +78,7 @@ def build(subs_path, title, body, url='./', hold=None, copies=1, key='focus'):
         for i in range(copies):
             # held rows stay unsent until the app asks for a reminder (sheet script sets a send time)
             rows.append([hold or today, row[0], base64.b64encode(encrypt(row[1], row[2], payload)).decode(),
-                         vapid_header(row[0], key, 23 if hold else 12), f'hold:{hold}:{key}:{i + 1}' if hold else ''])
+                         vapid_header(row[0], key, 23 if hold else 12), f'hold:{hold}:{tag}:{i + 1}' if hold else ''])
     print(json.dumps(rows))
 
 
@@ -91,6 +91,6 @@ if __name__ == '__main__':
     elif len(a) >= 5 and a[0] == 'hold':
         key = a[6] if len(a) > 6 else 'focus'
         build(a[1], a[2], a[3], a[5] if len(a) > 5 else './', hold=a[4],
-              copies=int(a[7]) if len(a) > 7 else (3 if key == 'focus' else 1), key=key)
+              copies=int(a[7]) if len(a) > 7 else (3 if key == 'focus' else 1), tag=key)
     else:
         sys.exit(__doc__)
