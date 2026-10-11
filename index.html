@@ -49,6 +49,10 @@ button{font:inherit;cursor:pointer;border:0;color:inherit}
 .modes button{flex:1;background:transparent;border-radius:9px;padding:8px 6px;font-weight:600;font-size:14px;color:var(--soft)}
 .modes button.on{background:var(--ink);color:#fff}
 .bar{display:flex;gap:3px;margin:0 0 14px}
+.foot.navbar{margin:0 auto;position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;gap:8px;max-width:560px;margin:0 auto;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:color-mix(in srgb,var(--bg) 88%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-top:1px solid var(--line)}
+.foot.navbar .btn{padding:12px 10px}.navbar .btn.ghost{padding:12px 14px}.navbar .nb{min-width:48px}.navbar .btn:disabled{opacity:.35}
+.bar{position:sticky;top:0;z-index:15;background:var(--bg);padding:8px 0 6px;margin-top:-8px}.bar i{height:8px;cursor:pointer}
+
 .bar i{flex:1;height:6px;border-radius:6px;background:#DCE1E8;transition:background .3s}
 .bar i.now{background:var(--ink)}
 .card{background:var(--paper);border-radius:20px;padding:20px 18px 18px;border:1px solid rgba(29,39,64,.06);box-shadow:0 10px 28px rgba(29,39,64,.08);position:relative;overflow:hidden;animation:enter .22s ease-out}
@@ -253,7 +257,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261011150119';
+var APP_BUILD='20261011151404';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -672,6 +676,9 @@ function buildCards(){
     var sc=recallItems('second');
     if(sc.length)cards.push({id:'second',title:'Second chance',sub:sc.length+' you missed before',color:'var(--grape)',tint:'#EEE8FF',min:2,body:quizHTML(sc.map(recallQ),'Try these again')});
   }
+  /* Fool's Errand numbers never open the brief: they sit after the news */
+  var fi=cards.findIndex(function(c){return c.id==='fe'});
+  if(fi>-1){var fc=cards.splice(fi,1)[0],ai=cards.findIndex(function(c){return c.id==='news'});if(ai<0)ai=cards.findIndex(function(c){return c.id==='bottle'});cards.splice(ai<0?cards.length:ai+1,0,fc)}
   return cards;
 }
 function recallQ(p){var q=Object.assign({},p);q.q='['+TRACK_NAME[p.track]+'] '+p.q;return q}
@@ -732,9 +739,8 @@ function render(){
   }
   if(S.i>=cs.length){finish();return}
   var c=cs[S.i];
-  app.innerHTML=header()+'<div class="bar">'+cs.map(function(x,i){return '<i class="'+(i===S.i&&!done[x.id]?'now':'')+'"'+(done[x.id]?' style="background:'+x.color+'"':'')+'></i>'}).join('')+'</div>'+card(c)+
-    '<div class="foot"><button class="btn ghost" onclick="later()">Later ↷</button><button class="btn" onclick="gotIt()">'+(S.i===cs.length-1?'Finish':'Got it')+'</button></div>'+
-    (S.i>0?'<p class="center"><a href="#" onclick="S.i--;render();return false">← back</a></p>':'');
+  app.innerHTML=header()+'<div class="bar">'+cs.map(function(x,i){return '<i role="button" tabindex="0" aria-label="'+esc(x.title)+'" onclick="goTo('+i+')" class="'+(i===S.i?'now':'')+'"'+(done[x.id]&&i!==S.i?' style="background:'+x.color+'"':'')+'></i>'}).join('')+'</div>'+card(c)+
+    '<div class="foot navbar" role="navigation">'+'<button class="btn ghost nb" aria-label="Previous card" '+(S.i>0?'onclick="goPrev()"':'disabled')+'>←</button><button class="btn ghost" onclick="later()">Later ↷</button><button class="btn" onclick="gotIt()">'+(S.i===cs.length-1?'Finish':'Got it →')+'</button></div>';
   furi(app);wireQuizzes(app);tickJST();window.scrollTo({top:0,behavior:'smooth'});
 }
 function extras(){
@@ -750,9 +756,18 @@ function extras(){
     pushPanel()+'<details class="past"><summary>Past briefs</summary>'+past+'</details>'+(src?'<div class="src">Sources: '+src+'</div>':'')+
     '<p class="small" style="margin-top:12px"><a href="#" onclick="if(confirm(\'Lock this phone? You\\\'ll need the passphrase again.\')){localStorage.removeItem(\'mb_key\');location.reload()}return false">Lock this phone</a></p></div>';
 }
+
+/* swipe between cards: left = next, right = back */
+(function(){var x0=null,y0=null,t0=0;
+document.addEventListener('touchstart',function(e){if(S.mode!=='flow'||e.touches.length!==1){x0=null;return}var t=e.target;if(t.closest&&t.closest('input,textarea,select,.jwx,.chunks,.mix,.bars'))return;x0=e.touches[0].clientX;y0=e.touches[0].clientY;t0=Date.now()},{passive:true});
+document.addEventListener('touchend',function(e){if(x0==null)return;var dx=e.changedTouches[0].clientX-x0,dy=e.changedTouches[0].clientY-y0;x0=null;if(Date.now()-t0>700||Math.abs(dx)<70||Math.abs(dy)>Math.abs(dx)*0.6)return;if(dx<0)goNext();else goPrev()},{passive:true});
+})();
 function setMode(m,q){S.mode=m;S.quick=q;S.i=0;var done=DONE[S.brief.date]||{},cs=visible();for(var i=0;i<cs.length;i++){if(!done[cs[i].id]){S.i=i;break}}render()}
 function jump(i){S.touched=1;S.mode='flow';S.quick=false;S.i=i;render()}
 function mark(){var cs=visible(),c=cs[S.i];var d=DONE[S.brief.date]=DONE[S.brief.date]||{};if(!d[c.id]){d[c.id]=Date.now();ls('mb_done',DONE);queueSync()}}
+function goPrev(){if(S.i>0){S.touched=1;S.i--;render()}}
+function goNext(){var cs=visible();S.touched=1;if(S.i<cs.length-1){S.i++;render()}}
+function goTo(i){S.touched=1;S.i=i;render()}
 function gotIt(){S.touched=1;mark();burst(10);S.i++;render()}
 function later(){S.touched=1;var cs=visible();if(S.quick){S.i++;render();return}var c=S.cards.splice(S.cards.indexOf(cs[S.i]),1)[0];S.cards.push(c);render();toast('Saved it for later')}
 function finish(){
