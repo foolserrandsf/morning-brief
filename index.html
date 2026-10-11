@@ -251,7 +251,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261011115355';
+var APP_BUILD='20261011115727';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -618,7 +618,7 @@ function buildCards(){
   cards.push({id:'bottle',title:'Bottle of the day',sub:esc(bt.group||'')+(bt.price?', $'+esc(bt.price)+' on the chalk':''),color:'var(--plum)',tint:'#FDE6EA',min:3,
     body:(bt.photo?'<img class="label" src="'+esc(bt.photo)+'" alt="Label: '+esc(bt.title)+'">':'')+'<div class="lead" style="margin-bottom:6px">'+esc(bt.producer)+(bt.wine?', '+esc(bt.wine):'')+'</div><div class="chips">'+[bt.grapes,bt.place,bt.vintage].filter(Boolean).map(function(x){return '<span>'+esc(x)+'</span>'}).join('')+'</div>'+
       (bt.hook?'<div class="hook">'+esc(bt.hook)+'</div>':'')+(bt.tasting&&bt.tasting.length?'<p style="margin-bottom:0"><b>In the glass</b></p>'+pts(bt.tasting,'var(--plum)'):'')+
-      (bt.pitch?'<div class="pitch"><b>Your 30-second pitch</b>'+esc(bt.pitch)+'</div>':'')+
+      (bt.story&&bt.story.length?'<div class="sect"><h3>Stories to tell</h3><p class="stats" style="margin:0 0 6px">Beyond the booklet page</p>'+pts(bt.story,'var(--plum)')+'</div>':'')+(bt.pitch?'<div class="pitch"><b>Your 30-second pitch</b>'+esc(bt.pitch)+'</div>':'')+
       more('Why it tastes that way, and the producer',(bt.terroir?'<p>'+esc(bt.terroir)+'</p>':'')+(bt.producer_notes&&bt.producer_notes.length?pts(bt.producer_notes,'var(--plum)'):''))+quizHTML(withIds(bt,'bottle'),'Remember it')});
   /* 8 · WSET */
   var ws=b.wset||{};
@@ -637,7 +637,7 @@ function buildCards(){
   /* 12 · bottle recs (Tue 6 PM / Sat 1:30 PM) */
   var rc=b.recs;
   if(rc)cards.push({id:'recs',title:rc.title,sub:esc(rc.posted||''),color:'var(--rose)',tint:'#FFE6F1',min:2,
-    body:'<p><b>Try these yourself</b></p><div class="list">'+(rc.try||[]).map(function(x){return '<div class="item">'+(x.photo?'<img class="label" style="max-height:180px" src="'+esc(x.photo)+'" alt="">':'')+'<div class="k">'+esc(x.name)+(x.price?' · $'+esc(x.price):'')+'</div><div class="m">'+esc(x.why)+'</div></div>'}).join('')+'</div><p style="margin-top:14px"><b>Push these on shift</b></p><div class="list">'+(rc.push||[]).map(function(x){return '<div class="item">'+(x.photo?'<img class="label" style="max-height:180px" src="'+esc(x.photo)+'" alt="">':'')+'<div class="k">'+esc(x.name)+'</div><div class="m">'+esc(x.pitch)+'</div>'+(x.pair_with?'<div class="m">For the guest who likes: '+esc(x.pair_with)+'</div>':'')+'</div>'}).join('')+'</div>'});
+    body:'<p><b>Try these yourself</b></p><div class="list">'+(rc.try||[]).map(function(x){return '<div class="item">'+(x.photo?'<img class="label" style="max-height:180px" src="'+esc(x.photo)+'" alt="">':'')+'<div class="k">'+esc(x.name)+(x.price?' · $'+esc(x.price):'')+'</div><div class="m">'+esc(x.why)+'</div>'+(x.story?'<div class="m"><b>The story:</b> '+esc(x.story)+'</div>':'')+'</div>'}).join('')+'</div><p style="margin-top:14px"><b>Push these on shift</b></p><div class="list">'+(rc.push||[]).map(function(x){return '<div class="item">'+(x.photo?'<img class="label" style="max-height:180px" src="'+esc(x.photo)+'" alt="">':'')+'<div class="k">'+esc(x.name)+'</div><div class="m">'+esc(x.pitch)+'</div>'+(x.pair_with?'<div class="m">For the guest who likes: '+esc(x.pair_with)+'</div>':'')+(x.story?'<div class="m"><b>The story:</b> '+esc(x.story)+'</div>':'')+'</div>'}).join('')+'</div>'});
   /* 13 · quizzes */
   if(wd===0){
     var sk=recallItems('sunday');
