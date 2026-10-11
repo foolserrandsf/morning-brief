@@ -330,6 +330,10 @@ function patterns_(V, d) {
     return { regulars_30_days_ago: Object.keys(R).length, not_back_in_20_days: gone.length, their_spend_in_prior28: r2_(sp) };
   }
   var last = win(addDays_(d, -27), d), prior = win(addDays_(d, -55), addDays_(d, -28));
+  function yearBack(n) {                                   // the same two 4-week windows n years earlier (52-week steps keep weekdays aligned)
+    var e = addDays_(d, -364 * n);
+    return addDays_(e, -55) >= first ? { last28: win(addDays_(e, -27), e), prior28: win(addDays_(e, -55), addDays_(e, -28)) } : null;
+  }
   var ly = addDays_(d, -364) >= addDays_(first, 27) ? win(addDays_(d, -364 - 27), addDays_(d, -364)) : null;
   var Rn = regulars(d), regSpend = 0;
   cards.forEach(function (c) { if (Rn[c]) V[c].forEach(function (x) { if (x[0] >= last.from && x[0] <= d) regSpend += x[1]; }); });
@@ -346,7 +350,7 @@ function patterns_(V, d) {
   Object.keys(months).forEach(function (m) { delete months[m]._s; });
   return {
     date: d, history_from: first, note: 'card payments only (cash not included); a card = one guest',
-    last28: last, prior28: prior, last_year28: ly,
+    last28: last, prior28: prior, last_year28: ly, same_weeks_1_year_ago: yearBack(1), same_weeks_2_years_ago: yearBack(2),
     regular_cards_now: Object.keys(Rn).length, regular_share_of_spend_last28_pct: last.spend ? Math.round(regSpend / last.spend * 100) : 0,
     lapsed_regulars: lapsed(d), lapsed_regulars_last_year: lapsed(addDays_(d, -364)),
     new_vs_returning_cards_by_month: months
