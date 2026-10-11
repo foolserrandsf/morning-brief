@@ -391,7 +391,7 @@ function upserveDay_(ss, up, d, pmixCsv, checksCsv, payCsv) {
   // regulars ledger: key | name | visits JSON [[date, spend], ...]
   var gs = ss.getSheetByName('guests') || ss.insertSheet('guests'), G = {};
   if (gs.getLastRow()) gs.getRange(1, 1, gs.getLastRow(), 3).getValues().forEach(function (r) { if (r[0]) G[r[0]] = { name: r[1], v: JSON.parse(r[2] || '[]') }; });
-  Object.keys(G).forEach(function (k) { G[k].v = G[k].v.filter(function (x) { return x[0] !== d && x[0] >= addDays_(d, -800); }); });
+  Object.keys(G).forEach(function (k) { G[k].v = G[k].v.filter(function (x) { return x[0] !== d && x[0] >= addDays_(d, -1200); }); });
   Object.keys(tonight).forEach(function (k) { var g = G[k] = G[k] || { name: tonight[k].name, v: [] }; g.v.push([d, r2_(tonight[k].spend)]); g.v.sort(); });
   var keys = Object.keys(G).filter(function (k) { return G[k].v.length; });
   gs.clearContents();
