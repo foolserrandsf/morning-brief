@@ -251,7 +251,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261011114824';
+var APP_BUILD='20261011115355';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -584,9 +584,11 @@ function buildCards(){
       if(!y&&(u.tips_by_shift||[]).length)dd+='<div class="ppl" style="margin-top:8px">'+u.tips_by_shift.map(function(x){return '<div class="p"><span>'+esc(x.shift)+'</span><small><b style="color:var(--ink)">'+money(x.tips)+'</b>, '+x.checks+' checks</small></div>'}).join('')+'</div>';
       h+=dd+more('What sold and the sales mix',sold);
       var rg=u.regulars||[],lp=u.lapsed||[],tp=u.top_spenders_30d||[],ppl='';
-      if(rg.length)ppl+='<h3 style="font-size:16.5px;margin:4px 0 8px">Repeat guests last night</h3><div class="ppl">'+rg.slice(0,10).map(function(r){return '<div class="p"><span>'+esc(r.name)+(r.milestone?' <span class="ms">'+r.milestone+'th visit</span>':'')+'</span><small>'+r.visits+' visits, '+money(r.spend_90d)+' in 90 days</small></div>'}).join('')+'</div>';
-      if(lp.length)ppl+='<h3 style="font-size:16.5px;margin:14px 0 8px">Haven\'t seen lately</h3><div class="ppl">'+lp.map(function(r){return '<div class="p"><span>'+esc(r.name)+'</span><small>last in '+esc(shortDate(r.last))+', '+r.visits_90d+' visits in 90 days</small></div>'}).join('')+'</div>';
-      if(tp.length)ppl+='<h3 style="font-size:16.5px;margin:14px 0 8px">Top spenders, last 30 days</h3><div class="ppl">'+tp.map(function(r){return '<div class="p"><span>'+esc(r.name)+'</span><small>'+money(r.spend_30d)+', '+r.visits_30d+' visit'+(r.visits_30d>1?'s':'')+'</small></div>'}).join('')+'</div>';
+      var dsince=function(n){var ls=u.ledger_since,cut=new Date(new Date(u.date+'T12:00:00Z').getTime()-n*864e5).toISOString().slice(0,10);return (ls&&ls>cut)?'since '+shortDate(ls):'in '+n+' days'};
+      if(u.ledger_since&&u.ledger_since>new Date(new Date(u.date+'T12:00:00Z').getTime()-90*864e5).toISOString().slice(0,10))ppl+='<p class="stats" style="margin:0 0 10px">Visit counts start '+esc(shortDate(u.ledger_since))+', the first night Upserve\'s checks report reached the script, so they\'ll grow from there.</p>';
+      if(rg.length)ppl+='<h3 style="font-size:16.5px;margin:4px 0 8px">In last night, and seen before</h3><div class="ppl">'+rg.slice(0,10).map(function(r){return '<div class="p"><span>'+esc(r.name)+(r.milestone?' <span class="ms">'+r.milestone+'th visit</span>':'')+'</span><small>'+r.visits+' nights '+dsince(90)+', '+money(r.spend_90d)+' spent</small></div>'}).join('')+'</div>';
+      if(lp.length)ppl+='<h3 style="font-size:16.5px;margin:14px 0 8px">Haven\'t seen lately</h3><div class="ppl">'+lp.map(function(r){return '<div class="p"><span>'+esc(r.name)+'</span><small>last in '+esc(shortDate(r.last))+', '+r.visits_90d+' nights '+dsince(90)+'</small></div>'}).join('')+'</div>';
+      if(tp.length)ppl+='<h3 style="font-size:16.5px;margin:14px 0 8px">Top spenders, '+(dsince(30)==='in 30 days'?'last 30 days':dsince(30))+'</h3><div class="ppl">'+tp.map(function(r){return '<div class="p"><span>'+esc(r.name)+'</span><small>'+money(r.spend_30d)+', '+r.visits_30d+' visit'+(r.visits_30d>1?'s':'')+'</small></div>'}).join('')+'</div>';
       h+=more('Guests: repeats, lapsed and top spenders',ppl);
       var sp=u.spending;
       if(sp)h+=more('Spending and invoices',(sp.wtd!=null?'<p>'+money(sp.wtd)+' in invoices this week'+(sp.sales_wtd?' against '+money(sp.sales_wtd)+' in sales ('+Math.round(sp.wtd/sp.sales_wtd*100)+'%)':'')+(sp.mtd!=null?'. '+money(sp.mtd)+' this month'+(sp.sales_mtd?' ('+Math.round(sp.mtd/sp.sales_mtd*100)+'% of sales)':''):'')+'.</p>':'')+
