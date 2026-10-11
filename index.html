@@ -138,6 +138,80 @@ button{font:inherit;cursor:pointer;border:0;color:inherit}
 .picks{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .picks button{border:1px solid #FFD9C6;background:#fff;border-radius:999px;padding:7px 12px;font-weight:600;font-size:14px;color:var(--ink);cursor:pointer}
 .fstat{font-size:14px;margin-top:8px}
+/* glance → grasp → go deeper */
+body{font-size:17px;line-height:1.6}
+.card .sub{font-size:14.5px}
+.item .m{font-size:15.5px;color:#4A5366}
+.lead{font:650 20px/1.35 var(--display);letter-spacing:-.01em;margin:4px 0 12px;color:var(--ink)}
+.pts{list-style:none;padding:0;margin:6px 0 4px;display:grid;gap:10px}
+.pts li{position:relative;padding-left:22px;line-height:1.5;margin:0}
+.pts li::before{content:'';position:absolute;left:3px;top:.62em;width:8px;height:8px;border-radius:3px;background:var(--dot,var(--ai))}
+details.more{margin-top:12px;border-radius:12px;background:var(--wash);border:1px solid var(--line)}
+details.more>summary{list-style:none;cursor:pointer;padding:12px 14px;font-weight:600;font-size:15.5px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::after{content:'+';font:700 20px/1 var(--sans);color:var(--soft)}
+details.more[open]>summary::after{content:'−'}
+details.more>.in{padding:0 14px 12px;font-size:16.5px}
+details.more>.in p:first-child{margin-top:0}
+.facts{margin:12px 0;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff}
+.facts .f{display:grid;grid-template-columns:26px 1fr;gap:10px;padding:11px 13px;border-top:1px solid var(--line)}
+.facts .f:first-child{border-top:0}
+.facts .f .i{font-size:18px;line-height:1.4}
+.facts .f b{display:block;font-size:13.5px;color:var(--soft);font-weight:600;line-height:1.3}
+.facts .f span{font-size:16px;line-height:1.45}
+.jpbox{margin-top:16px;background:#F3F6FC;border-radius:18px;padding:16px 15px}
+.jphead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.jphead .n{font:700 30px/1 var(--display);color:var(--ai);letter-spacing:-.02em}
+.jphead .t{font-weight:600;font-size:17px}
+.jphead .clock{margin-left:auto;font-size:14px;color:var(--soft);white-space:nowrap}
+.phrase{background:#fff;border-radius:14px;padding:16px;border:1px solid #DCE5F5;margin-top:12px}
+.phrase .lbl{font-size:14px;font-weight:600;color:var(--ai)}
+.phrase .say{font:600 23px/2 var(--mincho);margin:4px 0 0}
+.phrase .say rt{font-size:.46em;font-family:var(--sans);font-weight:500;color:#6B7487}
+.phrase .ro{font-size:14.5px;color:var(--soft);margin-top:2px}
+.phrase .en{font-weight:600;font-size:17.5px;line-height:1.45;margin-top:8px}
+.chunks{display:grid;gap:10px;margin-top:14px}
+.chunks .c{border-left:4px solid var(--cc);padding:2px 0 2px 12px}
+.chunks .c .jp{display:block;font-size:18.5px;font-weight:600;line-height:1.9}
+.chunks .c .jp rt{font-size:.5em;font-family:var(--sans)}
+.chunks .c span{font-size:15.5px;line-height:1.45;display:block}
+.back{background:#FFF6E6;border-radius:12px;padding:12px 14px;margin-top:12px;font-size:16px;line-height:1.55}
+.back b{display:block;font-size:14px;color:#9A6A0B;margin-bottom:2px}
+.wx2{display:flex;align-items:center;gap:14px;margin:16px 0 4px}
+.wx2 .temp{font:700 44px/1 var(--display);color:var(--ai);letter-spacing:-.03em}
+.wx2 .sky{font-weight:600;font-size:17px;line-height:1.35}
+.wx2 .hl{font-size:14.5px;color:var(--soft)}
+.wear{background:#EEF4FD;border-radius:12px;padding:11px 13px;margin-top:10px;font-size:16.5px}
+.alert{background:#FFF1E6;border-left:4px solid var(--persimmon);border-radius:10px;padding:9px 12px;margin-top:8px;font-size:15.5px}
+.focus .why{font-size:16px;color:#3B4458;line-height:1.55}
+.news .hl{font:650 18.5px/1.3 var(--display);margin:4px 0 8px;letter-spacing:-.01em}
+.news .pts li{font-size:16px}
+.nwhy{background:#F1EEFC;border-radius:10px;padding:10px 12px;margin-top:10px;font-size:15.5px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chips span{background:var(--wash);border:1px solid var(--line);border-radius:999px;padding:4px 11px;font-size:14.5px;font-weight:500}
+.pitch{background:#FBF0F4;border-radius:14px;padding:14px 15px;margin-top:14px;font-size:16.5px;line-height:1.6}
+.pitch b{display:block;color:var(--plum);font-size:14px;margin-bottom:4px}
+.money{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:6px 0 2px}
+.money .v{font:700 40px/1 var(--display);letter-spacing:-.03em}
+.delta{font-weight:700;font-size:15px;border-radius:999px;padding:3px 10px}
+.delta.up{background:var(--sage-wash);color:#1F7445}.delta.dn{background:#FBE7E4;color:#B23A2F}
+.stats{font-size:15px;color:var(--soft);margin-bottom:6px}
+.sect{margin-top:18px}
+.sect>h3{font-size:17px;margin:0 0 8px}
+.bars{display:grid;gap:8px}
+.bars .r{display:grid;grid-template-columns:1fr auto;gap:2px 10px;font-size:15.5px}
+.bars .r .b{grid-column:1/-1;height:7px;border-radius:7px;background:#E7EBF1;overflow:hidden}
+.bars .r .b i{display:block;height:100%;background:var(--teal);border-radius:7px}
+.bars .r .v{font-variant-numeric:tabular-nums;color:var(--soft)}
+.mix{display:flex;height:14px;border-radius:8px;overflow:hidden;margin:4px 0 8px}
+.mixkey{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:14px}
+.mixkey i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px}
+.ppl{display:grid;gap:8px}
+.ppl .p{display:flex;justify-content:space-between;gap:10px;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:7px;font-size:16px}
+.ppl .p:last-child{border-bottom:0}
+.ppl .p small{color:var(--soft);font-size:14px;text-align:right}
+.ppl .p .ms{color:var(--persimmon);font-weight:700}
+.insight{background:#E6F5F3;border-radius:12px;padding:12px 14px;margin-top:16px;font-size:16px}
 .small{font-size:14px;color:var(--soft)}
 .src{font-size:13px;color:var(--soft);margin-top:12px}
 .src a{color:var(--soft)}
@@ -158,7 +232,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261011131818';
+var APP_BUILD='20261011111025';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -399,10 +473,24 @@ function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(M
 
 /* ---------- cards ---------- */
 var TRACK_NAME={kanji:'Kanji',bottle:'Bottles',wset:'WSET',stocks:'Stocks & bonds',crypto:'Crypto',filipino:'Filipino'};
-var ICON={gm:'☀️',cal:'📅',inbox:'📬',fb:'🏈',news:'📰',kanji:'漢',bottle:'🍷',wset:'🎓',stocks:'📈',crypto:'🪙',fil:'🇵🇭',recs:'🥂',sun:'🏆',recall:'🔁',second:'🎯'};
+var ICON={gm:'☀️',fe:'🍻',cal:'📅',inbox:'📬',fb:'🏈',news:'📰',kanji:'漢',bottle:'🍷',wset:'🎓',stocks:'📈',crypto:'🪙',fil:'🇵🇭',recs:'🥂',sun:'🏆',recall:'🔁',second:'🎯'};
 function tint(col){return 'color-mix(in srgb, '+col+' 14%, white)'}
 function card(c){
   return '<div class="card"><div class="band" style="background:'+c.color+'"></div><div class="hd"><div class="ic'+(c.id==='kanji'?' k':'')+'" style="background:'+tint(c.color)+';color:'+c.color+'">'+(ICON[c.id]||'•')+'</div><div><h2>'+esc(c.title)+'</h2><div class="sub">'+esc(c.sub||'')+(c.min?(c.sub?', ':'')+'about '+c.min+' min':'')+'</div></div></div>'+c.body+'</div>';
+}
+function sents(t){return String(t||'').match(/[^.!?]+(?:[.!?]+["'”’)\]]*|$)\s*/g)||[]}
+function firstS(t){var x=sents(t);return x.length?x[0].trim():''}
+function restS(t){return sents(t).slice(1).join('').trim()}
+function pts(a,dot){return a&&a.length?'<ul class="pts"'+(dot?' style="--dot:'+dot+'"':'')+'>'+a.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul>':''}
+function more(label,html){return html?'<details class="more"><summary>'+esc(label)+'</summary><div class="in">'+html+'</div></details>':''}
+function paras(a){return (a||[]).map(function(p){return '<p>'+esc(p)+'</p>'}).join('')}
+function money(n){return '$'+Math.round(+n||0).toLocaleString('en-US')}
+function lesson(s,dot,deeper){
+  // takeaway first: key points visible, full explanation one tap away
+  var body=s.body||[],h='';
+  if(s.points&&s.points.length)h+=pts(s.points,dot)+more(deeper,paras(body));
+  else h+=(body[0]?'<p>'+esc(body[0])+'</p>':'')+more(deeper,paras(body.slice(1)));
+  return h;
 }
 function buildCards(){
   var b=S.brief,cards=[],wd=new Date(b.date+'T12:00:00').getDay(),di=dayIdx(b.date);
@@ -410,9 +498,25 @@ function buildCards(){
   var w=b.weather||{},f=b.focus||{},jp=b.japan;
   var gm='<div class="big">'+esc(b.greeting||'Let\'s go, Denise!')+'</div>';
   if(pushState()==='off')gm+='<div class="item" style="margin:0 0 12px"><div class="k">Get this every morning from the mug icon</div>'+pushPanel()+'</div>';
-  if(f.one_thing)gm+='<div class="focus"><div class="lbl">One thing that matters today</div><div class="one">'+esc(f.one_thing)+'</div>'+(f.why?'<div class="small">'+esc(f.why)+'</div>':'')+(f.first_step?'<p style="margin:.5em 0 0"><b>Tiny first step:</b> '+esc(f.first_step)+'</p>':'')+tChecks('focus','Finish: '+f.one_thing,f.first_step,'<button class="btn sun" onclick="sprint()">Start a 5-min sprint</button>')+'<div id="sprint"></div></div>';
-  if(w.hi!=null)gm+='<div class="wx"><span class="temp">'+esc(w.now||w.hi+'°')+'</span><span><b>'+esc(w.sky||'')+'</b><br><span class="small">'+esc((w.place||'San Francisco')+' · H '+w.hi+'° / L '+w.lo+'°'+(w.rain?' · rain '+w.rain:''))+'</span></span></div>'+(w.wear?'<p><b>Wear:</b> '+esc(w.wear)+'</p>':'');
-  if(jp&&jp.active)gm+='<div class="item" style="background:var(--wash);margin-top:12px"><div class="k">'+esc(jp.day||'Japan trip')+' · <span id="jst"></span> in Japan</div><div class="m">'+esc(jp.today||'')+'</div>'+(jp.phrase?'<p style="margin:.6em 0 0"><span class="jp" style="font-size:19px;font-weight:600">'+esc(jp.phrase.jp)+'</span><br><span class="small">'+esc(jp.phrase.romaji)+'</span><br>'+esc(jp.phrase.en)+'</p>'+(jp.phrase.notes&&jp.phrase.notes.length?'<div class="jpnote">'+jp.phrase.notes.map(function(n){return '<div><b class="jp">'+esc(n.bit)+'</b> '+esc(n.means)+'</div>'}).join('')+'</div>':''):'')+(jp.tip?'<p class="small">'+esc(jp.tip)+'</p>':'')+'</div>';
+  if(f.one_thing)gm+='<div class="focus"><div class="lbl">One thing that matters today</div><div class="one">'+esc(f.one_thing)+'</div>'+(f.why?'<div class="why">'+esc(f.why)+'</div>':'')+(f.first_step?'<p style="margin:.6em 0 0"><b>Tiny first step:</b> '+esc(f.first_step)+'</p>':'')+tChecks('focus','Finish: '+f.one_thing,f.first_step,'<button class="btn sun" onclick="sprint()">Start a 5-min sprint</button>')+'<div id="sprint"></div></div>';
+  if(w.hi!=null){
+    var wear=w.wear||'',alerts=w.alerts||[],wearMain=alerts.length?wear:firstS(wear),wearRest=alerts.length?'':restS(wear);
+    gm+='<div class="wx2"><span class="temp">'+esc(w.now||w.hi+'°')+'</span><div><div class="sky">'+esc(w.sky||'')+'</div><div class="hl">'+esc((w.place||'San Francisco')+', high '+w.hi+'°, low '+w.lo+'°'+(w.rain?', rain '+w.rain:''))+'</div></div></div>'+
+      (wearMain?'<div class="wear"><b>Wear:</b> '+esc(wearMain)+'</div>':'')+alerts.map(function(a){return '<div class="alert"><b>'+esc(a.title||'')+'</b> '+esc(a.detail||'')+'</div>'}).join('')+(wearRest?more('Weather alerts and details','<p>'+esc(wearRest)+'</p>'):'');
+  }
+  if(jp&&jp.active){
+    var dm=String(jp.day||'').match(/^(.*?)(\d+)\s*(day|days)\b(.*)$/i);
+    gm+='<div class="jpbox"><div class="jphead">'+(jp.headline?'<span class="t">'+esc(jp.headline)+'</span>':'<span class="t">'+esc(jp.day||'Japan trip')+'</span>')+'<span class="clock"><span id="jst"></span> in Japan</span></div>';
+    if(jp.facts&&jp.facts.length)gm+='<div class="facts">'+jp.facts.map(function(x){return '<div class="f"><span class="i">'+esc(x.icon||'•')+'</span><div><b>'+esc(x.label)+'</b><span>'+esc(x.value)+'</span></div></div>'}).join('')+'</div>';
+    else if(jp.today)gm+='<p style="margin:10px 0 0">'+esc(firstS(jp.today))+'</p>'+more('Trip details','<p>'+esc(restS(jp.today))+'</p>');
+    if(jp.phrase){
+      var cols=['#3070D0','#EC6A3A','#2F9460','#B3366A','#6A57D6'];
+      gm+='<div class="phrase"><div class="lbl">Say it today</div><div class="say jp">'+esc(jp.phrase.jp)+'</div><div class="ro">'+esc(jp.phrase.romaji)+'</div><div class="en">'+esc(jp.phrase.en)+'</div>'+
+        (jp.phrase.notes&&jp.phrase.notes.length?'<div class="chunks">'+jp.phrase.notes.map(function(n,i){return '<div class="c" style="--cc:'+cols[i%cols.length]+'"><b class="jp">'+esc(n.bit)+'</b><span>'+esc(n.means)+'</span></div>'}).join('')+'</div>':'')+'</div>';
+    }
+    if(jp.tip)gm+='<div class="back"><b>What you\'ll likely hear back</b>'+esc(jp.tip)+'</div>';
+    gm+='</div>';
+  }
   cards.push({id:'gm',title:'Good morning, Denise',sub:'Edition '+(b.edition||1),color:'var(--persimmon)',tint:'#FFF1CF',min:1,must:1,body:gm});
   /* 2 · calendar */
   var cal=b.calendar||[];
@@ -422,31 +526,65 @@ function buildCards(){
   var ib=b.inbox||[];
   cards.push({id:'inbox',title:'Needs you',sub:ib.length?ib.length+' email'+(ib.length>1?'s':'')+' waiting on you':'Inbox zero-ish',color:'var(--coral)',tint:'#FFE7E3',min:2,must:1,
     body:(ib.length?'<div class="list">'+ib.map(function(m,i){return '<div class="item"><span class="tag" style="'+(m.account==='fe'?'background:#E6F2F1;color:var(--teal);border-color:#CDE4E2':'')+'">'+(m.account==='fe'?'Fool\'s Errand':'Gmail')+'</span>'+(m.by?'<span class="tag" style="background:var(--persimmon-wash);color:var(--persimmon);border-color:#F6D5C6">by '+esc(m.by)+'</span>':'')+'<div class="k">'+esc(m.from)+' — '+esc(m.subject)+'</div><div class="m">'+esc(m.ask)+'</div>'+(m.url?'<div class="m">'+linkify(m.url,'Open email →')+'</div>':'')+tChecks('in'+i,'Reply: '+m.from+' — '+m.subject,m.ask+(m.url?'\n'+m.url:''))+'</div>'}).join('')+'</div>':'<p class="empty">Nothing in either inbox needs a reply from you today.</p>')+(b.inbox_note?'<p class="small">'+esc(b.inbox_note)+'</p>':'')});
+  /* 3b · last night at Fool's Errand (Upserve) */
+  var u=b.upserve;
+  if(u&&u.net!=null){
+    var wdn=new Date(u.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long'}),d=u.vs_last_week_pct,h='';
+    h+='<div class="money"><span class="v">'+money(u.net)+'</span>'+(d!=null?'<span class="delta '+(d>=0?'up':'dn')+'">'+(d>=0?'+':'')+d+'% vs last '+wdn+'</span>':'')+'</div><div class="stats">'+u.checks+' checks, '+money(u.avg_check)+' average, '+money(u.tips)+' in tips</div>';
+    if(u.headline)h+='<div class="lead">'+esc(u.headline)+'</div>';
+    var tb=u.tips_by_shift||[];
+    if(tb.length)h+='<div class="sect"><h3>Tips by shift</h3><div class="ppl">'+tb.map(function(x){return '<div class="p"><span>'+esc(x.shift)+'</span><small><b style="color:var(--ink);font-size:16px">'+money(x.tips)+'</b><br>'+x.checks+' checks, '+x.tip_pct+'% of '+money(x.sales)+'</small></div>'}).join('')+'</div></div>';
+    var ti=(u.top_items||[]).slice(0,6),mx=ti.reduce(function(a,x){return Math.max(a,x.net)},1);
+    if(ti.length)h+='<div class="sect"><h3>What sold</h3><div class="bars">'+ti.map(function(x){return '<div class="r"><span>'+esc(x.name)+'</span><span class="v">'+x.sold+' sold, '+money(x.net)+'</span><span class="b"><i style="width:'+Math.round(x.net/mx*100)+'%"></i></span></div>'}).join('')+'</div></div>';
+    var cs=(u.categories||[]).filter(function(c){return c.pct>0}),cc=['#17998C','#3070D0','#B3366A','#D29A1B','#6A57D6','#EC6A3A','#2F9460','#8A93A6'];
+    if(cs.length)h+='<div class="sect"><h3>Sales mix</h3><div class="mix">'+cs.map(function(c,i){return '<i style="width:'+c.pct+'%;background:'+cc[i%cc.length]+'"></i>'}).join('')+'</div><div class="mixkey">'+cs.map(function(c,i){return '<span><i style="background:'+cc[i%cc.length]+'"></i>'+esc(c.name)+' '+c.pct+'%</span>'}).join('')+'</div></div>';
+    var rg=u.regulars||[];
+    h+='<div class="sect"><h3>Regulars in last night</h3>'+(rg.length?'<div class="ppl">'+rg.slice(0,8).map(function(r){return '<div class="p"><span>'+esc(r.name)+(r.milestone?' <span class="ms">'+r.milestone+'th visit</span>':'')+'</span><small>'+r.visits+' visits, '+money(r.spend_90d)+' in 90 days</small></div>'}).join('')+'</div>':'<p class="empty">No repeat guests yet. The regulars list fills in as more nights are tracked.</p>')+(u.newcomers?'<p class="stats" style="margin-top:8px">'+u.newcomers+' first-time names on cards'+(u.ledger_since?' since tracking started '+esc(shortDate(u.ledger_since)):'')+'.</p>':'')+'</div>';
+    var lp=u.lapsed||[],tp=u.top_spenders_30d||[],extra='';
+    if(lp.length)extra+='<h3 style="font-size:16.5px;margin:4px 0 8px">Haven\'t seen lately</h3><div class="ppl">'+lp.map(function(r){return '<div class="p"><span>'+esc(r.name)+'</span><small>last in '+esc(shortDate(r.last))+', '+r.visits_90d+' visits in 90 days</small></div>'}).join('')+'</div>';
+    if(tp.length)extra+='<h3 style="font-size:16.5px;margin:14px 0 8px">Top spenders, last 30 days</h3><div class="ppl">'+tp.map(function(r){return '<div class="p"><span>'+esc(r.name)+'</span><small>'+money(r.spend_30d)+', '+r.visits_30d+' visit'+(r.visits_30d>1?'s':'')+'</small></div>'}).join('')+'</div>';
+    h+=more('Lapsed regulars and top spenders',extra);
+    var sp=u.spending;
+    if(sp){
+      h+='<div class="sect"><h3>Spending</h3>'+(sp.wtd!=null?'<div class="stats" style="font-size:16px;color:var(--ink)">'+money(sp.wtd)+' in invoices this week'+(sp.sales_wtd?' against '+money(sp.sales_wtd)+' in sales ('+Math.round(sp.wtd/sp.sales_wtd*100)+'%)':'')+(sp.mtd!=null?'. '+money(sp.mtd)+' this month'+(sp.sales_mtd?' ('+Math.round(sp.mtd/sp.sales_mtd*100)+'% of sales)':''):'')+'.</div>':'')+
+        ((sp.new||[]).length?'<div class="ppl">'+sp.new.map(function(x){return '<div class="p"><span>'+esc(x.vendor)+(x.what?'<br><small style="text-align:left">'+esc(x.what)+'</small>':'')+'</span><small>'+money(x.amount)+(x.due?'<br>due '+esc(x.due):'')+'</small></div>'}).join('')+'</div>':'<p class="empty">No new invoices came in.</p>')+
+        ((sp.due_soon||[]).length?'<div class="alert"><b>Due soon:</b> '+sp.due_soon.map(function(x){return esc(x.vendor)+' '+money(x.amount)+' ('+esc(x.due)+')'}).join(', ')+'</div>':'')+'</div>';
+    }
+    if(u.insight)h+='<div class="insight"><b>Try this:</b> '+esc(u.insight)+'</div>';
+    cards.push({id:'fe',title:'Last night at Fool\'s Errand',sub:wdn+' '+shortDate(u.date).replace(/^\w+,\s*/,''),color:'var(--teal)',tint:'#E0F6F3',min:2,must:1,body:h});
+  }
   /* 4 · football */
   var fb=b.football||{};
   if(fb.games&&fb.games.length)cards.push({id:'fb',title:'Game day',sub:fb.games.length+' game'+(fb.games.length>1?'s':'')+' to know',color:'var(--leaf)',tint:'#E4F7E8',min:1,must:1,
     body:'<div class="list">'+fb.games.map(function(g){return '<div class="fb"><span class="tag">'+esc(g.league)+'</span><div class="mu">'+esc(g.matchup)+'</div><div class="row"><span class="chip">'+esc(g.kickoff)+'</span><span class="chip">'+esc(g.tv)+'</span>'+(g.spread?'<span class="chip">'+esc(g.spread)+'</span>':'')+'</div>'+(g.pick?'<div class="pick">Brief pick: '+esc(g.pick)+'</div>':'')+(g.your_bet?'<div class="bet">Your bet: '+esc(g.your_bet)+'</div>':'')+'</div>'}).join('')+'</div>'+(fb.link?'<p>'+linkify(fb.link,'Full Football Brief →')+'</p>':'')});
   /* 5 · news */
-  var nw=b.news||[];
-  cards.push({id:'news',title:'The news',sub:'Bloomberg, Morning Brew, SF Standard, Ground News',color:'var(--grape)',tint:'#EEE8FF',min:6,
-    body:'<div class="list">'+nw.map(function(n){var sm=n.summary?(Array.isArray(n.summary)?n.summary:[n.summary]):[];return '<div class="item news"><span class="tag">'+esc(n.source)+'</span><div class="k">'+esc(n.headline)+'</div>'+sm.map(function(p){return '<p class="nsum">'+esc(p)+'</p>'}).join('')+(n.coverage?'<div class="m" style="margin-top:6px"><b>Coverage:</b> '+esc(n.coverage)+'</div>':'')+(n.why?'<div class="nwhy"><b>Why it matters to you:</b> '+esc(n.why)+'</div>':'')+(n.url?'<div class="m" style="margin-top:6px">'+linkify(n.url,'Full article')+'</div>':'')+'</div>'}).join('')+'</div>'});
+  var nw=(b.news||[]).filter(function(n){return !/upserve/i.test(n.source||'')||!b.upserve});
+  cards.push({id:'news',title:'The news',sub:nw.length+' stories, takeaway first',color:'var(--grape)',tint:'#EEE8FF',min:6,
+    body:'<div class="list">'+nw.map(function(n){
+      var sm=n.summary?(Array.isArray(n.summary)?n.summary:[n.summary]):[];
+      var top=n.points&&n.points.length?pts(n.points,'var(--grape)'):(n.tldr?'<p>'+esc(n.tldr)+'</p>':(sm[0]?'<p>'+esc(sm[0])+'</p>':''));
+      var deep=(n.points&&n.points.length||n.tldr?sm:sm.slice(1)).map(function(p){return '<p>'+esc(p)+'</p>'}).join('')+(n.coverage?'<p><b>Coverage:</b> '+esc(n.coverage)+'</p>':'')+(n.url?'<p>'+linkify(n.url,'Read the original')+'</p>':'');
+      return '<div class="item news"><span class="tag">'+esc(n.source)+'</span><div class="hl">'+esc(n.headline)+'</div>'+top+(n.why?'<div class="nwhy"><b>For you:</b> '+esc(n.why)+'</div>':'')+more('The full story',deep)+'</div>'}).join('')+'</div>'});
   /* 6 · kanji */
   var k=b.kanji||{};
   cards.push({id:'kanji',title:'Kanji of the day',sub:'#'+esc(k.n)+' of 270 · KEIRO deck',color:'#D2453A',tint:'#FFE7E3',min:2,
     body:'<div class="kanji">'+esc(k.kanji)+'</div><div class="center"><span class="big jp" style="font-size:26px">'+esc(k.reading)+'</span><br><b>'+esc(k.meaning)+'</b></div>'+(k.hook?'<div class="hook">'+esc(k.hook)+'</div>':'')+(k.example?'<p class="jp"><b>'+esc(k.example)+'</b> '+(k.example_romaji?'<span class="small">('+esc(k.example_romaji)+')</span>':'')+'<br>'+esc(k.example_en)+'</p>':'')+(k.spot_it?'<p><b>Spot it:</b> '+esc(k.spot_it)+'</p>':'')+quizHTML(withIds(k,'kanji'),'Lock it in')});
   /* 7 · bottle */
   var bt=b.bottle||{};
-  cards.push({id:'bottle',title:'Bottle of the day',sub:esc(bt.group||'')+(bt.price?' · $'+esc(bt.price)+' on the chalk':''),color:'var(--plum)',tint:'#FDE6EA',min:3,
-    body:(bt.photo?'<img class="label" src="'+esc(bt.photo)+'" alt="Label: '+esc(bt.title)+'">':'')+'<h3 style="margin:0">'+esc(bt.producer)+(bt.wine?' · '+esc(bt.wine):'')+'</h3><div class="small"><b>'+esc(bt.grapes)+'</b> · '+esc(bt.place)+' · '+esc(bt.vintage)+'</div>'+(bt.hook?'<div class="hook">'+esc(bt.hook)+'</div>':'')+(bt.tasting&&bt.tasting.length?'<p><b>In the glass</b></p><ul>'+bt.tasting.map(function(t){return '<li>'+esc(t)+'</li>'}).join('')+'</ul>':'')+(bt.terroir?'<p><b>Why it tastes that way:</b> '+esc(bt.terroir)+'</p>':'')+(bt.producer_notes&&bt.producer_notes.length?'<p><b>Producer</b></p><ul>'+bt.producer_notes.map(function(t){return '<li>'+esc(t)+'</li>'}).join('')+'</ul>':'')+(bt.pitch?'<div class="item" style="background:var(--wash)"><div class="k">30-second guest pitch</div><div>'+esc(bt.pitch)+'</div></div>':'')+quizHTML(withIds(bt,'bottle'),'Remember it')});
+  cards.push({id:'bottle',title:'Bottle of the day',sub:esc(bt.group||'')+(bt.price?', $'+esc(bt.price)+' on the chalk':''),color:'var(--plum)',tint:'#FDE6EA',min:3,
+    body:(bt.photo?'<img class="label" src="'+esc(bt.photo)+'" alt="Label: '+esc(bt.title)+'">':'')+'<div class="lead" style="margin-bottom:6px">'+esc(bt.producer)+(bt.wine?', '+esc(bt.wine):'')+'</div><div class="chips">'+[bt.grapes,bt.place,bt.vintage].filter(Boolean).map(function(x){return '<span>'+esc(x)+'</span>'}).join('')+'</div>'+
+      (bt.hook?'<div class="hook">'+esc(bt.hook)+'</div>':'')+(bt.tasting&&bt.tasting.length?'<p style="margin-bottom:0"><b>In the glass</b></p>'+pts(bt.tasting,'var(--plum)'):'')+
+      (bt.pitch?'<div class="pitch"><b>Your 30-second pitch</b>'+esc(bt.pitch)+'</div>':'')+
+      more('Why it tastes that way, and the producer',(bt.terroir?'<p>'+esc(bt.terroir)+'</p>':'')+(bt.producer_notes&&bt.producer_notes.length?pts(bt.producer_notes,'var(--plum)'):''))+quizHTML(withIds(bt,'bottle'),'Remember it')});
   /* 8 · WSET */
   var ws=b.wset||{};
   cards.push({id:'wset',title:ws.title||'WSET concept',sub:esc(ws.level||'WSET Level 2')+' · concept '+esc(ws.n||''),color:'var(--teal)',tint:'#E0F6F3',min:3,
-    body:(ws.body||[]).map(function(p){return '<p>'+esc(p)+'</p>'}).join('')+(ws.tie_in?'<div class="hook">On our shelves: '+esc(ws.tie_in)+'</div>':'')+(ws.try_it?'<p><b>Try it tonight:</b> '+esc(ws.try_it)+'</p>':'')+quizHTML(withIds(ws,'wset'),'Competency check')});
+    body:(ws.lead?'<div class="lead">'+esc(ws.lead)+'</div>':'')+lesson(ws,'var(--teal)','Explain it fully')+(ws.tie_in?'<div class="hook">On our shelves: '+esc(ws.tie_in)+'</div>':'')+(ws.try_it?'<p><b>Try it tonight:</b> '+esc(ws.try_it)+'</p>':'')+quizHTML(withIds(ws,'wset'),'Competency check')});
   /* 9 · stocks + 10 · crypto */
   [['stocks','Stocks & bonds','var(--sky)','#E4F1FF'],['crypto','Crypto','var(--ochre)','#FFF3D6']].forEach(function(t){
     var s=b[t[0]]||{};
     cards.push({id:t[0],emoji:t[1],title:s.title||t[2],sub:t[2]+' 101 · lesson '+esc(s.n||''),color:t[3],tint:t[4],min:4,
-      body:(s.hook?'<div class="hook">'+esc(s.hook)+'</div>':'')+(s.body||[]).map(function(p){return '<p>'+esc(p)+'</p>'}).join('')+(s.key_terms&&s.key_terms.length?'<div class="terms">'+s.key_terms.map(function(x){return '<div><b>'+esc(x.term)+'</b> — '+esc(x.def)+'</div>'}).join('')+'</div>':'')+quizHTML(withIds(s,t[0]),'Competency check')});
+      body:(s.hook?'<div class="hook">'+esc(s.hook)+'</div>':'')+lesson(s,t[2],'Explain it fully')+(s.key_terms&&s.key_terms.length?'<div class="terms">'+s.key_terms.map(function(x){return '<div><b>'+esc(x.term)+'</b> — '+esc(x.def)+'</div>'}).join('')+'</div>':'')+quizHTML(withIds(s,t[0]),'Competency check')});
   });
   /* 11 · Filipino */
   var fl=b.filipino||{};

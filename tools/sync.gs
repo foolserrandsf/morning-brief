@@ -119,12 +119,137 @@ function dropSub_(endpoint) {
   for (var i = rows.length - 1; i >= 0; i--) if (rows[i][0] === endpoint) sh.deleteRow(i + 1);
 }
 
-// Run once from the editor (select "setup" → Run) to start the 5-minute delivery check.
+// ---------- Upserve: nightly product mix + regulars ----------
+// Upserve emails the Daily Product Mix CSV and Daily Checks CSV every morning. Every 15 minutes this
+// looks for new ones in Gmail, works out the night's numbers (tips by shift too) and keeps a regulars
+// ledger by first name only, in this private sheet, then writes one JSON summary per night to the "upserve" tab
+// for the Morning Brief writer to read.
+function importUpserve() {
+  var ss = SpreadsheetApp.getActive();
+  var up = ss.getSheetByName('upserve') || ss.insertSheet('upserve');
+  up.getRange('A:A').setNumberFormat('@');
+  var done = {};
+  if (up.getLastRow()) up.getRange(1, 1, up.getLastRow(), 1).getDisplayValues().forEach(function (r) { done[r[0]] = 1; });
+  var files = {};
+  GmailApp.search('from:support@upserve.com newer_than:6d has:attachment', 0, 40).forEach(function (t) {
+    t.getMessages().forEach(function (m) {
+      m.getAttachments().forEach(function (a) {
+        var n = a.getName(), kind = /^pmix-report/.test(n) ? 'pmix' : /^checks-report/.test(n) ? 'checks' : null;
+        var md = n.match(/--(\d{4}-\d{2}-\d{2})-to-(\d{4}-\d{2}-\d{2})/);
+        if (!kind || !md || md[1] !== md[2]) return;
+        (files[md[1]] = files[md[1]] || {})[kind] = a.getDataAsString();
+      });
+    });
+  });
+  Object.keys(files).sort().forEach(function (d) {
+    var f = files[d];
+    if (done[d] || !f.pmix || !f.checks) return;
+    up.appendRow([d, JSON.stringify(upserveDay_(ss, up, d, f.pmix, f.checks))]);
+    done[d] = 1;
+  });
+}
+function addDays_(d, n) { var t = new Date(d + 'T12:00:00Z'); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); }
+function num_(x) { var v = parseFloat(String(x).replace(/[$,]/g, '')); return isNaN(v) ? 0 : v; }
+function r2_(x) { return Math.round(x * 100) / 100; }
+function table_(csv) {
+  var rows = Utilities.parseCsv(csv), h = 0;
+  while (h < rows.length && rows[h].length < 5) h++;          // skip the title + date lines
+  var head = rows[h], out = [];
+  for (var i = h + 1; i < rows.length; i++) {
+    if (rows[i].length < head.length - 2) continue;
+    var o = {}; head.forEach(function (k, j) { o[k.trim()] = rows[i][j]; }); out.push(o);
+  }
+  return out;
+}
+// Regulars are tracked by FIRST NAME ONLY (Denise's rule: never store last names).
+function guestName_(raw, num) {
+  raw = String(raw || '').trim();
+  if (!raw || raw === String(num).trim() || !/[A-Za-z]/.test(raw)) return null;
+  var first = raw.indexOf(',') > 0 ? raw.split(',')[1] : raw;
+  first = String(first || '').trim().split(/\s+/)[0] || '';
+  if (!/[A-Za-z]/.test(first)) return null;
+  return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+}
+// Shift schedule (same as the "Shift schedule" tab of Fool's Errand Sales): check time → shift.
+function shiftOf_(d, when) {
+  var m = String(when).match(/(\d{1,2}):(\d{2})\s*([ap]m)/i), wd = new Date(d + 'T12:00:00Z').getUTCDay();
+  var h = m ? (+m[1] % 12) + (m[3].toLowerCase() === 'pm' ? 12 : 0) + (+m[2]) / 60 : 20;
+  if (h < 6) h += 24;                                   // after midnight counts as the last shift
+  if (wd === 0 || wd === 1) return 'All day';
+  if (wd === 2) return h < 18 ? 'AM' : 'PM';
+  if (wd === 3 || wd === 4) return h < 17 ? 'AM' : 'PM';
+  if (wd === 5) return h < 17 ? 'AM' : h < 18 ? 'PM (one bartender)' : 'PM (both bartenders)';
+  return h < 18 ? 'AM only' : h < 20.5 ? 'Overlap (both)' : 'PM only';
+}
+function upserveDay_(ss, up, d, pmixCsv, checksCsv) {
+  // product mix
+  var items = [], cats = [];
+  table_(pmixCsv).forEach(function (r) {
+    if (r['Type'] === 'Item') items.push({ name: r['Name'], cat: r['Category Name'], sold: num_(r['Sold']), net: r2_(num_(r['Net'])) });
+    if (r['Type'] === 'Category' && !/ Total$/.test(r['Name']) && r['Name'] !== 'Fees') cats.push({ name: r['Name'], sold: num_(r['Sold']), net: r2_(num_(r['Net'])) });
+  });
+  var catSum = cats.reduce(function (a, c) { return a + c.net; }, 0) || 1;
+  cats.forEach(function (c) { c.pct = Math.round(c.net / catSum * 100); });
+  cats.sort(function (a, b) { return b.net - a.net; });
+  items.sort(function (a, b) { return b.net - a.net; });
+  // checks
+  var checks = table_(checksCsv), net = 0, tips = 0, n = 0, tonight = {}, shifts = {}, order = [];
+  checks.forEach(function (r) {
+    if (!r['#']) return;
+    n++; net += num_(r['Net Sales']); tips += num_(r['Tips']);
+    var sh = shiftOf_(d, r['Date']), x = shifts[sh];
+    if (!x) { x = shifts[sh] = { shift: sh, tips: 0, checks: 0, sales: 0 }; order.push(sh); }
+    x.tips += num_(r['Tips']); x.checks++; x.sales += num_(r['Net Sales']);
+    var nm = guestName_(r['Name'], r['#']);
+    if (!nm) return;
+    var k = nm.toUpperCase(), g = tonight[k] = tonight[k] || { name: nm, spend: 0, checks: 0, time: '' };
+    g.spend += num_(r['Bill Total']); g.checks++; g.time = String(r['Date']).replace(/^\S+\s+/, '');
+  });
+  // regulars ledger: key | name | visits JSON [[date, spend], ...]
+  var gs = ss.getSheetByName('guests') || ss.insertSheet('guests'), G = {};
+  if (gs.getLastRow()) gs.getRange(1, 1, gs.getLastRow(), 3).getValues().forEach(function (r) { if (r[0]) G[r[0]] = { name: r[1], v: JSON.parse(r[2] || '[]') }; });
+  Object.keys(G).forEach(function (k) { G[k].v = G[k].v.filter(function (x) { return x[0] !== d && x[0] >= addDays_(d, -400); }); });
+  Object.keys(tonight).forEach(function (k) { var g = G[k] = G[k] || { name: tonight[k].name, v: [] }; g.v.push([d, r2_(tonight[k].spend)]); g.v.sort(); });
+  var keys = Object.keys(G).filter(function (k) { return G[k].v.length; });
+  gs.clearContents();
+  if (keys.length) gs.getRange(1, 1, keys.length, 3).setValues(keys.map(function (k) { return [k, G[k].name, JSON.stringify(G[k].v)]; }));
+  var since = function (g, days) { var c = addDays_(d, -days); return g.v.filter(function (x) { return x[0] > c && x[0] <= d; }); };
+  var sum = function (v) { return r2_(v.reduce(function (a, x) { return a + x[1]; }, 0)); };
+  var regulars = [], newcomers = 0;
+  Object.keys(tonight).forEach(function (k) {
+    var g = G[k], all = g.v.filter(function (x) { return x[0] <= d; }), v90 = since(g, 90), prev = all.filter(function (x) { return x[0] < d; }).pop();
+    if (all.length < 2) { newcomers++; return; }
+    regulars.push({ name: g.name, tonight: r2_(tonight[k].spend), visits: all.length, visits_90d: v90.length, spend_90d: sum(v90),
+      avg_ticket: r2_(sum(all) / all.length), last_before: prev ? prev[0] : '', milestone: [3, 5, 10, 25, 50, 100].indexOf(all.length) >= 0 ? all.length : null });
+  });
+  regulars.sort(function (a, b) { return b.visits_90d - a.visits_90d || b.spend_90d - a.spend_90d; });
+  var lapsed = keys.map(function (k) { var g = G[k], v90 = since(g, 90), last = g.v[g.v.length - 1][0]; return { name: g.name, visits_90d: v90.length, last: last, spend_90d: sum(v90) }; })
+    .filter(function (x) { return x.visits_90d >= 3 && x.last <= addDays_(d, -14) && x.last >= addDays_(d, -45); })
+    .sort(function (a, b) { return b.visits_90d - a.visits_90d; }).slice(0, 6);
+  var top30 = keys.map(function (k) { var v = since(G[k], 30); return { name: G[k].name, spend_30d: sum(v), visits_30d: v.length }; })
+    .filter(function (x) { return x.visits_30d; }).sort(function (a, b) { return b.spend_30d - a.spend_30d; }).slice(0, 5);
+  var lw = null, wk = addDays_(d, -7);
+  if (up.getLastRow()) up.getRange(1, 1, up.getLastRow(), 2).getDisplayValues().forEach(function (r) { if (r[0] === wk) { try { lw = JSON.parse(r[1]).net; } catch (e) {} } });
+  return {
+    date: d, net: r2_(net), checks: n, named_checks: Object.keys(tonight).length, tips: r2_(tips), avg_check: n ? r2_(net / n) : 0,
+    tips_by_shift: ['AM', 'AM only', 'PM (one bartender)', 'PM (both bartenders)', 'Overlap (both)', 'PM', 'PM only', 'All day']
+      .filter(function (k) { return shifts[k]; }).map(function (k) { var x = shifts[k]; return { shift: k, tips: r2_(x.tips), checks: x.checks, sales: r2_(x.sales), tip_pct: x.sales ? Math.round(x.tips / x.sales * 1000) / 10 : 0 }; }),
+    last_week_net: lw, vs_last_week_pct: lw ? Math.round((net - lw) / lw * 1000) / 10 : null,
+    top_items: items.slice(0, 12), categories: cats,
+    regulars: regulars.slice(0, 15), newcomers: newcomers, lapsed: lapsed, top_spenders_30d: top30,
+    ledger_since: keys.reduce(function (a, k) { return G[k].v[0][0] < a ? G[k].v[0][0] : a; }, d), guests_tracked: keys.length
+  };
+}
+
+// Run once from the editor (select "setup" → Run) to start the 5-minute delivery check and the
+// 15-minute Upserve import. It asks for Gmail (read) and Sheets permission the first time.
 function setup() {
   ScriptApp.getProjectTriggers().forEach(function (t) {
-    if (t.getHandlerFunction() === 'sendOutbox') ScriptApp.deleteTrigger(t);
+    if (['sendOutbox', 'importUpserve'].indexOf(t.getHandlerFunction()) >= 0) ScriptApp.deleteTrigger(t);
   });
   ScriptApp.newTrigger('sendOutbox').timeBased().everyMinutes(5).create();
+  ScriptApp.newTrigger('importUpserve').timeBased().everyMinutes(15).create();
+  importUpserve();
 }
 
 function out_(o) {
