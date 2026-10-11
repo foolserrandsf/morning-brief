@@ -148,8 +148,8 @@ function importUpserve() {
   Object.keys(files).sort().forEach(function (d) {
     var f = files[d];
     if (done[d] || !f.pmix || !f.checks) return;
-    // give the Payments report (card matching) until 7 a.m. the next morning to arrive
-    if (!f.pay && Utilities.formatDate(new Date(), ss.getSpreadsheetTimeZone(), "yyyy-MM-dd'T'HH") < addDays_(d, 1) + 'T07') return;
+    // give the Payments report (card matching) until 6:10 a.m. the next morning, so the 6:30 brief always has the night
+    if (!f.pay && Utilities.formatDate(new Date(), ss.getSpreadsheetTimeZone(), "yyyy-MM-dd'T'HH:mm") < addDays_(d, 1) + 'T06:10') return;
     var day = upserveDay_(ss, up, d, f.pmix, f.checks, f.pay);
     if (!day.checks) { Logger.log('No checks read for ' + d + ' - run debugUpserve'); return; }
     if (empty[d]) up.getRange(empty[d], 1, 1, 2).setValues([[d, JSON.stringify(day)]]);
@@ -397,7 +397,7 @@ function setup() {
     if (['sendOutbox', 'importUpserve'].indexOf(t.getHandlerFunction()) >= 0) ScriptApp.deleteTrigger(t);
   });
   ScriptApp.newTrigger('sendOutbox').timeBased().everyMinutes(5).create();
-  ScriptApp.newTrigger('importUpserve').timeBased().everyMinutes(15).create();
+  ScriptApp.newTrigger('importUpserve').timeBased().everyMinutes(5).create();
   importUpserve();
 }
 
