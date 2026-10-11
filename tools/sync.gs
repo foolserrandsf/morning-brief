@@ -496,8 +496,9 @@ function setup() {
     if (['sendOutbox', 'importUpserve'].indexOf(t.getHandlerFunction()) >= 0) ScriptApp.deleteTrigger(t);
   });
   ScriptApp.newTrigger('sendOutbox').timeBased().everyMinutes(5).create();
-  ScriptApp.newTrigger('importUpserve').timeBased().everyMinutes(5).create();
-  importUpserve();
+  // Upserve reports and invoices are now handled by Denise's "Fools Sales & Invoices" project, so the
+  // Morning Brief no longer reads those emails: setup removes the old importUpserve trigger and doesn't recreate it.
+  // (importUpserve/backfillGuests stay below, unused, in case that ever changes.)
 }
 
 function out_(o) {

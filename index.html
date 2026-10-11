@@ -252,7 +252,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261011130916';
+var APP_BUILD='20261011131828';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -505,6 +505,7 @@ function pts(a,dot){return a&&a.length?'<ul class="pts"'+(dot?' style="--dot:'+d
 function more(label,html){return html?'<details class="more"><summary>'+esc(label)+'</summary><div class="in">'+html+'</div></details>':''}
 function paras(a){return (a||[]).map(function(p){return '<p>'+esc(p)+'</p>'}).join('')}
 function money(n){return '$'+Math.round(+n||0).toLocaleString('en-US')}
+function money2(n){return '$'+(+n||0).toFixed(2)}
 function lesson(s,dot,deeper){
   // takeaway first: key points visible, full explanation one tap away
   var body=s.body||[],h='';
@@ -558,10 +559,17 @@ function buildCards(){
       else{
         var v=y.vs_last_week||{},up=(v.diff||0)>=0;
         h+='<div class="money"><span class="v">'+money(y.net)+'</span>'+(v.pct!=null?'<span class="delta '+(up?'up':'dn')+'">'+(up?'+':'−')+money(Math.abs(v.diff))+' ('+(up?'+':'−')+Math.abs(v.pct)+'%)</span>':'')+'</div>'+
-          '<div class="ylines"><div>'+esc(String(y.guests))+' guests, '+(y.tips_real?money(y.tips)+' in tips':'real tips aren\'t in yet (estimate '+money(y.tips)+')')+'</div>'+
+          '<div class="ylines"><div>'+esc(String(y.guests))+' guests'+(y.avg_check?', '+money2(y.avg_check)+' average check':'')+'</div><div>'+(y.tips_real?money(y.tips)+' in tips'+(y.tip_pct!=null?' ('+y.tip_pct+'% of sales)':''):'real tips aren\'t in yet (estimate '+money(y.tips)+')')+'</div>'+
           (v.net!=null?'<div>Last '+wdn+': '+money(v.net)+'</div>':'')+
           ((y.shifts||[]).length?'<div class="yshift">'+y.shifts.map(function(x){return '<span><b>'+esc(x.shift)+'</b> '+esc(x.hours||'')+' <em>'+money(x.tips)+'</em></span>'}).join('')+'</div>':'')+
           ((y.regulars||[]).length?'<div>Regulars in: '+y.regulars.map(function(r){return esc(r.name)+' ('+r.visits+' visits)'}).join(', ')+'</div>':'<div>No regulars from the Regulars tab came in.</div>')+'</div>';
+      }
+      var mt=y.mtd;
+      if(mt&&mt.net!=null){var mu=(mt.pct||0)>=0;h+='<div class="ylines"><div><b>Month to date:</b> '+money(mt.net)+(mt.prev_net!=null?' vs '+money(mt.prev_net)+' '+esc(mt.prev_label||'at this point last month')+' <span class="delta '+(mu?'up':'dn')+'">'+(mu?'+':'−')+Math.abs(mt.pct)+'%</span>':'')+'</div></div>';}
+      var bl=y.bills;
+      if(bl){
+        if((bl.overdue||[]).length)h+='<div class="alert"><b>Past due:</b> '+bl.overdue.map(function(x){return esc(x.vendor)+(x.amount!=null?' '+money(x.amount):'')+(x.due?' (due '+esc(x.due)+')':'')}).join('; ')+'</div>';
+        h+='<div class="ylines"><div><b>Bills due in the next 7 days:</b> '+((bl.due_soon||[]).length?bl.due_soon.map(function(x){return esc(x.vendor)+' '+money(x.amount)+' ('+esc(x.due)+')'}).join('; '):'none')+'</div></div>';
       }
     }
     if(y&&(y.trend||y.forecast)){
