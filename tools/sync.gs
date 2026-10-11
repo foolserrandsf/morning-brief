@@ -236,7 +236,7 @@ function payRows_(csv) {
     return /^(Captured|Paid)$/i.test(r['Status'] || '') && /^[A-Za-z]+ \d{4}$/.test(r['Tender Account'] || '');
   }).map(function (r) {
     var m = String(r['Trading Day']).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-    return { date: m ? m[3] + '-' + pad2_(m[1]) + '-' + pad2_(m[2]) : '', no: String(r['Check No.']).trim(), card: String(r['Tender Account']).toUpperCase(), amount: num_(r['Payment']) };
+    return { date: m ? m[3] + '-' + pad2_(m[1]) + '-' + pad2_(m[2]) : '', no: String(r['Check No.']).trim(), card: String(r['Tender Account']).toUpperCase(), amount: num_(r['Payment']), tip: num_(r['Tip']) };
   });
 }
 function loadCards_(ss) {
@@ -273,6 +273,89 @@ function nameChecks_(checks, pays, C) {
   });
   return matched;
 }
+// ---- card visit history (brand + last 4 only) and the patterns the brief reports ----
+function loadCardVisits_(ss) {
+  var sh = ss.getSheetByName('cardvisits') || ss.insertSheet('cardvisits'), V = {};
+  if (sh.getLastRow()) sh.getRange(1, 1, sh.getLastRow(), 2).getValues().forEach(function (r) { if (r[0]) V[r[0]] = JSON.parse(r[1] || '[]'); });
+  return { sheet: sh, V: V };
+}
+function saveCardVisits_(k) {
+  var keys = Object.keys(k.V).filter(function (c) { return k.V[c].length; }).sort();
+  k.sheet.clearContents();
+  if (keys.length) k.sheet.getRange(1, 1, keys.length, 2).setValues(keys.map(function (c) { return [c, JSON.stringify(k.V[c])]; }));
+}
+// pays for whole nights: replaces any earlier entries for those dates, so re-running never double counts
+function addCardVisits_(V, pays) {
+  var dates = {}, agg = {};
+  pays.forEach(function (p) {
+    dates[p.date] = 1;
+    var key = p.card + '|' + p.date, a = agg[key] = agg[key] || [p.date, 0, 0, 0];
+    a[1] = r2_(a[1] + p.amount); a[2] = r2_(a[2] + (p.tip || 0)); a[3]++;
+  });
+  Object.keys(V).forEach(function (c) { V[c] = V[c].filter(function (x) { return !dates[x[0]]; }); });
+  Object.keys(agg).forEach(function (key) { var c = key.split('|')[0]; (V[c] = V[c] || []).push(agg[key]); });
+  Object.keys(V).forEach(function (c) { V[c].sort(function (a, b) { return a[0] < b[0] ? -1 : 1; }); });
+}
+function patterns_(V, d) {
+  var DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], cards = Object.keys(V);
+  var first = cards.reduce(function (m, c) { return V[c].length && V[c][0][0] < m ? V[c][0][0] : m; }, d);
+  function win(a, b) {
+    var o = { from: a, to: b, payments: 0, cards: 0, spend: 0, tips: 0, by_weekday: {} };
+    cards.forEach(function (c) {
+      var hit = false;
+      V[c].forEach(function (x) {
+        if (x[0] < a || x[0] > b) return;
+        hit = true; o.payments += x[3]; o.spend += x[1]; o.tips += x[2];
+        var k = DOW[new Date(x[0] + 'T12:00:00Z').getUTCDay()]; o.by_weekday[k] = r2_((o.by_weekday[k] || 0) + x[1]);
+      });
+      if (hit) o.cards++;
+    });
+    o.spend = r2_(o.spend); o.tips = r2_(o.tips);
+    o.per_payment = o.payments ? r2_(o.spend / o.payments) : 0;
+    o.tip_pct = o.spend ? Math.round(o.tips / o.spend * 1000) / 10 : 0;
+    return o;
+  }
+  function regulars(end) {
+    var s = addDays_(end, -90), R = {};
+    cards.forEach(function (c) { if (V[c].filter(function (x) { return x[0] > s && x[0] <= end; }).length >= 4) R[c] = 1; });
+    return R;
+  }
+  function lapsed(end) {
+    if (addDays_(end, -120) < first) return null;                       // not enough history
+    var R = regulars(addDays_(end, -30)), gone = Object.keys(R).filter(function (c) {
+      return !V[c].some(function (x) { return x[0] > addDays_(end, -20) && x[0] <= end; });
+    });
+    var a = addDays_(end, -55), b = addDays_(end, -28), sp = 0;
+    gone.forEach(function (c) { V[c].forEach(function (x) { if (x[0] >= a && x[0] <= b) sp += x[1]; }); });
+    return { regulars_30_days_ago: Object.keys(R).length, not_back_in_20_days: gone.length, their_spend_in_prior28: r2_(sp) };
+  }
+  var last = win(addDays_(d, -27), d), prior = win(addDays_(d, -55), addDays_(d, -28));
+  var ly = addDays_(d, -364) >= addDays_(first, 27) ? win(addDays_(d, -364 - 27), addDays_(d, -364)) : null;
+  var Rn = regulars(d), regSpend = 0;
+  cards.forEach(function (c) { if (Rn[c]) V[c].forEach(function (x) { if (x[0] >= last.from && x[0] <= d) regSpend += x[1]; }); });
+  var months = {};
+  cards.forEach(function (c) {
+    var prev = null;
+    V[c].forEach(function (x) {
+      var m = x[0].slice(0, 7), isNew = !prev || prev < addDays_(x[0], -180);
+      if (m + '-01' >= addDays_(first, 180)) { var o = months[m] = months[m] || { new_cards: 0, returning_cards: 0, _s: {} };
+        if (!o._s[c]) { o._s[c] = 1; if (isNew) o.new_cards++; else o.returning_cards++; } }
+      prev = x[0];
+    });
+  });
+  Object.keys(months).forEach(function (m) { delete months[m]._s; });
+  return {
+    date: d, history_from: first, note: 'card payments only (cash not included); a card = one guest',
+    last28: last, prior28: prior, last_year28: ly,
+    regular_cards_now: Object.keys(Rn).length, regular_share_of_spend_last28_pct: last.spend ? Math.round(regSpend / last.spend * 100) : 0,
+    lapsed_regulars: lapsed(d), lapsed_regulars_last_year: lapsed(addDays_(d, -364)),
+    new_vs_returning_cards_by_month: months
+  };
+}
+function savePatterns_(ss, p) {
+  var sh = ss.getSheetByName('patterns') || ss.insertSheet('patterns');
+  sh.clearContents(); sh.getRange(1, 1, 1, 2).setValues([[p.date, JSON.stringify(p)]]);
+}
 function upserveDay_(ss, up, d, pmixCsv, checksCsv, payCsv) {
   // product mix
   var items = [], cats = [];
@@ -288,7 +371,13 @@ function upserveDay_(ss, up, d, pmixCsv, checksCsv, payCsv) {
   var checks = table_(checksCsv).filter(function (r) { return r['#']; }), net = 0, tips = 0, n = 0, tonight = {}, shifts = {}, order = [];
   var K = loadCards_(ss), list = checks.map(function (r) { return { date: d, no: String(r['#']).trim(), raw: r['Name'] }; });
   var cardMatched = nameChecks_(list, payRows_(payCsv).map(function (p) { p.date = d; return p; }), K.C);
-  if (payCsv) saveCards_(K);
+  if (payCsv) {
+    saveCards_(K);
+    var CV = loadCardVisits_(ss);
+    addCardVisits_(CV.V, payRows_(payCsv).map(function (p) { p.date = d; return p; }));
+    saveCardVisits_(CV);
+    savePatterns_(ss, patterns_(CV.V, d));
+  }
   checks.forEach(function (r, ci) {
     n++; net += num_(r['Net Sales']); tips += num_(r['Tips']);
     var sh = shiftOf_(d, r['Date']), x = shifts[sh];
@@ -302,7 +391,7 @@ function upserveDay_(ss, up, d, pmixCsv, checksCsv, payCsv) {
   // regulars ledger: key | name | visits JSON [[date, spend], ...]
   var gs = ss.getSheetByName('guests') || ss.insertSheet('guests'), G = {};
   if (gs.getLastRow()) gs.getRange(1, 1, gs.getLastRow(), 3).getValues().forEach(function (r) { if (r[0]) G[r[0]] = { name: r[1], v: JSON.parse(r[2] || '[]') }; });
-  Object.keys(G).forEach(function (k) { G[k].v = G[k].v.filter(function (x) { return x[0] !== d && x[0] >= addDays_(d, -400); }); });
+  Object.keys(G).forEach(function (k) { G[k].v = G[k].v.filter(function (x) { return x[0] !== d && x[0] >= addDays_(d, -800); }); });
   Object.keys(tonight).forEach(function (k) { var g = G[k] = G[k] || { name: tonight[k].name, v: [] }; g.v.push([d, r2_(tonight[k].spend)]); g.v.sort(); });
   var keys = Object.keys(G).filter(function (k) { return G[k].v.length; });
   gs.clearContents();
@@ -364,7 +453,12 @@ function backfillGuests() {
   }
   var ssB = SpreadsheetApp.getActive(), K = { sheet: ssB.getSheetByName('cards') || ssB.insertSheet('cards'), C: {} };
   var matched = nameChecks_(list, pays, K.C);
-  if (pays.length) saveCards_(K);
+  if (pays.length) {
+    saveCards_(K);
+    var CV = { sheet: ssB.getSheetByName('cardvisits') || ssB.insertSheet('cardvisits'), V: {} };
+    addCardVisits_(CV.V, pays);
+    saveCardVisits_(CV);
+  }
   list.forEach(function (c) {
     if (!c.name) return;
     var k = c.name.toUpperCase(), g = G[k] = G[k] || { name: c.name, v: {} };
@@ -390,6 +484,7 @@ function backfillGuests() {
     var v = Object.keys(G[k].v).sort().map(function (d) { return [d, G[k].v[d]]; });
     return [k, G[k].name, JSON.stringify(v)];
   }));
+  if (pays.length) savePatterns_(ssB, patterns_(CV.V, last));
   Logger.log('Loaded ' + nChecks + ' checks and ' + pays.length + ' card payments from ' + nFiles + ' files: ' + keys.length + ' guests, ' + matched + ' unnamed checks matched by card, ' + orphanVisits + ' earlier visits found by card, from ' + first + ' through ' + last + '.');
 }
 function setup() {

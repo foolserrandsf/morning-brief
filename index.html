@@ -226,6 +226,7 @@ details.more>.in p:first-child{margin-top:0}
 .tf b.pos,.tf b.neg{font:700 14px var(--sans)}.tf b.pos{color:#1F7445}.tf b.neg{color:#B23A2F}
 .tf small{font-size:13px;color:var(--soft);line-height:1.35}
 .insight>b{display:block;margin-bottom:2px}
+.conn{padding:10px 0;border-top:1px solid rgba(127,127,127,.18)}.conn:first-of-type{border-top:0}.conn b{display:block;font-size:16.5px;margin-bottom:2px}.conn span{display:block}
 .ylines{display:grid;gap:6px;font-size:16.5px;margin-top:6px}
 .yshift{display:flex;flex-wrap:wrap;gap:6px}
 .yshift span{background:var(--wash);border:1px solid var(--line);border-radius:10px;padding:5px 10px;font-size:14.5px}
@@ -251,7 +252,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261011122650';
+var APP_BUILD='20261011123155';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -572,6 +573,7 @@ function buildCards(){
         (fo.next30?'<div><span>Next 30 days</span><b>~'+k(fo.next30.total)+'</b><small>likely '+k(fo.next30.low)+' to '+k(fo.next30.high)+'</small></div>':'')+
         '</div>'+(fo.basis?'<p class="stats" style="margin-top:6px">'+esc(fo.basis)+'</p>':'')+'</div>';
     }
+    if(y&&y.connections&&y.connections.length)h+='<div class="sect"><h3>What the numbers connect</h3>'+y.connections.map(function(c){return '<div class="conn"><b>'+esc(c.title)+'</b><span>'+esc(c.detail)+'</span></div>'}).join('')+(y.connections_basis?'<p class="stats">'+esc(y.connections_basis)+'</p>':'')+'</div>';
     var ideas=(y&&y.ideas)||(u&&u.insight?[u.insight]:[]);
     if(ideas.length)h+='<div class="insight"><b>Ideas for this week</b>'+pts(ideas,'var(--teal)')+'</div>';
     if(u&&u.net!=null){
