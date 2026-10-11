@@ -207,7 +207,8 @@ function guestName_(raw, num) {
   raw = String(raw || '').trim();
   if (!raw || raw === String(num).trim() || !/[A-Za-z]/.test(raw)) return null;
   var first = raw.indexOf(',') > 0 ? raw.split(',')[1] : raw;
-  first = String(first || '').trim().split(/\s+/)[0] || '';
+  var w = String(first || '').trim().split(/\s+/).filter(function (x) { return !/^(mr|mrs|ms|miss|dr|mx)\.?$/i.test(x); });
+  first = w[0] || '';
   if (!/[A-Za-z]/.test(first)) return null;
   return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
 }
