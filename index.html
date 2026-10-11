@@ -264,7 +264,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261011162653';
+var APP_BUILD='20261011163138';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -789,7 +789,7 @@ function mins(){var t=dayStat();return Math.max(1,Math.round(((t.end||Date.now()
 function scoreChip(){var t=dayStat();return t.total?'✓ '+t.right+'/'+t.total+' · '+mins()+' min':''}
 function unanswered(){var el=document.querySelectorAll('#app .card .q');var n=0,first=null;el.forEach(function(q){if(!q.dataset.ans){n++;if(!first)first=q}});return {n:n,first:first}}
 
-/* ---------- ask Claude: type under a Needs you item; a 5-minute runner reads it from the sync and replies ---------- */
+/* ---------- ask Claude: type under a Needs you item; an hourly runner reads it from the sync and replies ---------- */
 var REP={},SEEN=ls('mb_seen')||{};
 function askKey(i){return S.brief.date+':in'+i}
 function asksFor(i){var d=DONE[S.brief.date]||{},out=[];for(var k in d){var e=d[k];if(e&&e.k==='ask'&&e.key===askKey(i))out.push(e)}return out.sort(function(a,b){return a.t-b.t})}
@@ -797,7 +797,7 @@ function askBox(i,m){
   var asks=asksFor(i),h='';
   asks.forEach(function(a){
     var r=REP[a.id],st=r?r.status:'waiting',isNew=r&&!SEEN[a.id]&&(r.status==='draft_ready'||r.status==='question'||r.status==='done'||r.status==='sent');
-    var label={waiting:'Sent to Claude, picked up within 5 minutes (6:30–11 am)',working:'Claude is on it',draft_ready:'Draft ready for you',question:'Claude has a question',done:'Done',sent:'Sent',error:'Couldn\'t finish'}[st]||st;
+    var label={waiting:'Sent to Claude, picked up at the next hourly check (about :35 past, 6:35–10:35 am)',working:'Claude is on it',draft_ready:'Draft ready for you',question:'Claude has a question',done:'Done',sent:'Sent',error:'Couldn\'t finish'}[st]||st;
     var inner='<p class="small"><b>You asked:</b> '+esc(a.text)+'</p>';
     if(r&&r.text)inner+='<p>'+esc(r.text)+'</p>';
     if(r&&r.draft)inner+='<div class="draft"><div class="small"><b>To:</b> '+esc(r.draft.to||'')+'<br><b>Subject:</b> '+esc(r.draft.subject||'')+'</div><div class="body">'+esc(r.draft.body||'').replace(/\n/g,'<br>')+'</div></div>'+
