@@ -252,7 +252,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261011133534';
+var APP_BUILD='20261011140244';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -573,7 +573,7 @@ function buildCards(){
         '<div style="grid-column:1/-1"><span>'+esc(ex.month||'')+' expenses so far</span><b>'+money(ex.total_month)+'</b><small>'+money(ex.invoices_month)+' in invoices + '+money(ex.fixed_month)+' fixed costs'+(ex.sales_month?' · sales '+money(ex.sales_month):'')+'</small></div></div>'+
         (ex.note?'<p class="stats">'+esc(ex.note)+'</p>':'')+'</div>';
       var wt=y.weekly_tips;
-      if(wt&&(wt.people||[]).length)h+='<div class="sect"><h3>Tips by bartender, '+esc(wt.week||'last week')+'</h3><div class="ppl">'+wt.people.map(function(p){return '<div class="p"><span>'+esc(p.name)+'</span><small>'+money(p.tips)+(p.shifts?', '+p.shifts+' shift'+(p.shifts>1?'s':''):'')+'</small></div>'}).join('')+'</div>'+(wt.total?'<p class="stats">Total '+money(wt.total)+(wt.note?'. '+esc(wt.note):'')+'</p>':'')+'</div>';
+      if(wt&&(wt.people||[]).length)h+='<div class="sect"><h3>Tips by bartender, '+esc(wt.week||'last week')+'</h3><div class="ppl">'+wt.people.map(function(p){return '<div class="p"><span>'+esc(p.name)+'</span><small>earned '+money(p.tips)+(p.shifts?', '+p.shifts+' shift'+(p.shifts>1?'s':''):'')+(p.paid!=null?'<br>paid '+money(p.paid):'')+(p.balance!=null?'<br><b class="'+(Math.abs(p.balance)<0.005?'pos':'neg')+'">'+(Math.abs(p.balance)<0.005?'all paid':(p.balance>0?'still owed '+money(p.balance):'paid ahead '+money(-p.balance)))+'</b>':'')+'</small></div>'}).join('')+'</div>'+(wt.total?'<p class="stats">Earned '+money(wt.total)+(wt.paid_total!=null?', paid '+money(wt.paid_total):'')+(wt.note?'. '+esc(wt.note):'')+'</p>':'')+((wt.unmatched||[]).length?'<p class="stats">Payments I couldn\'t match to a bartender: '+wt.unmatched.map(function(u){return esc(u.name)+' '+money(u.amount)+(u.date?' ('+esc(u.date)+')':'')}).join('; ')+'</p>':'')+'</div>';
       var bl=y.bills;
       if(bl){
         if((bl.overdue||[]).length)h+='<div class="alert"><b>Past due:</b> '+bl.overdue.map(function(x){return esc(x.vendor)+(x.amount!=null?' '+money(x.amount):'')+(x.due?' (due '+esc(x.due)+')':'')}).join('; ')+'</div>';
