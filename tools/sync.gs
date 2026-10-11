@@ -129,7 +129,11 @@ function importUpserve() {
   var up = ss.getSheetByName('upserve') || ss.insertSheet('upserve');
   up.getRange('A:A').setNumberFormat('@');
   var done = {};
-  if (up.getLastRow()) up.getRange(1, 1, up.getLastRow(), 1).getDisplayValues().forEach(function (r) { done[r[0]] = 1; });
+  var empty = {};
+  if (up.getLastRow()) up.getRange(1, 1, up.getLastRow(), 2).getDisplayValues().forEach(function (r, i) {
+    var o = {}; try { o = JSON.parse(r[1]); } catch (e) {}
+    if (o.checks) done[r[0]] = 1; else empty[r[0]] = i + 1;
+  });
   var files = {};
   GmailApp.search('from:support@upserve.com newer_than:6d has:attachment', 0, 40).forEach(function (t) {
     t.getMessages().forEach(function (m) {
@@ -137,31 +141,68 @@ function importUpserve() {
         var n = a.getName(), kind = /^pmix-report/.test(n) ? 'pmix' : /^checks-report/.test(n) ? 'checks' : null;
         var md = n.match(/--(\d{4}-\d{2}-\d{2})-to-(\d{4}-\d{2}-\d{2})/);
         if (!kind || !md || md[1] !== md[2]) return;
-        (files[md[1]] = files[md[1]] || {})[kind] = a.getDataAsString();
+        (files[md[1]] = files[md[1]] || {})[kind] = csvText_(a);
       });
     });
   });
   Object.keys(files).sort().forEach(function (d) {
     var f = files[d];
     if (done[d] || !f.pmix || !f.checks) return;
-    up.appendRow([d, JSON.stringify(upserveDay_(ss, up, d, f.pmix, f.checks))]);
+    var day = upserveDay_(ss, up, d, f.pmix, f.checks);
+    if (!day.checks) { Logger.log('No checks read for ' + d + ' - run debugUpserve'); return; }
+    if (empty[d]) up.getRange(empty[d], 1, 1, 2).setValues([[d, JSON.stringify(day)]]);
+    else up.appendRow([d, JSON.stringify(day)]);
     done[d] = 1;
   });
 }
 function addDays_(d, n) { var t = new Date(d + 'T12:00:00Z'); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); }
 function num_(x) { var v = parseFloat(String(x).replace(/[$,]/g, '')); return isNaN(v) ? 0 : v; }
 function r2_(x) { return Math.round(x * 100) / 100; }
+function parseCsv_(t) {
+  t = String(t || '').replace(/^\uFEFF/, '').replace(/\u0000/g, '');
+  var rows = [], row = [], f = '', q = false;
+  for (var i = 0; i < t.length; i++) {
+    var c = t.charAt(i);
+    if (q) {
+      if (c === '"') { if (t.charAt(i + 1) === '"') { f += '"'; i++; } else q = false; }
+      else f += c;
+    } else if (c === '"' && f === '') q = true;
+    else if (c === ',') { row.push(f); f = ''; }
+    else if (c === '\n' || c === '\r') {
+      if (c === '\r' && t.charAt(i + 1) === '\n') i++;
+      row.push(f); rows.push(row); row = []; f = '';
+    } else f += c;
+  }
+  if (f !== '' || row.length) { row.push(f); rows.push(row); }
+  return rows;
+}
 function table_(csv) {
-  var rows = Utilities.parseCsv(csv), h = 0;
-  while (h < rows.length && rows[h].length < 5) h++;          // skip the title + date lines
-  var head = rows[h], out = [];
+  var rows = parseCsv_(csv), h = 0;
+  while (h < rows.length && !(rows[h].length >= 5 && /^(Type|#)$/.test(String(rows[h][0]).trim()))) h++;
+  if (h >= rows.length) { h = 0; while (h < rows.length && rows[h].length < 5) h++; }
+  var head = rows[h] || [], out = [];
   for (var i = h + 1; i < rows.length; i++) {
-    if (rows[i].length < head.length - 2) continue;
-    var o = {}; head.forEach(function (k, j) { o[k.trim()] = rows[i][j]; }); out.push(o);
+    if (rows[i].length < 5) continue;
+    var o = {}; head.forEach(function (k, j) { o[String(k).trim()] = String(rows[i][j] == null ? '' : rows[i][j]).trim(); }); out.push(o);
   }
   return out;
 }
-// Regulars are tracked by FIRST NAME ONLY (Denise's rule: never store last names).
+function csvText_(a) {
+  var s = a.getDataAsString('UTF-8');
+  if (s.indexOf('\u0000') >= 0) s = a.getDataAsString('UTF-16');
+  return s;
+}
+// Run this from the editor if the upserve tab shows zeros: it logs what the script sees.
+function debugUpserve() {
+  GmailApp.search('from:support@upserve.com newer_than:3d has:attachment', 0, 10).forEach(function (t) {
+    t.getMessages().forEach(function (m) {
+      m.getAttachments().forEach(function (a) {
+        var s = csvText_(a), rows = table_(s);
+        Logger.log(a.getName() + ' | ' + a.getContentType() + ' | ' + s.length + ' chars | ' + rows.length + ' rows | columns: ' + (rows[0] ? Object.keys(rows[0]).slice(0, 8).join(', ') : 'none'));
+      });
+    });
+  });
+}
 function guestName_(raw, num) {
   raw = String(raw || '').trim();
   if (!raw || raw === String(num).trim() || !/[A-Za-z]/.test(raw)) return null;
