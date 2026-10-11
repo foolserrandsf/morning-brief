@@ -252,7 +252,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261011123906';
+var APP_BUILD='20261011130223';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -593,9 +593,9 @@ function buildCards(){
       if(tp.length)ppl+='<h3 style="font-size:16.5px;margin:14px 0 8px">Top spenders, '+(dsince(30)==='in 30 days'?'last 30 days':dsince(30))+'</h3><div class="ppl">'+tp.map(function(r){return '<div class="p"><span>'+esc(r.name)+'</span><small>'+money(r.spend_30d)+', '+r.visits_30d+' visit'+(r.visits_30d>1?'s':'')+'</small></div>'}).join('')+'</div>';
       h+=more('Guests: repeats, lapsed and top spenders',ppl);
       var sp=u.spending;
-      if(sp)h+=more('Spending and invoices',(sp.wtd!=null?'<p>'+money(sp.wtd)+' in invoices this week'+(sp.sales_wtd?' against '+money(sp.sales_wtd)+' in sales ('+Math.round(sp.wtd/sp.sales_wtd*100)+'%)':'')+(sp.mtd!=null?'. '+money(sp.mtd)+' this month'+(sp.sales_mtd?' ('+Math.round(sp.mtd/sp.sales_mtd*100)+'% of sales)':''):'')+'.</p>':'')+
+      if(sp)h+=more('Spending and invoices',((sp.overdue||[]).length?'<div class="alert"><b>Past due:</b> '+sp.overdue.map(function(x){return esc(x.vendor)+(x.amount!=null?' '+money(x.amount):'')+(x.due?' (was due '+esc(x.due)+')':'')+(x.note?' — '+esc(x.note):'')}).join('; ')+'</div>':'')+(sp.wtd!=null?'<p>'+money(sp.wtd)+' in invoices this week'+(sp.sales_wtd?' against '+money(sp.sales_wtd)+' in sales ('+Math.round(sp.wtd/sp.sales_wtd*100)+'%)':'')+(sp.mtd!=null?'. '+money(sp.mtd)+' this month'+(sp.sales_mtd?' ('+Math.round(sp.mtd/sp.sales_mtd*100)+'% of sales)':''):'')+'.</p>':'')+
         ((sp.new||[]).length?'<div class="ppl">'+sp.new.map(function(x){return '<div class="p"><span>'+esc(x.vendor)+(x.what?'<br><small style="text-align:left">'+esc(x.what)+'</small>':'')+'</span><small>'+money(x.amount)+(x.due?'<br>due '+esc(x.due):'')+'</small></div>'}).join('')+'</div>':'<p>No new invoices came in.</p>')+
-        ((sp.due_soon||[]).length?'<div class="alert"><b>Due soon:</b> '+sp.due_soon.map(function(x){return esc(x.vendor)+' '+money(x.amount)+' ('+esc(x.due)+')'}).join(', ')+'</div>':''));
+        ((sp.due_soon||[]).length?'<div class="alert"><b>Due soon:</b> '+sp.due_soon.map(function(x){return esc(x.vendor)+' '+money(x.amount)+' ('+esc(x.due)+')'}).join(', ')+'</div>':'')+(sp.note?'<p class="stats">'+esc(sp.note)+'</p>':''));
     }
     cards.push({id:'fe',title:'Fool\'s Errand yesterday',sub:wdn+' '+shortDate(ydate).replace(/^\w+,\s*/,''),color:'var(--teal)',tint:'#E0F6F3',min:1,must:1,body:h});
   }
