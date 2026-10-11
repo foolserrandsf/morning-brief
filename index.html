@@ -49,6 +49,11 @@ button{font:inherit;cursor:pointer;border:0;color:inherit}
 .modes button{flex:1;background:transparent;border-radius:9px;padding:8px 6px;font-weight:600;font-size:14px;color:var(--soft)}
 .modes button.on{background:var(--ink);color:#fff}
 .bar{display:flex;gap:3px;margin:0 0 14px}
+.askbox{display:flex;flex-direction:column;gap:6px;margin-top:10px}.askbox textarea{width:100%;box-sizing:border-box;font:15.5px/1.4 var(--sans);padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink);resize:vertical}.askbox .btn{align-self:flex-end;padding:10px 16px;font-size:15px}
+.more.ask{margin-top:8px}.more summary .dot,.bar i.attn::after{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--coral);margin-right:8px;vertical-align:middle}.more.attn summary{font-weight:700;color:var(--coral)}
+.bar i.attn{position:relative}.bar i.attn::after{content:'';position:absolute;top:-5px;right:-2px;margin:0;box-shadow:0 0 0 2px var(--bg)}
+.draft{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--wash);margin-top:6px}.draft .body{margin-top:8px;font-size:15.5px}
+
 .donestats{display:flex;justify-content:center;gap:22px;margin:14px 0 4px}.donestats div{display:flex;flex-direction:column;align-items:center}.donestats b{font:700 28px/1.1 var(--display)}.donestats span{font-size:13px;color:var(--soft)}.pb{font-weight:700;color:var(--persimmon);margin:6px 0 0}
 .foot.navbar{margin:0 auto;position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;gap:8px;max-width:560px;margin:0 auto;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:color-mix(in srgb,var(--bg) 88%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-top:1px solid var(--line)}
 .foot.navbar .btn{padding:12px 10px}.navbar .btn.ghost{padding:12px 14px}.navbar .nb{min-width:48px}.navbar .btn:disabled{opacity:.35}
@@ -116,7 +121,7 @@ button{font:inherit;cursor:pointer;border:0;color:inherit}
 .lock h1{font-weight:600;font-size:26px}
 .lock input{width:100%;max-width:340px;font:500 18px var(--sans);padding:13px;border-radius:12px;border:1px solid #CDD3DC;text-align:center;background:#fff;color:var(--ink)}
 .lock .btn{max-width:340px;width:100%}
-.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-weight:600;font-size:15px;z-index:9;opacity:0;transition:opacity .25s;pointer-events:none;max-width:90vw}
+.toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-weight:600;font-size:15px;z-index:30;opacity:0;transition:opacity .25s;pointer-events:none;max-width:90vw}
 .toast.on{opacity:1}
 .timer{font-weight:600;font-size:40px;text-align:center;margin:8px 0 0;font-variant-numeric:tabular-nums;color:var(--persimmon)}
 .fb{border:1px solid var(--line);border-radius:12px;padding:11px 13px}
@@ -259,7 +264,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261011155023';
+var APP_BUILD='20261011162653';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -418,6 +423,7 @@ async function load(first,date){
   var d=date||lt.date;
   S.state=await decFile('data/state.enc',lt.v);
   S.brief=await decFile('data/briefs/'+d+'.enc',lt.v);
+  loadReplies();
   S.latest=lt;
   ls('mb_cache',{brief:S.brief,state:S.state,latest:lt});
   build();
@@ -563,7 +569,7 @@ function buildCards(){
   /* 3 · inbox */
   var ib=b.inbox||[];
   cards.push({id:'inbox',title:'Needs you',sub:ib.length?ib.length+' email'+(ib.length>1?'s':'')+' waiting on you':'Inbox zero-ish',color:'var(--coral)',tint:'#FFE7E3',min:2,must:1,
-    body:(ib.length?'<div class="list">'+ib.map(function(m,i){return '<div class="item"><span class="tag" style="'+(m.account==='fe'?'background:#E6F2F1;color:var(--teal);border-color:#CDE4E2':'')+'">'+(m.account==='fe'?'Fool\'s Errand':'Gmail')+'</span>'+(m.by?'<span class="tag" style="background:var(--persimmon-wash);color:var(--persimmon);border-color:#F6D5C6">by '+esc(m.by)+'</span>':'')+'<div class="k">'+esc(m.from)+' — '+esc(m.subject)+'</div><div class="m">'+esc(m.ask)+'</div>'+(m.url?'<div class="m">'+linkify(m.url,'Open email →')+'</div>':'')+tChecks('in'+i,'Reply: '+m.from+' — '+m.subject,m.ask+(m.url?'\n'+m.url:''))+'</div>'}).join('')+'</div>':'<p class="empty">Nothing in either inbox needs a reply from you today.</p>')+(b.inbox_note?'<p class="small">'+esc(b.inbox_note)+'</p>':'')});
+    body:(ib.length?'<div class="list">'+ib.map(function(m,i){return '<div class="item"><span class="tag" style="'+(m.account==='fe'?'background:#E6F2F1;color:var(--teal);border-color:#CDE4E2':'')+'">'+(m.account==='fe'?'Fool\'s Errand':'Gmail')+'</span>'+(m.by?'<span class="tag" style="background:var(--persimmon-wash);color:var(--persimmon);border-color:#F6D5C6">by '+esc(m.by)+'</span>':'')+'<div class="k">'+esc(m.from)+' — '+esc(m.subject)+'</div><div class="m">'+esc(m.ask)+'</div>'+(m.url?'<div class="m">'+linkify(m.url,'Open email →')+'</div>':'')+tChecks('in'+i,'Reply: '+m.from+' — '+m.subject,m.ask+(m.url?'\n'+m.url:''))+askBox(i,m)+'</div>'}).join('')+'</div>':'<p class="empty">Nothing in either inbox needs a reply from you today.</p>')+(b.inbox_note?'<p class="small">'+esc(b.inbox_note)+'</p>':'')});
   /* 3b · Fool's Errand yesterday: Sales sheet first (5 short lines), Upserve detail one tap deeper */
   var y=b.fe_yesterday,u=b.upserve;
   if(y||(u&&u.net!=null)){
@@ -754,7 +760,7 @@ function render(){
   var c=cs[S.i];
   app.innerHTML=header()+'<div class="bar">'+cs.map(function(x,i){return '<i role="button" tabindex="0" aria-label="'+esc(x.title)+'" onclick="goTo('+i+')" class="'+(i===S.i?'now':'')+'"'+(done[x.id]&&i!==S.i?' style="background:'+x.color+'"':'')+'></i>'}).join('')+'</div>'+card(c)+
     '<div class="foot navbar" role="navigation">'+'<button class="btn ghost nb" aria-label="Previous card" '+(S.i>0?'onclick="goPrev()"':'disabled')+'>←</button><button class="btn ghost" onclick="later()">Later ↷</button><button class="btn" onclick="gotIt()">'+(S.i===cs.length-1?'Finish':'Got it →')+'</button></div>';
-  furi(app);wireQuizzes(app);tickJST();window.scrollTo({top:0,behavior:'smooth'});
+  furi(app);wireQuizzes(app);tickJST();badge();if(S.keepScroll){S.keepScroll=false}else window.scrollTo({top:0,behavior:'smooth'});
 }
 function extras(){
   var st=S.state||{},pool=Object.values(st.pool||{});
@@ -782,6 +788,36 @@ function cheer(t,n){toast(t);burst(n||30)}
 function mins(){var t=dayStat();return Math.max(1,Math.round(((t.end||Date.now())-t.start)/60000))}
 function scoreChip(){var t=dayStat();return t.total?'✓ '+t.right+'/'+t.total+' · '+mins()+' min':''}
 function unanswered(){var el=document.querySelectorAll('#app .card .q');var n=0,first=null;el.forEach(function(q){if(!q.dataset.ans){n++;if(!first)first=q}});return {n:n,first:first}}
+
+/* ---------- ask Claude: type under a Needs you item; a 5-minute runner reads it from the sync and replies ---------- */
+var REP={},SEEN=ls('mb_seen')||{};
+function askKey(i){return S.brief.date+':in'+i}
+function asksFor(i){var d=DONE[S.brief.date]||{},out=[];for(var k in d){var e=d[k];if(e&&e.k==='ask'&&e.key===askKey(i))out.push(e)}return out.sort(function(a,b){return a.t-b.t})}
+function askBox(i,m){
+  var asks=asksFor(i),h='';
+  asks.forEach(function(a){
+    var r=REP[a.id],st=r?r.status:'waiting',isNew=r&&!SEEN[a.id]&&(r.status==='draft_ready'||r.status==='question'||r.status==='done'||r.status==='sent');
+    var label={waiting:'Sent to Claude, picked up within 5 minutes (6:30–11 am)',working:'Claude is on it',draft_ready:'Draft ready for you',question:'Claude has a question',done:'Done',sent:'Sent',error:'Couldn\'t finish'}[st]||st;
+    var inner='<p class="small"><b>You asked:</b> '+esc(a.text)+'</p>';
+    if(r&&r.text)inner+='<p>'+esc(r.text)+'</p>';
+    if(r&&r.draft)inner+='<div class="draft"><div class="small"><b>To:</b> '+esc(r.draft.to||'')+'<br><b>Subject:</b> '+esc(r.draft.subject||'')+'</div><div class="body">'+esc(r.draft.body||'').replace(/\n/g,'<br>')+'</div></div>'+
+      (st==='draft_ready'&&!sentReq(a.id)?'<div class="foot" style="margin-top:8px"><button class="btn" onclick="sendDraft(\''+a.id+'\')">Send it</button></div>':'')+(sentReq(a.id)&&st!=='sent'?'<p class="small">Sending on the next pickup.</p>':'');
+    h+='<details class="more ask'+(isNew?' attn':'')+'" ontoggle="if(this.open)seen(\''+a.id+'\',this)"><summary>'+(isNew?'<i class="dot"></i>':'')+esc(label)+'</summary><div class="in">'+inner+'</div></details>';
+  });
+  h+='<div class="askbox"><textarea id="ask'+i+'" rows="2" placeholder="Tell Claude what to do: draft a reply, say yes, ask for a new date… add &quot;send&quot; to send it"></textarea><button class="btn ghost" onclick="askSend('+i+')">Send to Claude</button></div>';
+  return h;
+}
+function sentReq(id){var d=DONE[S.brief.date]||{};for(var k in d){var e=d[k];if(e&&e.k==='send'&&e.ask===id)return true}return false}
+function askSend(i){var ta=$('ask'+i),v=(ta&&ta.value||'').trim();if(!v){toast('Type what you want done first');return}
+  var m=(S.brief.inbox||[])[i]||{},t=Date.now();tEvent('ask',{id:'a'+t,key:askKey(i),text:v,from:m.from||'',subject:m.subject||'',url:m.url||'',account:m.account||''});
+  cheer('Sent to Claude!',25);S.keepScroll=true;build()}
+function sendDraft(id){tEvent('send',{ask:id});toast('Will send on the next pickup');S.keepScroll=true;build()}
+function seen(id,el){if(!SEEN[id]){SEEN[id]=Date.now();ls('mb_seen',SEEN);el.classList.remove('attn');var d=el.querySelector('summary .dot');if(d)d.remove();badge()}}
+function pendingAttn(){var n=0;for(var id in REP){var r=REP[id];if(!SEEN[id]&&r.date===(S.brief&&S.brief.date)&&/draft_ready|question|done|sent/.test(r.status))n++}return n}
+function badge(){var n=pendingAttn(),b=document.querySelectorAll('.bar i');(S.cards||[]).forEach(function(c,i){if(c.id==='inbox'&&b[i])b[i].classList.toggle('attn',n>0)})}
+async function loadReplies(){if(!S.key)return;try{var r=await decFile('data/replies.enc',Date.now());var before=JSON.stringify(REP);REP=r.items||{};if(JSON.stringify(REP)!==before){var n=pendingAttn();if(n)toast(n+' repl'+(n>1?'ies':'y')+' from Claude in Needs you');if(S.brief&&S.mode==='flow'&&visible()[S.i]&&visible()[S.i].id==='inbox'&&!document.activeElement.matches('textarea')){S.keepScroll=true;build()}else badge()}}catch(e){}}
+setInterval(function(){if(document.visibilityState==='visible')loadReplies()},60000);
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')loadReplies()});
 function setMode(m,q){S.mode=m;S.quick=q;S.i=0;var done=DONE[S.brief.date]||{},cs=visible();for(var i=0;i<cs.length;i++){if(!done[cs[i].id]){S.i=i;break}}render()}
 function jump(i){S.touched=1;S.mode='flow';S.quick=false;S.i=i;render()}
 function mark(){var cs=visible(),c=cs[S.i];var d=DONE[S.brief.date]=DONE[S.brief.date]||{};if(!d[c.id]){d[c.id]=Date.now();ls('mb_done',DONE);queueSync()}}

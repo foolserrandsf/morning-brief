@@ -249,7 +249,7 @@ def cmd_progress(path):
 
 def last_focus(day):
     """What she did with that day's one thing: done / later (with reminder time) / undo / not touched."""
-    ev = [v for k, v in day.items() if k.startswith('f_') and isinstance(v, dict)]
+    ev = [v for k, v in day.items() if k.startswith('f_') and isinstance(v, dict) and v.get('k') == 'focus']
     if not ev:
         return 'not checked off'
     e = max(ev, key=lambda v: v.get('t', 0))
@@ -290,10 +290,53 @@ def cmd_check():
     print('All files decrypt.')
 
 
+REPLIES = os.path.join(DATA, 'replies.enc')
+
+
+def load_replies():
+    r = dec(REPLIES) if os.path.exists(REPLIES) else {}
+    r.setdefault('items', {})
+    return r
+
+
+def cmd_asks(path):
+    """List what she typed under Needs you items (and Send-it taps) that hasn't been handled yet."""
+    j = json.loads(open(path).read().strip())
+    prog = json.loads(AESGCM(key()).decrypt(base64.b64decode(j['n']), base64.b64decode(j['c']), None))
+    items = load_replies()['items']
+    todo = []
+    for d, day in sorted(prog.get('DONE', {}).items())[-3:]:
+        for k, v in day.items():
+            if not (k.startswith('f_') and isinstance(v, dict)):
+                continue
+            if v.get('k') == 'ask' and v.get('id') and items.get(v['id'], {}).get('status') in (None, 'waiting', 'working'):
+                todo.append({'type': 'ask', 'date': d, **{x: v.get(x) for x in ('id', 'key', 'text', 'from', 'subject', 'url', 'account')}})
+            if v.get('k') == 'send' and v.get('ask'):
+                r = items.get(v['ask'], {})
+                if r.get('status') == 'draft_ready':
+                    todo.append({'type': 'send', 'date': d, 'id': v['ask'], 'draft': r.get('draft'), 'draft_id': r.get('draft_id')})
+    print(json.dumps(todo, ensure_ascii=False, indent=1))
+
+
+def cmd_reply(path):
+    """Merge reply entries [{id, date, status, text, draft{to,subject,body}, draft_id}] into data/replies.enc (keeps 14 days)."""
+    new = json.load(open(path))
+    r = load_replies()
+    for e in new if isinstance(new, list) else [new]:
+        cur = r['items'].get(e['id'], {})
+        cur.update(e)
+        cur['updated'] = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).isoformat() + 'Z'
+        r['items'][e['id']] = cur
+    cutoff = (datetime.date.today() - datetime.timedelta(days=14)).isoformat()
+    r['items'] = {k: v for k, v in r['items'].items() if v.get('date', '9') >= cutoff}
+    enc(r, REPLIES)
+    print(f"Saved {len(new) if isinstance(new, list) else 1} repl(ies); {len(r['items'])} kept")
+
+
 if __name__ == '__main__':
     a = sys.argv[1:]
     if not a:
         sys.exit(__doc__)
     {'state': lambda: cmd_state(), 'check': lambda: cmd_check(),
      'brief': lambda: cmd_brief(a[1]), 'recs': lambda: cmd_recs(a[1]),
-     'progress': lambda: cmd_progress(a[1]), 'birthdays': lambda: cmd_birthdays(a[1])}[a[0]]()
+     'progress': lambda: cmd_progress(a[1]), 'asks': lambda: cmd_asks(a[1]), 'reply': lambda: cmd_reply(a[1]), 'birthdays': lambda: cmd_birthdays(a[1])}[a[0]]()
