@@ -204,13 +204,16 @@ function debugUpserve() {
   });
 }
 function guestName_(raw, num) {
+  // "LAST, FIRST" -> "First L."; a single name typed on a tab -> "First". Only a last INITIAL is kept, never the last name.
   raw = String(raw || '').trim();
   if (!raw || raw === String(num).trim() || !/[A-Za-z]/.test(raw)) return null;
-  var first = raw.indexOf(',') > 0 ? raw.split(',')[1] : raw;
+  var last = '', first = raw;
+  if (raw.indexOf(',') > 0) { last = raw.slice(0, raw.indexOf(',')); first = raw.slice(raw.indexOf(',') + 1); }
   var w = String(first || '').trim().split(/\s+/).filter(function (x) { return !/^(mr|mrs|ms|miss|dr|mx)\.?$/i.test(x); });
   first = w[0] || '';
-  if (!/[A-Za-z]/.test(first)) return null;
-  return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+  if (!/[A-Za-z]{2}/.test(first)) return null;
+  var li = last.replace(/[^A-Za-z]/g, '').charAt(0).toUpperCase();
+  return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase() + (li ? ' ' + li + '.' : '');
 }
 // Shift schedule (same as the "Shift schedule" tab of Fool's Errand Sales): check time → shift.
 function shiftOf_(d, when) {
@@ -285,6 +288,41 @@ function upserveDay_(ss, up, d, pmixCsv, checksCsv) {
 
 // Run once from the editor (select "setup" → Run) to start the 5-minute delivery check and the
 // 15-minute Upserve import. It asks for Gmail (read) and Sheets permission the first time.
+// One-time history load: put Upserve "Checks" report CSVs (any date range, e.g. one per month) in the Drive
+// folder "Morning Brief - Upserve checks history", then run this. It rebuilds the guest history from those files.
+function backfillGuests() {
+  var name = 'Morning Brief - Upserve checks history', it = DriveApp.getFoldersByName(name);
+  var folder = it.hasNext() ? it.next() : DriveApp.createFolder(name);
+  var files = folder.getFiles(), G = {}, nFiles = 0, nChecks = 0, last = '';
+  while (files.hasNext()) {
+    var f = files.next();
+    if (!/\.csv$/i.test(f.getName())) continue;
+    nFiles++;
+    table_(f.getBlob().getDataAsString('UTF-8')).forEach(function (r) {
+      if (!r['#']) return;
+      var m = String(r['Date']).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})\s*([ap]m)/i);
+      if (!m) return;
+      nChecks++;
+      var d = m[3] + '-' + ('0' + m[1]).slice(-2) + '-' + ('0' + m[2]).slice(-2);
+      var h = (+m[4] % 12) + (m[6].toLowerCase() === 'pm' ? 12 : 0);
+      if (h < 6) d = addDays_(d, -1);                       // after midnight belongs to the night before
+      if (d > last) last = d;
+      var nm = guestName_(r['Name'], r['#']);
+      if (!nm) return;
+      var k = nm.toUpperCase(), g = G[k] = G[k] || { name: nm, v: {} };
+      g.v[d] = r2_((g.v[d] || 0) + num_(r['Bill Total']));
+    });
+  }
+  if (!nFiles) { Logger.log('Put the Checks CSVs in this Drive folder, then run backfillGuests again: ' + folder.getUrl()); return; }
+  var ss = SpreadsheetApp.getActive(), gs = ss.getSheetByName('guests') || ss.insertSheet('guests');
+  var keys = Object.keys(G).sort();
+  gs.clearContents();
+  if (keys.length) gs.getRange(1, 1, keys.length, 3).setValues(keys.map(function (k) {
+    var v = Object.keys(G[k].v).sort().map(function (d) { return [d, G[k].v[d]]; });
+    return [k, G[k].name, JSON.stringify(v)];
+  }));
+  Logger.log('Loaded ' + nChecks + ' checks from ' + nFiles + ' files: ' + keys.length + ' named guests, through ' + last + '.');
+}
 function setup() {
   ScriptApp.getProjectTriggers().forEach(function (t) {
     if (['sendOutbox', 'importUpserve'].indexOf(t.getHandlerFunction()) >= 0) ScriptApp.deleteTrigger(t);
