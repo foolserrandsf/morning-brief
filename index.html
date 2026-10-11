@@ -211,6 +211,15 @@ details.more>.in p:first-child{margin-top:0}
 .ppl .p:last-child{border-bottom:0}
 .ppl .p small{color:var(--soft);font-size:14px;text-align:right}
 .ppl .p .ms{color:var(--persimmon);font-weight:700}
+.jwx{display:grid;gap:8px;margin-top:12px}
+.jwx .c{background:#fff;border:1px solid #DCE5F5;border-radius:14px;padding:12px 14px}
+.jwx .top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.jwx .top b{font:650 17px var(--display)}.jwx .top span{font-size:13.5px;color:var(--soft)}
+.jwx .now{display:flex;align-items:baseline;gap:6px;margin-top:2px}.jwx .now .t{font:700 26px/1.1 var(--display);color:var(--ai)}.jwx .now span{color:var(--soft)}
+.jwx .sky{font-size:15.5px}
+.jwx .days{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.jwx .days span{background:var(--wash);border-radius:8px;padding:3px 8px;font-size:13.5px}
+.jwx .nt{font-size:15px;margin-top:6px}
 .ylines{display:grid;gap:6px;font-size:16.5px;margin-top:6px}
 .yshift{display:flex;flex-wrap:wrap;gap:6px}
 .yshift span{background:var(--wash);border:1px solid var(--line);border-radius:10px;padding:5px 10px;font-size:14.5px}
@@ -236,7 +245,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261011111628';
+var APP_BUILD='20261011112146';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -518,6 +527,8 @@ function buildCards(){
       gm+='<div class="phrase"><div class="lbl">Say it today</div><div class="say jp">'+esc(jp.phrase.jp)+'</div><div class="ro">'+esc(jp.phrase.romaji)+'</div><div class="en">'+esc(jp.phrase.en)+'</div>'+
         (jp.phrase.notes&&jp.phrase.notes.length?'<div class="chunks">'+jp.phrase.notes.map(function(n,i){return '<div class="c" style="--cc:'+cols[i%cols.length]+'"><b class="jp">'+esc(n.bit)+'</b><span>'+esc(n.means)+'</span></div>'}).join('')+'</div>':'')+'</div>';
     }
+    var jw=w.japan||[];
+    if(jw.length)gm+='<div class="jwx">'+jw.map(function(c){return '<div class="c"><div class="top"><b>'+esc(c.city)+'</b>'+(c.when?'<span>'+esc(c.when)+'</span>':'')+'</div><div class="now"><span class="t">'+esc(c.hi)+'°</span><span>/ '+esc(c.lo)+'°</span></div><div class="sky">'+esc(c.sky||'')+(c.rain?', rain '+esc(c.rain):'')+'</div>'+(c.days&&c.days.length?'<div class="days">'+c.days.map(function(d){return '<span><b>'+esc(d.day)+'</b> '+esc(d.hi)+'°/'+esc(d.lo)+'° '+esc(d.sky||'')+(d.rain?' '+esc(d.rain):'')+'</span>'}).join('')+'</div>':'')+(c.note?'<div class="nt">'+esc(c.note)+'</div>':'')+'</div>'}).join('')+'</div>';
     if(jp.tip)gm+='<div class="back"><b>What you\'ll likely hear back</b>'+esc(jp.tip)+'</div>';
     gm+='</div>';
   }
