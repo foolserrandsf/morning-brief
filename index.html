@@ -257,7 +257,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261011151404';
+var APP_BUILD='20261011152505';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -580,7 +580,7 @@ function buildCards(){
         '<div style="grid-column:1/-1"><span>'+mo+' total expenses so far</span><b>'+money(ex.total_month)+'</b><small>supplier bills + fixed costs'+(ex.sales_month?'. '+mo+' sales so far: '+money(ex.sales_month):'')+'</small></div></div>'+
         ((ex.fixed_items||[]).length?'<div class="tipsplit" style="margin-top:10px"><div><span><b style="font-size:15px">'+mo+' fixed costs, one by one</b></span></div>'+ex.fixed_items.map(function(f){return '<div><span>'+esc(f.name)+(f.note?'<small>'+esc(f.note)+'</small>':'')+'</span><b>'+money(f.amount)+'</b></div>'}).join('')+'</div>':'')+(ex.note?'<p class="stats">'+esc(ex.note)+'</p>':'')+'</div>';}
       var wt=y.weekly_tips;
-      if(wt&&(wt.people||[]).length)h+='<div class="sect"><h3>Tips by bartender, '+esc(wt.week||'last week')+'</h3><div class="ppl">'+wt.people.map(function(p){return '<div class="p"><span>'+esc(p.name)+'</span><small>'+(p.shifts||p.tips?'earned '+money(p.tips)+(p.shifts?', '+p.shifts+' shift'+(p.shifts>1?'s':''):''):'no tracked shifts yet')+(p.paid?'<br>paid '+money(p.paid)+(wt.since?' since '+esc(dshort(wt.since)):' this week'):'')+(p.last_paid&&p.last_paid.date?'<br>last payout '+money(p.last_paid.amount)+' on '+esc(p.last_paid.date):'')+(p.balance!=null?'<br>'+(p.balance>0.005?'<b class="owed">still owed '+money(p.balance)+(p.paid_through?' (paid through '+esc(p.paid_through)+')':'')+'</b>':p.balance<-0.005?'<b class="over">paid '+money(-p.balance)+' more than earned</b>':'<b class="ok">all paid</b>'):'')+'</small></div>'}).join('')+'</div>'+(wt.total?'<p class="stats">Earned '+money(wt.total)+(wt.paid_total!=null?', paid '+money(wt.paid_total):'')+(wt.note?'. '+esc(wt.note):'')+'</p>':'')+((wt.unmatched||[]).length?'<p class="stats">Payments I couldn\'t match to a bartender: '+wt.unmatched.map(function(u){return esc(u.name)+' '+money(u.amount)+(u.date?' ('+esc(u.date)+')':'')}).join('; ')+'</p>':'')+'</div>';
+      if(wt&&(wt.people||[]).length)h+='<div class="sect"><h3>Last week\'s tips by bartender'+(wt.week?', '+esc(wt.week):'')+'</h3><div class="ppl">'+wt.people.map(function(p){return '<div class="p"><span>'+esc(p.name)+'</span><small>'+(p.shifts||p.tips?'earned '+money(p.tips)+(p.shifts?', '+p.shifts+' shift'+(p.shifts>1?'s':''):''):'no tracked shifts yet')+(p.paid?'<br>paid '+money(p.paid)+' last week':'')+(p.last_paid&&p.last_paid.date?'<br>last payout '+money(p.last_paid.amount)+' on '+esc(p.last_paid.date):'')+(p.balance!=null?'<br>'+(p.balance>0.005?'<b class="owed">still owed in total '+money(p.balance)+(p.paid_through?' (paid through '+esc(p.paid_through)+')':'')+'</b>':p.balance<-0.005?'<b class="over">paid '+money(-p.balance)+' more than earned</b>':'<b class="ok">all paid</b>'):'')+'</small></div>'}).join('')+'</div>'+(wt.total?'<p class="stats">Last week: earned '+money(wt.total)+(wt.paid_total!=null?', paid out '+money(wt.paid_total):'')+(wt.note?'. '+esc(wt.note):'')+'</p>':'')+((wt.unmatched||[]).length?'<p class="stats">Payments I couldn\'t match to a bartender: '+wt.unmatched.map(function(u){return esc(u.name)+' '+money(u.amount)+(u.date?' ('+esc(u.date)+')':'')}).join('; ')+'</p>':'')+'</div>';
       var bl=y.bills;
       if(bl){
         if((bl.overdue||[]).length)h+='<div class="alert"><b>Past due:</b> '+bl.overdue.map(function(x){return esc(x.vendor)+(x.amount!=null?' '+money(x.amount):'')+(x.due?' (due '+esc(x.due)+')':'')}).join('; ')+'</div>';
@@ -614,7 +614,7 @@ function buildCards(){
       if(rg.length)ppl+='<h3 style="font-size:16.5px;margin:4px 0 8px">In last night, and seen before</h3><div class="ppl">'+rg.slice(0,10).map(function(r){return '<div class="p"><span>'+esc(r.name)+(r.milestone?' <span class="ms">'+r.milestone+'th visit</span>':'')+'</span><small>'+r.visits+' nights '+dsince(90)+', '+money(r.spend_90d)+' spent</small></div>'}).join('')+'</div>';
       if(lp.length)ppl+='<h3 style="font-size:16.5px;margin:14px 0 8px">Haven\'t seen lately</h3><div class="ppl">'+lp.map(function(r){return '<div class="p"><span>'+esc(r.name)+'</span><small>last in '+esc(shortDate(r.last))+', '+r.visits_90d+' nights '+dsince(90)+'</small></div>'}).join('')+'</div>';
       if(tp.length)ppl+='<h3 style="font-size:16.5px;margin:14px 0 8px">Top spenders, '+(dsince(30)==='in 30 days'?'last 30 days':dsince(30))+'</h3><div class="ppl">'+tp.map(function(r){return '<div class="p"><span>'+esc(r.name)+'</span><small>'+money(r.spend_30d)+', '+r.visits_30d+' visit'+(r.visits_30d>1?'s':'')+'</small></div>'}).join('')+'</div>';
-      h+=more('Guests: repeats, lapsed and top spenders',ppl);
+      h+=more('Guests: who came back, who\'s missing, top spenders',ppl);
       var sp=u.spending;
       if(sp)h+=more('Spending and invoices',((sp.overdue||[]).length?'<div class="alert"><b>Past due:</b> '+sp.overdue.map(function(x){return esc(x.vendor)+(x.amount!=null?' '+money(x.amount):'')+(x.due?' (was due '+esc(x.due)+')':'')+(x.note?' — '+esc(x.note):'')}).join('; ')+'</div>':'')+(sp.wtd!=null?'<p>'+money(sp.wtd)+' in invoices this week'+(sp.sales_wtd?' against '+money(sp.sales_wtd)+' in sales ('+Math.round(sp.wtd/sp.sales_wtd*100)+'%)':'')+(sp.mtd!=null?'. '+money(sp.mtd)+' this month'+(sp.sales_mtd?' ('+Math.round(sp.mtd/sp.sales_mtd*100)+'% of sales)':''):'')+'.</p>':'')+
         ((sp.new||[]).length?'<div class="ppl">'+sp.new.map(function(x){return '<div class="p"><span>'+esc(x.vendor)+(x.what?'<br><small style="text-align:left">'+esc(x.what)+'</small>':'')+'</span><small>'+money(x.amount)+(x.due?'<br>due '+esc(x.due):'')+'</small></div>'}).join('')+'</div>':'<p>No new invoices came in.</p>')+
@@ -624,8 +624,10 @@ function buildCards(){
   }
   /* 4 · football */
   var fb=b.football||{};
-  if(fb.games&&fb.games.length)cards.push({id:'fb',title:'Game day',sub:fb.games.length+' game'+(fb.games.length>1?'s':'')+' to know',color:'var(--leaf)',tint:'#E4F7E8',min:1,must:1,
-    body:'<div class="list">'+fb.games.map(function(g){return '<div class="fb"><span class="tag">'+esc(g.league)+'</span><div class="mu">'+esc(g.matchup)+'</div><div class="row"><span class="chip">'+esc(g.kickoff)+'</span><span class="chip">'+esc(g.tv)+'</span>'+(g.spread?'<span class="chip">'+esc(g.spread)+'</span>':'')+'</div>'+(g.pick?'<div class="pick">Brief pick: '+esc(g.pick)+'</div>':'')+(g.your_bet?'<div class="bet">Your bet: '+esc(g.your_bet)+'</div>':'')+'</div>'}).join('')+'</div>'+(fb.link?'<p>'+linkify(fb.link,'Full Football Brief →')+'</p>':'')});
+  var fbg=fb.games||[],fbz=fb.buzz||[];
+  if(fbg.length||fbz.length)cards.push({id:'fb',title:fbg.length?'Game day':'Football talk',sub:fbg.length?fbg.length+' game'+(fbg.length>1?'s':'')+' to know':'What people are talking about',color:'var(--leaf)',tint:'#E4F7E8',min:1,must:1,
+    body:(fbz.length?'<h3 style="font-size:16.5px;margin:0 0 8px">What people are talking about</h3><div class="list">'+fbz.map(function(z){return '<div class="fb"><div class="mu">'+esc(z.title)+'</div>'+(z.line?'<div style="margin-top:4px">'+esc(z.line)+'</div>':'')+'</div>'}).join('')+'</div>':'')+
+      (fbg.length?'<h3 style="font-size:16.5px;margin:'+(fbz.length?'16px':'0')+' 0 8px">Games to know</h3><div class="list">'+fbg.map(function(g){return '<div class="fb"><span class="tag">'+esc(g.league)+'</span><div class="mu">'+esc(g.matchup)+'</div><div class="row"><span class="chip">'+esc(g.kickoff)+'</span>'+(g.tv?'<span class="chip">'+esc(g.tv)+'</span>':'')+(g.spread?'<span class="chip">'+esc(g.spread)+'</span>':'')+'</div>'+(g.note?'<div style="margin-top:6px">'+esc(g.note)+'</div>':'')+(g.pick?'<div class="pick">Brief pick: '+esc(g.pick)+'</div>':'')+(g.your_bet?'<div class="bet">Your bet: '+esc(g.your_bet)+'</div>':'')+'</div>'}).join('')+'</div>':'')+(fb.link?'<p>'+linkify(fb.link,'Full Football Brief →')+'</p>':'')});
   /* 5 · news */
   var nw=(b.news||[]).filter(function(n){return !/upserve/i.test(n.source||'')||!b.upserve});
   cards.push({id:'news',title:'The news',sub:nw.length+' stories, takeaway first',color:'var(--grape)',tint:'#EEE8FF',min:6,
@@ -676,9 +678,9 @@ function buildCards(){
     var sc=recallItems('second');
     if(sc.length)cards.push({id:'second',title:'Second chance',sub:sc.length+' you missed before',color:'var(--grape)',tint:'#EEE8FF',min:2,body:quizHTML(sc.map(recallQ),'Try these again')});
   }
-  /* Fool's Errand numbers never open the brief: they sit after the news */
-  var fi=cards.findIndex(function(c){return c.id==='fe'});
-  if(fi>-1){var fc=cards.splice(fi,1)[0],ai=cards.findIndex(function(c){return c.id==='news'});if(ai<0)ai=cards.findIndex(function(c){return c.id==='bottle'});cards.splice(ai<0?cards.length:ai+1,0,fc)}
+  /* Denise's order (Oct 11) */
+  var ORDER=['gm','cal','inbox','fe','bottle','recs','wset','fb','news','kanji','fil','stocks','crypto','sun','recall','second'];
+  cards.sort(function(x,y){var i=ORDER.indexOf(x.id),j=ORDER.indexOf(y.id);return (i<0?99:i)-(j<0?99:j)});
   return cards;
 }
 function recallQ(p){var q=Object.assign({},p);q.q='['+TRACK_NAME[p.track]+'] '+p.q;return q}
