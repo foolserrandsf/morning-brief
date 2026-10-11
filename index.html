@@ -264,7 +264,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261011163138';
+var APP_BUILD='20261011164549';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -423,7 +423,7 @@ async function load(first,date){
   var d=date||lt.date;
   S.state=await decFile('data/state.enc',lt.v);
   S.brief=await decFile('data/briefs/'+d+'.enc',lt.v);
-  loadReplies();
+  loadReplies();noteTZ();
   S.latest=lt;
   ls('mb_cache',{brief:S.brief,state:S.state,latest:lt});
   build();
@@ -642,7 +642,7 @@ function buildCards(){
   var fbg=fb.games||[],fbz=fb.buzz||[],f1=b.football_101;
   if(fbg.length||fbz.length||f1)cards.push({id:'fb',title:fbg.length?'Game day':'Football',sub:(fbg.length?fbg.length+' game'+(fbg.length>1?'s':'')+' to know':'What people are talking about')+(f1&&f1.n?' · 101 lesson '+esc(f1.n):''),color:'var(--leaf)',tint:'#E4F7E8',min:f1?4:1,must:1,
     body:(fbz.length?'<h3 style="font-size:16.5px;margin:0 0 8px">What people are talking about</h3>'+pts(fbz.map(function(z){return z.title+(z.line?': '+z.line:'')}),'var(--leaf)'):'')+
-      more('Games to know'+(fbg.length?' ('+fbg.length+')':''),fbg.length?'<div class="list">'+fbg.map(function(g){return '<div class="fb"><span class="tag">'+esc(g.league)+'</span><div class="mu">'+esc(g.matchup)+'</div><div class="row"><span class="chip">'+esc(g.kickoff)+'</span>'+(g.tv?'<span class="chip">'+esc(g.tv)+'</span>':'')+(g.spread?'<span class="chip">'+esc(g.spread)+'</span>':'')+'</div>'+(g.note?'<div style="margin-top:6px">'+esc(g.note)+'</div>':'')+(g.pick?'<div class="pick">Brief pick: '+esc(g.pick)+'</div>':'')+(g.your_bet?'<div class="bet">Your bet: '+esc(g.your_bet)+'</div>':'')+'</div>'}).join('')+'</div>':'')+
+      more('Games to know'+(fbg.length?' ('+fbg.length+')':''),fbg.length?'<div class="list">'+fbg.map(function(g){return '<div class="fb"><span class="tag">'+esc(g.league)+'</span><div class="mu">'+esc(g.matchup)+'</div><div class="row"><span class="chip">'+esc(localKick(g))+'</span>'+(g.tv?'<span class="chip">'+esc(g.tv)+'</span>':'')+(g.spread?'<span class="chip">'+esc(g.spread)+'</span>':'')+'</div>'+(g.note?'<div style="margin-top:6px">'+esc(g.note)+'</div>':'')+(g.pick?'<div class="pick">Brief pick: '+esc(g.pick)+'</div>':'')+(g.your_bet?'<div class="bet">Your bet: '+esc(g.your_bet)+'</div>':'')+'</div>'}).join('')+'</div>':'')+
       (f1?'<div class="sect"><h3>Football 101'+(f1.n?' · lesson '+esc(f1.n):'')+': '+esc(f1.title||'')+'</h3>'+(f1.hook?'<div class="hook">'+esc(f1.hook)+'</div>':'')+lesson(f1,'var(--leaf)','Break it down')+more('Watch for it (film room)',(f1.film?'<p>'+esc(f1.film)+'</p>':'')+(f1.history?'<p><b>From the history books:</b> '+esc(f1.history)+'</p>':''))+(f1.key_terms&&f1.key_terms.length?more('Key terms','<div class="terms">'+f1.key_terms.map(function(x){return '<div><b>'+esc(x.term)+'</b> — '+esc(x.def)+'</div>'}).join('')+'</div>'):'')+quizHTML(withIds(f1,'football'),'Football check')+'</div>':'')+
       (fb.link?'<p>'+linkify(fb.link,'Full Football Brief →')+'</p>':'')});
   /* 5 · news */
@@ -818,6 +818,10 @@ function badge(){var n=pendingAttn(),b=document.querySelectorAll('.bar i');(S.ca
 async function loadReplies(){if(!S.key)return;try{var r=await decFile('data/replies.enc',Date.now());var before=JSON.stringify(REP);REP=r.items||{};if(JSON.stringify(REP)!==before){var n=pendingAttn();if(n)toast(n+' repl'+(n>1?'ies':'y')+' from Claude in Needs you');if(S.brief&&S.mode==='flow'&&visible()[S.i]&&visible()[S.i].id==='inbox'&&!document.activeElement.matches('textarea')){S.keepScroll=true;build()}else badge()}}catch(e){}}
 setInterval(function(){if(document.visibilityState==='visible')loadReplies()},60000);
 document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')loadReplies()});
+
+function phoneTZ(){try{return Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){return ''}}
+function noteTZ(){var tz=phoneTZ();if(tz&&tz!==ls('mb_tz')){ls('mb_tz',tz);tEvent('tz',{tz:tz,off:-new Date().getTimezoneOffset()})}}
+function localKick(g){if(!g.kickoff_iso)return g.kickoff;try{return new Date(g.kickoff_iso).toLocaleString('en-US',{weekday:'short',hour:'numeric',minute:'2-digit'})}catch(e){return g.kickoff}}
 function setMode(m,q){S.mode=m;S.quick=q;S.i=0;var done=DONE[S.brief.date]||{},cs=visible();for(var i=0;i<cs.length;i++){if(!done[cs[i].id]){S.i=i;break}}render()}
 function jump(i){S.touched=1;S.mode='flow';S.quick=false;S.i=i;render()}
 function mark(){var cs=visible(),c=cs[S.i];var d=DONE[S.brief.date]=DONE[S.brief.date]||{};if(!d[c.id]){d[c.id]=Date.now();ls('mb_done',DONE);queueSync()}}

@@ -244,7 +244,14 @@ def cmd_progress(path):
         'struggling': [{'track': t, 'ref': ref, 'q': q, 'misses': w} for w, b, t, ref, q in struggling[:20]],
         'days_with_cards_done': sorted(prog.get('DONE', {}).keys())[-14:],
         'one_thing': {d: last_focus(v) for d, v in sorted(prog.get('DONE', {}).items())[-3:]},
+        'phone_tz': phone_tz(prog),
     }, ensure_ascii=False, indent=1))
+
+
+def phone_tz(prog):
+    """Her phone's time zone the last time she opened the app (IANA name), or ''."""
+    ev = [v for day in prog.get('DONE', {}).values() for k, v in day.items() if k.startswith('f_') and isinstance(v, dict) and v.get('k') == 'tz']
+    return max(ev, key=lambda v: v.get('t', 0)).get('tz', '') if ev else ''
 
 
 def last_focus(day):
