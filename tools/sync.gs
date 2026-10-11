@@ -236,7 +236,7 @@ function payRows_(csv) {
     return /^(Captured|Paid)$/i.test(r['Status'] || '') && /^[A-Za-z]+ \d{4}$/.test(r['Tender Account'] || '');
   }).map(function (r) {
     var m = String(r['Trading Day']).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-    return { date: m ? m[3] + '-' + pad2_(m[1]) + '-' + pad2_(m[2]) : '', no: String(r['Check No.']).trim(), card: String(r['Tender Account']).toUpperCase() };
+    return { date: m ? m[3] + '-' + pad2_(m[1]) + '-' + pad2_(m[2]) : '', no: String(r['Check No.']).trim(), card: String(r['Tender Account']).toUpperCase(), amount: num_(r['Payment']) };
   });
 }
 function loadCards_(ss) {
@@ -342,7 +342,7 @@ function upserveDay_(ss, up, d, pmixCsv, checksCsv, payCsv) {
 function backfillGuests() {
   var name = 'Morning Brief - Upserve checks history', it = DriveApp.getFoldersByName(name);
   var folder = it.hasNext() ? it.next() : DriveApp.createFolder(name);
-  var files = folder.getFiles(), G = {}, nFiles = 0, nChecks = 0, last = '', list = [], pays = [];
+  var files = folder.getFiles(), G = {}, nFiles = 0, nChecks = 0, last = '', first = '9999', list = [], pays = [];
   while (files.hasNext()) {
     var f = files.next();
     if (!/\.csv$/i.test(f.getName())) continue;
@@ -358,6 +358,7 @@ function backfillGuests() {
       var h = (+m[4] % 12) + (m[6].toLowerCase() === 'pm' ? 12 : 0);
       if (h < 6) d = addDays_(d, -1);                       // after midnight belongs to the night before
       if (d > last) last = d;
+      if (d < first) first = d;
       list.push({ date: d, no: String(r['#']).trim(), raw: r['Name'], spend: num_(r['Bill Total']) });
     });
   }
@@ -369,6 +370,18 @@ function backfillGuests() {
     var k = c.name.toUpperCase(), g = G[k] = G[k] || { name: c.name, v: {} };
     g.v[c.date] = r2_((g.v[c.date] || 0) + c.spend);
   });
+  // months with a Payments report but no Checks report: a payment by a known card still counts as that guest's visit
+  var haveCheck = {}, orphanVisits = 0;
+  list.forEach(function (c) { haveCheck[c.date + '|' + c.no] = 1; });
+  pays.forEach(function (p) {
+    if (haveCheck[p.date + '|' + p.no]) return;
+    var o = cardOwner_(K.C[p.card]);
+    if (!o) return;
+    var k = o.toUpperCase(), g = G[k] = G[k] || { name: o, v: {} };
+    if (g.v[p.date] == null) orphanVisits++;
+    g.v[p.date] = r2_((g.v[p.date] || 0) + p.amount);
+    if (p.date < first) first = p.date;
+  });
   if (!nFiles) { Logger.log('Put the Checks CSVs in this Drive folder, then run backfillGuests again: ' + folder.getUrl()); return; }
   var ss = SpreadsheetApp.getActive(), gs = ss.getSheetByName('guests') || ss.insertSheet('guests');
   var keys = Object.keys(G).sort();
@@ -377,7 +390,7 @@ function backfillGuests() {
     var v = Object.keys(G[k].v).sort().map(function (d) { return [d, G[k].v[d]]; });
     return [k, G[k].name, JSON.stringify(v)];
   }));
-  Logger.log('Loaded ' + nChecks + ' checks and ' + pays.length + ' card payments from ' + nFiles + ' files: ' + keys.length + ' guests, ' + matched + ' unnamed checks matched by card, through ' + last + '.');
+  Logger.log('Loaded ' + nChecks + ' checks and ' + pays.length + ' card payments from ' + nFiles + ' files: ' + keys.length + ' guests, ' + matched + ' unnamed checks matched by card, ' + orphanVisits + ' earlier visits found by card, from ' + first + ' through ' + last + '.');
 }
 function setup() {
   ScriptApp.getProjectTriggers().forEach(function (t) {
