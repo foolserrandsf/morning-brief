@@ -211,6 +211,10 @@ details.more>.in p:first-child{margin-top:0}
 .ppl .p:last-child{border-bottom:0}
 .ppl .p small{color:var(--soft);font-size:14px;text-align:right}
 .ppl .p .ms{color:var(--persimmon);font-weight:700}
+.ylines{display:grid;gap:6px;font-size:16.5px;margin-top:6px}
+.yshift{display:flex;flex-wrap:wrap;gap:6px}
+.yshift span{background:var(--wash);border:1px solid var(--line);border-radius:10px;padding:5px 10px;font-size:14.5px}
+.yshift em{font-style:normal;font-weight:700;color:var(--ink)}
 .insight{background:#E6F5F3;border-radius:12px;padding:12px 14px;margin-top:16px;font-size:16px}
 .small{font-size:14px;color:var(--soft)}
 .src{font-size:13px;color:var(--soft);margin-top:12px}
@@ -232,7 +236,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261011111025';
+var APP_BUILD='20261011111628';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -526,32 +530,43 @@ function buildCards(){
   var ib=b.inbox||[];
   cards.push({id:'inbox',title:'Needs you',sub:ib.length?ib.length+' email'+(ib.length>1?'s':'')+' waiting on you':'Inbox zero-ish',color:'var(--coral)',tint:'#FFE7E3',min:2,must:1,
     body:(ib.length?'<div class="list">'+ib.map(function(m,i){return '<div class="item"><span class="tag" style="'+(m.account==='fe'?'background:#E6F2F1;color:var(--teal);border-color:#CDE4E2':'')+'">'+(m.account==='fe'?'Fool\'s Errand':'Gmail')+'</span>'+(m.by?'<span class="tag" style="background:var(--persimmon-wash);color:var(--persimmon);border-color:#F6D5C6">by '+esc(m.by)+'</span>':'')+'<div class="k">'+esc(m.from)+' — '+esc(m.subject)+'</div><div class="m">'+esc(m.ask)+'</div>'+(m.url?'<div class="m">'+linkify(m.url,'Open email →')+'</div>':'')+tChecks('in'+i,'Reply: '+m.from+' — '+m.subject,m.ask+(m.url?'\n'+m.url:''))+'</div>'}).join('')+'</div>':'<p class="empty">Nothing in either inbox needs a reply from you today.</p>')+(b.inbox_note?'<p class="small">'+esc(b.inbox_note)+'</p>':'')});
-  /* 3b · last night at Fool's Errand (Upserve) */
-  var u=b.upserve;
-  if(u&&u.net!=null){
-    var wdn=new Date(u.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long'}),d=u.vs_last_week_pct,h='';
-    h+='<div class="money"><span class="v">'+money(u.net)+'</span>'+(d!=null?'<span class="delta '+(d>=0?'up':'dn')+'">'+(d>=0?'+':'')+d+'% vs last '+wdn+'</span>':'')+'</div><div class="stats">'+u.checks+' checks, '+money(u.avg_check)+' average, '+money(u.tips)+' in tips</div>';
-    if(u.headline)h+='<div class="lead">'+esc(u.headline)+'</div>';
-    var tb=u.tips_by_shift||[];
-    if(tb.length)h+='<div class="sect"><h3>Tips by shift</h3><div class="ppl">'+tb.map(function(x){return '<div class="p"><span>'+esc(x.shift)+'</span><small><b style="color:var(--ink);font-size:16px">'+money(x.tips)+'</b><br>'+x.checks+' checks, '+x.tip_pct+'% of '+money(x.sales)+'</small></div>'}).join('')+'</div></div>';
-    var ti=(u.top_items||[]).slice(0,6),mx=ti.reduce(function(a,x){return Math.max(a,x.net)},1);
-    if(ti.length)h+='<div class="sect"><h3>What sold</h3><div class="bars">'+ti.map(function(x){return '<div class="r"><span>'+esc(x.name)+'</span><span class="v">'+x.sold+' sold, '+money(x.net)+'</span><span class="b"><i style="width:'+Math.round(x.net/mx*100)+'%"></i></span></div>'}).join('')+'</div></div>';
-    var cs=(u.categories||[]).filter(function(c){return c.pct>0}),cc=['#17998C','#3070D0','#B3366A','#D29A1B','#6A57D6','#EC6A3A','#2F9460','#8A93A6'];
-    if(cs.length)h+='<div class="sect"><h3>Sales mix</h3><div class="mix">'+cs.map(function(c,i){return '<i style="width:'+c.pct+'%;background:'+cc[i%cc.length]+'"></i>'}).join('')+'</div><div class="mixkey">'+cs.map(function(c,i){return '<span><i style="background:'+cc[i%cc.length]+'"></i>'+esc(c.name)+' '+c.pct+'%</span>'}).join('')+'</div></div>';
-    var rg=u.regulars||[];
-    h+='<div class="sect"><h3>Regulars in last night</h3>'+(rg.length?'<div class="ppl">'+rg.slice(0,8).map(function(r){return '<div class="p"><span>'+esc(r.name)+(r.milestone?' <span class="ms">'+r.milestone+'th visit</span>':'')+'</span><small>'+r.visits+' visits, '+money(r.spend_90d)+' in 90 days</small></div>'}).join('')+'</div>':'<p class="empty">No repeat guests yet. The regulars list fills in as more nights are tracked.</p>')+(u.newcomers?'<p class="stats" style="margin-top:8px">'+u.newcomers+' first-time names on cards'+(u.ledger_since?' since tracking started '+esc(shortDate(u.ledger_since)):'')+'.</p>':'')+'</div>';
-    var lp=u.lapsed||[],tp=u.top_spenders_30d||[],extra='';
-    if(lp.length)extra+='<h3 style="font-size:16.5px;margin:4px 0 8px">Haven\'t seen lately</h3><div class="ppl">'+lp.map(function(r){return '<div class="p"><span>'+esc(r.name)+'</span><small>last in '+esc(shortDate(r.last))+', '+r.visits_90d+' visits in 90 days</small></div>'}).join('')+'</div>';
-    if(tp.length)extra+='<h3 style="font-size:16.5px;margin:14px 0 8px">Top spenders, last 30 days</h3><div class="ppl">'+tp.map(function(r){return '<div class="p"><span>'+esc(r.name)+'</span><small>'+money(r.spend_30d)+', '+r.visits_30d+' visit'+(r.visits_30d>1?'s':'')+'</small></div>'}).join('')+'</div>';
-    h+=more('Lapsed regulars and top spenders',extra);
-    var sp=u.spending;
-    if(sp){
-      h+='<div class="sect"><h3>Spending</h3>'+(sp.wtd!=null?'<div class="stats" style="font-size:16px;color:var(--ink)">'+money(sp.wtd)+' in invoices this week'+(sp.sales_wtd?' against '+money(sp.sales_wtd)+' in sales ('+Math.round(sp.wtd/sp.sales_wtd*100)+'%)':'')+(sp.mtd!=null?'. '+money(sp.mtd)+' this month'+(sp.sales_mtd?' ('+Math.round(sp.mtd/sp.sales_mtd*100)+'% of sales)':''):'')+'.</div>':'')+
-        ((sp.new||[]).length?'<div class="ppl">'+sp.new.map(function(x){return '<div class="p"><span>'+esc(x.vendor)+(x.what?'<br><small style="text-align:left">'+esc(x.what)+'</small>':'')+'</span><small>'+money(x.amount)+(x.due?'<br>due '+esc(x.due):'')+'</small></div>'}).join('')+'</div>':'<p class="empty">No new invoices came in.</p>')+
-        ((sp.due_soon||[]).length?'<div class="alert"><b>Due soon:</b> '+sp.due_soon.map(function(x){return esc(x.vendor)+' '+money(x.amount)+' ('+esc(x.due)+')'}).join(', ')+'</div>':'')+'</div>';
+  /* 3b · Fool's Errand yesterday: Sales sheet first (5 short lines), Upserve detail one tap deeper */
+  var y=b.fe_yesterday,u=b.upserve;
+  if(y||(u&&u.net!=null)){
+    var h='',ydate=(y&&y.date)||(u&&u.date),wdn=new Date(ydate+'T12:00:00').toLocaleDateString('en-US',{weekday:'long'});
+    if(y){
+      if(y.status==='closed')h+='<div class="lead">'+esc(y.note||'No row for '+wdn+' on the Daily tab. The bar may have been closed.')+'</div>';
+      else if(y.status==='not_yet')h+='<div class="lead">'+esc(y.note||wdn+'\'s numbers aren\'t on the Daily tab yet.')+'</div>';
+      else{
+        var v=y.vs_last_week||{},up=(v.diff||0)>=0;
+        h+='<div class="money"><span class="v">'+money(y.net)+'</span>'+(v.pct!=null?'<span class="delta '+(up?'up':'dn')+'">'+(up?'+':'−')+money(Math.abs(v.diff))+' ('+(up?'+':'−')+Math.abs(v.pct)+'%)</span>':'')+'</div>'+
+          '<div class="ylines"><div>'+esc(String(y.guests))+' guests, '+(y.tips_real?money(y.tips)+' in tips':'real tips aren\'t in yet (estimate '+money(y.tips)+')')+'</div>'+
+          (v.net!=null?'<div>Last '+wdn+': '+money(v.net)+'</div>':'')+
+          ((y.shifts||[]).length?'<div class="yshift">'+y.shifts.map(function(x){return '<span><b>'+esc(x.shift)+'</b> '+esc(x.hours||'')+' <em>'+money(x.tips)+'</em></span>'}).join('')+'</div>':'')+
+          ((y.regulars||[]).length?'<div>Regulars in: '+y.regulars.map(function(r){return esc(r.name)+' ('+r.visits+' visits)'}).join(', ')+'</div>':'<div>No regulars from the Regulars tab came in.</div>')+'</div>';
+      }
     }
-    if(u.insight)h+='<div class="insight"><b>Try this:</b> '+esc(u.insight)+'</div>';
-    cards.push({id:'fe',title:'Last night at Fool\'s Errand',sub:wdn+' '+shortDate(u.date).replace(/^\w+,\s*/,''),color:'var(--teal)',tint:'#E0F6F3',min:2,must:1,body:h});
+    if(u&&u.net!=null){
+      var dd='';
+      if(!y){var d=u.vs_last_week_pct;dd+='<div class="money"><span class="v">'+money(u.net)+'</span>'+(d!=null?'<span class="delta '+(d>=0?'up':'dn')+'">'+(d>=0?'+':'')+d+'% vs last '+wdn+'</span>':'')+'</div><div class="stats">'+u.checks+' checks, '+money(u.avg_check)+' average, '+money(u.tips)+' in tips</div>';}
+      var ti=(u.top_items||[]).slice(0,6),mx=ti.reduce(function(a,x){return Math.max(a,x.net)},1),sold='';
+      if(ti.length)sold+='<div class="bars">'+ti.map(function(x){return '<div class="r"><span>'+esc(x.name)+'</span><span class="v">'+x.sold+' sold, '+money(x.net)+'</span><span class="b"><i style="width:'+Math.round(x.net/mx*100)+'%"></i></span></div>'}).join('')+'</div>';
+      var cs=(u.categories||[]).filter(function(c){return c.pct>0}),cc=['#17998C','#3070D0','#B3366A','#D29A1B','#6A57D6','#EC6A3A','#2F9460','#8A93A6'];
+      if(cs.length)sold+='<div class="mix" style="margin-top:14px">'+cs.map(function(c,i){return '<i style="width:'+c.pct+'%;background:'+cc[i%cc.length]+'"></i>'}).join('')+'</div><div class="mixkey">'+cs.map(function(c,i){return '<span><i style="background:'+cc[i%cc.length]+'"></i>'+esc(c.name)+' '+c.pct+'%</span>'}).join('')+'</div>';
+      if(!y&&(u.tips_by_shift||[]).length)dd+='<div class="ppl" style="margin-top:8px">'+u.tips_by_shift.map(function(x){return '<div class="p"><span>'+esc(x.shift)+'</span><small><b style="color:var(--ink)">'+money(x.tips)+'</b>, '+x.checks+' checks</small></div>'}).join('')+'</div>';
+      h+=dd+more('What sold and the sales mix',sold);
+      var rg=u.regulars||[],lp=u.lapsed||[],tp=u.top_spenders_30d||[],ppl='';
+      if(rg.length)ppl+='<h3 style="font-size:16.5px;margin:4px 0 8px">Repeat guests last night</h3><div class="ppl">'+rg.slice(0,10).map(function(r){return '<div class="p"><span>'+esc(r.name)+(r.milestone?' <span class="ms">'+r.milestone+'th visit</span>':'')+'</span><small>'+r.visits+' visits, '+money(r.spend_90d)+' in 90 days</small></div>'}).join('')+'</div>';
+      if(lp.length)ppl+='<h3 style="font-size:16.5px;margin:14px 0 8px">Haven\'t seen lately</h3><div class="ppl">'+lp.map(function(r){return '<div class="p"><span>'+esc(r.name)+'</span><small>last in '+esc(shortDate(r.last))+', '+r.visits_90d+' visits in 90 days</small></div>'}).join('')+'</div>';
+      if(tp.length)ppl+='<h3 style="font-size:16.5px;margin:14px 0 8px">Top spenders, last 30 days</h3><div class="ppl">'+tp.map(function(r){return '<div class="p"><span>'+esc(r.name)+'</span><small>'+money(r.spend_30d)+', '+r.visits_30d+' visit'+(r.visits_30d>1?'s':'')+'</small></div>'}).join('')+'</div>';
+      h+=more('Guests: repeats, lapsed and top spenders',ppl);
+      var sp=u.spending;
+      if(sp)h+=more('Spending and invoices',(sp.wtd!=null?'<p>'+money(sp.wtd)+' in invoices this week'+(sp.sales_wtd?' against '+money(sp.sales_wtd)+' in sales ('+Math.round(sp.wtd/sp.sales_wtd*100)+'%)':'')+(sp.mtd!=null?'. '+money(sp.mtd)+' this month'+(sp.sales_mtd?' ('+Math.round(sp.mtd/sp.sales_mtd*100)+'% of sales)':''):'')+'.</p>':'')+
+        ((sp.new||[]).length?'<div class="ppl">'+sp.new.map(function(x){return '<div class="p"><span>'+esc(x.vendor)+(x.what?'<br><small style="text-align:left">'+esc(x.what)+'</small>':'')+'</span><small>'+money(x.amount)+(x.due?'<br>due '+esc(x.due):'')+'</small></div>'}).join('')+'</div>':'<p>No new invoices came in.</p>')+
+        ((sp.due_soon||[]).length?'<div class="alert"><b>Due soon:</b> '+sp.due_soon.map(function(x){return esc(x.vendor)+' '+money(x.amount)+' ('+esc(x.due)+')'}).join(', ')+'</div>':''));
+      if(u.insight)h+='<div class="insight"><b>Try this:</b> '+esc(u.insight)+'</div>';
+    }
+    cards.push({id:'fe',title:'Fool\'s Errand yesterday',sub:wdn+' '+shortDate(ydate).replace(/^\w+,\s*/,''),color:'var(--teal)',tint:'#E0F6F3',min:1,must:1,body:h});
   }
   /* 4 · football */
   var fb=b.football||{};
