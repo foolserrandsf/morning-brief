@@ -49,6 +49,7 @@ button{font:inherit;cursor:pointer;border:0;color:inherit}
 .modes button{flex:1;background:transparent;border-radius:9px;padding:8px 6px;font-weight:600;font-size:14px;color:var(--soft)}
 .modes button.on{background:var(--ink);color:#fff}
 .bar{display:flex;gap:3px;margin:0 0 14px}
+.donestats{display:flex;justify-content:center;gap:22px;margin:14px 0 4px}.donestats div{display:flex;flex-direction:column;align-items:center}.donestats b{font:700 28px/1.1 var(--display)}.donestats span{font-size:13px;color:var(--soft)}.pb{font-weight:700;color:var(--persimmon);margin:6px 0 0}
 .foot.navbar{margin:0 auto;position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;gap:8px;max-width:560px;margin:0 auto;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:color-mix(in srgb,var(--bg) 88%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-top:1px solid var(--line)}
 .foot.navbar .btn{padding:12px 10px}.navbar .btn.ghost{padding:12px 14px}.navbar .nb{min-width:48px}.navbar .btn:disabled{opacity:.35}
 .bar{position:sticky;top:0;z-index:15;background:var(--bg);padding:8px 0 6px;margin-top:-8px}.bar i{height:8px;cursor:pointer}
@@ -258,7 +259,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261011153425';
+var APP_BUILD='20261011155023';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -290,7 +291,10 @@ async function decFile(path,v){
 
 /* ---------- progress (synced across devices) ---------- */
 var P=ls('mb_prog')||{};          // itemId -> {box, wrong, last, t}
-var DONE=ls('mb_done')||{};       // date -> {cardId: timestamp}
+var DONE=ls('mb_done')||{};
+var ANS=ls('mb_ans')||{};   // date -> {question text: chosen option}
+var DAY=ls('mb_day')||{};   // date -> {start, right, total, combo, bestCombo, end}
+var BEST=ls('mb_best')||{}; // {mins, pct}       // date -> {cardId: timestamp}
 function record(id,right){
   var p=P[id]||{box:0,wrong:0,last:null};
   if(right){p.box=Math.min(4,p.box+1)}else{p.box=0;p.wrong++}
@@ -453,21 +457,24 @@ function wireQuizzes(root){
     z.querySelectorAll('.q').forEach(function(qd){
       var q=items[+qd.dataset.i];
       qd.querySelectorAll('.opt').forEach(function(b){
-        b.onclick=function(){
+        b.onclick=function(ev,restore){
           if(qd.dataset.ans)return;qd.dataset.ans=1;
           var j=+b.dataset.j,ok=j===q.a;
+          if(!restore){var A=ANS[S.brief.date]=ANS[S.brief.date]||{};A[q.q]=j;ls('mb_ans',ANS);dayHit(ok)}
           b.classList.add(ok?'right':'wrong');
           if(!ok)qd.querySelectorAll('.opt')[q.a].classList.add('right');
           if(q.w){var w=document.createElement('div');w.className='why';w.innerHTML=esc(q.w);qd.appendChild(w);furi(w)}
-          if(q.id)record(q.id,ok);
+          if(q.id&&!restore)record(q.id,ok);
           answered++;if(ok)right++;
-          if(navigator.vibrate)navigator.vibrate(ok?15:[30,40,30]);
+          if(navigator.vibrate&&!restore)navigator.vibrate(ok?15:[30,40,30]);
           if(answered===items.length){
             z.querySelector('.score').textContent=right===items.length?right+'/'+items.length+' — perfect.':right+'/'+items.length+' — misses come back in your next quiz.';
-            if(right===items.length)burst(40);
+            if(right===items.length&&!restore)burst(40);
           }
         };
       });
+      var prev=(ANS[S.brief.date]||{})[q.q];
+      if(prev!=null){var pb=qd.querySelectorAll('.opt')[prev];if(pb)pb.onclick(null,true)}
     });
   });
 }
@@ -734,7 +741,7 @@ function streak(){
 function header(){
   var cs=visible(),done=DONE[S.brief.date]||{},n=cs.filter(function(c){return done[c.id]}).length,mins=cs.filter(function(c){return !done[c.id]}).reduce(function(a,c){return a+(c.min||1)},0);
   var stale=S.brief.date!==todayPT();
-  return '<div class="top"><img src="icons/icon-192.png" alt=""><div class="t"><b>Morning Brief <em>'+esc(shortDate(S.brief.date))+'</em></b><span>'+n+'/'+cs.length+' done · '+mins+' min left'+(stale?' · from '+esc(S.brief.date):'')+' <span id="syncchip">'+syncLabel()+'</span></span></div>'+(streak()?'<span class="chip" title="Days in a row">🔥 '+streak()+'</span>':'')+'<button class="iconbtn" aria-label="Refresh" onclick="refresh()">↻</button></div>'+
+  return '<div class="top"><img src="icons/icon-192.png" alt=""><div class="t"><b>Morning Brief <em>'+esc(shortDate(S.brief.date))+'</em></b><span>'+n+'/'+cs.length+' done · '+mins+' min left'+(stale?' · from '+esc(S.brief.date):'')+' <span id="syncchip">'+syncLabel()+'</span> <b id="scorechip" style="color:var(--sage)">'+scoreChip()+'</b></span></div>'+(streak()?'<span class="chip" title="Days in a row">🔥 '+streak()+'</span>':'')+'<button class="iconbtn" aria-label="Refresh" onclick="refresh()">↻</button></div>'+
   '<div class="modes"><button class="'+(S.mode==='flow'&&!S.quick?'on':'')+'" onclick="setMode(\'flow\',false)">One at a time</button><button class="'+(S.quick?'on':'')+'" onclick="setMode(\'flow\',true)">2-min musts</button><button class="'+(S.mode==='all'?'on':'')+'" onclick="setMode(\'all\',false)">Overview</button></div>';
 }
 function render(){
@@ -768,18 +775,36 @@ function extras(){
 document.addEventListener('touchstart',function(e){if(S.mode!=='flow'||e.touches.length!==1){x0=null;return}var t=e.target;if(t.closest&&t.closest('input,textarea,select,.jwx,.chunks,.mix,.bars'))return;x0=e.touches[0].clientX;y0=e.touches[0].clientY;t0=Date.now()},{passive:true});
 document.addEventListener('touchend',function(e){if(x0==null)return;var dx=e.changedTouches[0].clientX-x0,dy=e.changedTouches[0].clientY-y0;x0=null;if(Date.now()-t0>700||Math.abs(dx)<70||Math.abs(dy)>Math.abs(dx)*0.6)return;if(dx<0)goNext();else goPrev()},{passive:true});
 })();
+
+function dayStat(){var d=S.brief.date;DAY[d]=DAY[d]||{start:Date.now(),right:0,total:0,combo:0,bestCombo:0};return DAY[d]}
+function dayHit(ok){var t=dayStat();t.total++;if(ok){t.right++;t.combo++;if(t.combo>t.bestCombo)t.bestCombo=t.combo;if(t.combo===3)cheer('3 in a row!',30);else if(t.combo===5)cheer('5 in a row! On fire.',60);else if(t.combo>5&&t.combo%5===0)cheer(t.combo+' in a row!',80)}else t.combo=0;ls('mb_day',DAY);var c=$('scorechip');if(c)c.innerHTML=scoreChip()}
+function cheer(t,n){toast(t);burst(n||30)}
+function mins(){var t=dayStat();return Math.max(1,Math.round(((t.end||Date.now())-t.start)/60000))}
+function scoreChip(){var t=dayStat();return t.total?'✓ '+t.right+'/'+t.total+' · '+mins()+' min':''}
+function unanswered(){var el=document.querySelectorAll('#app .card .q');var n=0,first=null;el.forEach(function(q){if(!q.dataset.ans){n++;if(!first)first=q}});return {n:n,first:first}}
 function setMode(m,q){S.mode=m;S.quick=q;S.i=0;var done=DONE[S.brief.date]||{},cs=visible();for(var i=0;i<cs.length;i++){if(!done[cs[i].id]){S.i=i;break}}render()}
 function jump(i){S.touched=1;S.mode='flow';S.quick=false;S.i=i;render()}
 function mark(){var cs=visible(),c=cs[S.i];var d=DONE[S.brief.date]=DONE[S.brief.date]||{};if(!d[c.id]){d[c.id]=Date.now();ls('mb_done',DONE);queueSync()}}
 function goPrev(){if(S.i>0){S.touched=1;S.i--;render()}}
 function goNext(){var cs=visible();S.touched=1;if(S.i<cs.length-1){S.i++;render()}}
 function goTo(i){S.touched=1;S.i=i;render()}
-function gotIt(){S.touched=1;mark();burst(10);S.i++;render()}
+function gotIt(){
+  var u=unanswered();
+  if(u.n&&S._nudged!==S.i){S._nudged=S.i;u.first.scrollIntoView({behavior:'smooth',block:'center'});toast(u.n+' question'+(u.n>1?'s':'')+' left here. Finish '+(u.n>1?'them':'it')+' to lock it in, or tap Got it again to move on.');return}
+  S._nudged=null;S.touched=1;dayStat();mark();burst(10);S.i++;
+  var cs=visible(),done=DONE[S.brief.date]||{},n=cs.filter(function(c){return done[c.id]}).length;
+  if(n===Math.ceil(cs.length/2))cheer('Halfway there!',50);
+  else if(cs.length-n===3)cheer('3 cards to go!',30);
+  render()}
 function later(){S.touched=1;var cs=visible();if(S.quick){S.i++;render();return}var c=S.cards.splice(S.cards.indexOf(cs[S.i]),1)[0];S.cards.push(c);render();toast('Saved it for later')}
 function finish(){
   var done=DONE[S.brief.date]||{},left=S.cards.filter(function(c){return !done[c.id]});
   burst(160);
-  $('app').innerHTML=header()+'<div class="card done-wrap"><img src="icons/icon-192.png" alt="" style="width:72px;height:72px;border-radius:16px;margin-bottom:6px"><div class="big">'+(left.length?'Musts done!':'Brief complete!')+'</div><p>'+(left.length?left.length+' cards are waiting whenever you want them.':'You showed up for yourself this morning. That counts.')+'</p><div class="foot">'+(left.length?'<button class="btn sun" onclick="setMode(\'flow\',false)">Keep going</button>':'')+'<button class="btn ink" onclick="setMode(\'all\',false)">Overview</button></div></div>'+extras();furi($('app'));
+  var t=dayStat();if(!left.length&&!t.end){t.end=Date.now();ls('mb_day',DAY)}
+  var m=mins(),pct=t.total?Math.round(t.right/t.total*100):null,pb=[];
+  if(!left.length&&t.total){if(!BEST.pct||pct>BEST.pct){if(BEST.pct)pb.push('best accuracy yet');BEST.pct=pct}if(!BEST.mins||m<BEST.mins){if(BEST.mins)pb.push('fastest finish yet');BEST.mins=m}ls('mb_best',BEST)}
+  var stats='<div class="donestats"><div><b>'+m+'</b><span>minutes</span></div>'+(pct!=null?'<div><b>'+pct+'%</b><span>right</span></div>':'')+(t.bestCombo?'<div><b>'+t.bestCombo+'</b><span>best streak</span></div>':'')+'</div>'+(pb.length?'<p class="pb">New personal record: '+pb.join(' and ')+'!</p>':'');
+  $('app').innerHTML=header()+'<div class="card done-wrap"><img src="icons/icon-192.png" alt="" style="width:72px;height:72px;border-radius:16px;margin-bottom:6px"><div class="big">'+(left.length?'Musts done!':'Brief complete!')+'</div><p>'+(left.length?left.length+' cards are waiting whenever you want them.':'You showed up for yourself this morning. That counts.')+'</p>'+stats+'<div class="foot">'+(left.length?'<button class="btn sun" onclick="setMode(\'flow\',false)">Keep going</button>':'')+'<button class="btn ink" onclick="setMode(\'all\',false)">Overview</button></div></div>'+extras();furi($('app'));
 }
 async function openDay(d){try{S.brief=await decFile('data/briefs/'+d+'.enc',S.latest.v);S._landed=0;S.mode='flow';S.quick=false;build()}catch(e){toast('Couldn\'t open that day')}}
 async function refresh(){toast('Checking for a fresh brief…');try{S._landed=0;await load();toast('Up to date')}catch(e){toast('Offline — try again soon')}}
