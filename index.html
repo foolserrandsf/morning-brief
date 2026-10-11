@@ -230,6 +230,7 @@ details.more>.in p:first-child{margin-top:0}
 .ppl b.owed{color:inherit}.ppl b.over{color:#B23A2F}.ppl b.ok{color:#1F7445}.tf b.pos,.tf b.neg{font:700 14px var(--sans)}.tf b.pos{color:#1F7445}.tf b.neg{color:#B23A2F}
 .tf small{font-size:13px;color:var(--soft);line-height:1.35}
 .insight>b{display:block;margin-bottom:2px}
+.conn summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:10px;align-items:baseline}.conn summary::-webkit-details-marker{display:none}.conn summary::after{content:'+';font-weight:700;color:var(--soft);font-size:18px}.conn[open] summary::after{content:'−'}.conn span{margin-top:4px}
 .conn{padding:10px 0;border-top:1px solid rgba(127,127,127,.18)}.conn:first-of-type{border-top:0}.conn b{display:block;font-size:16.5px;margin-bottom:2px}.conn span{display:block}
 .ylines{display:grid;gap:6px;font-size:16.5px;margin-top:6px}
 .tipsplit{margin:6px 0 2px 2px;border-left:3px solid var(--line);padding-left:10px;display:grid;gap:4px}.tipsplit div{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:15px}.tipsplit span{color:var(--soft)}.tipsplit small{display:block;font-size:13px}.tipsplit b{font-size:18px;font-variant-numeric:tabular-nums;color:var(--ink)}.reg{margin:3px 0 0 12px;font-size:15.5px}
@@ -257,7 +258,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261011152505';
+var APP_BUILD='20261011153206';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -497,7 +498,7 @@ function recallItems(kind){
 function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
 
 /* ---------- cards ---------- */
-var TRACK_NAME={kanji:'Kanji',bottle:'Bottles',wset:'WSET',stocks:'Stocks & bonds',crypto:'Crypto',filipino:'Filipino'};
+var TRACK_NAME={kanji:'Kanji',bottle:'Bottles',wset:'WSET',stocks:'Stocks & bonds',crypto:'Crypto',filipino:'Filipino',football:'Football'};
 var ICON={gm:'☀️',fe:'🍻',cal:'📅',inbox:'📬',fb:'🏈',news:'📰',kanji:'漢',bottle:'🍷',wset:'🎓',stocks:'📈',crypto:'🪙',fil:'🇵🇭',recs:'🥂',sun:'🏆',recall:'🔁',second:'🎯'};
 function tint(col){return 'color-mix(in srgb, '+col+' 14%, white)'}
 function card(c){
@@ -511,6 +512,7 @@ function more(label,html){return html?'<details class="more"><summary>'+esc(labe
 function paras(a){return (a||[]).map(function(p){return '<p>'+esc(p)+'</p>'}).join('')}
 function money(n){return '$'+Math.round(+n||0).toLocaleString('en-US')}
 function dshort(d){var m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],p=String(d).split('-');return p.length==3?m[+p[1]-1]+' '+(+p[2]):d}
+function tipSummary(wt){var ow=(wt.people||[]).filter(function(p){return p.balance>0.005}),ov=(wt.people||[]).filter(function(p){return p.balance<-0.005});return '<div class="ylines" style="margin-top:0"><div><b>'+money(wt.total)+'</b> earned'+(wt.paid_total!=null?', <b>'+money(wt.paid_total)+'</b> paid out':'')+'</div>'+(ow.length?'<div>Still owed: '+ow.map(function(p){return esc(p.name)+' '+money(p.balance)}).join(', ')+'</div>':'')+(ov.length?'<div class="alert"><b>Paid more than earned:</b> '+ov.map(function(p){return esc(p.name)+' '+money(-p.balance)}).join(', ')+'</div>':'')+'</div>'}
 function money2(n){return '$'+(+n||0).toFixed(2)}
 function lesson(s,dot,deeper){
   // takeaway first: key points visible, full explanation one tap away
@@ -578,9 +580,9 @@ function buildCards(){
         '<div><span>'+mo+' supplier bills</span><b>'+money(ex.invoices_month)+'</b><small>'+(ex.invoices_count?ex.invoices_count+' invoices dated in '+mo:'invoices dated in '+mo)+(ex.invoices_paid!=null?'. '+money(ex.invoices_paid)+' paid, '+money(ex.invoices_unpaid)+' not paid yet':'')+'</small></div>'+
         '<div><span>'+mo+' fixed costs</span><b>'+money(ex.fixed_month)+'</b><small>full month: rent, payroll, utilities, insurance, debt payment</small></div>'+
         '<div style="grid-column:1/-1"><span>'+mo+' total expenses so far</span><b>'+money(ex.total_month)+'</b><small>supplier bills + fixed costs'+(ex.sales_month?'. '+mo+' sales so far: '+money(ex.sales_month):'')+'</small></div></div>'+
-        ((ex.fixed_items||[]).length?'<div class="tipsplit" style="margin-top:10px"><div><span><b style="font-size:15px">'+mo+' fixed costs, one by one</b></span></div>'+ex.fixed_items.map(function(f){return '<div><span>'+esc(f.name)+(f.note?'<small>'+esc(f.note)+'</small>':'')+'</span><b>'+money(f.amount)+'</b></div>'}).join('')+'</div>':'')+(ex.note?'<p class="stats">'+esc(ex.note)+'</p>':'')+'</div>';}
+        ((ex.fixed_items||[]).length?more(mo+' fixed costs, one by one','<div class="tipsplit">'+ex.fixed_items.map(function(f){return '<div><span>'+esc(f.name)+(f.note?'<small>'+esc(f.note)+'</small>':'')+'</span><b>'+money(f.amount)+'</b></div>'}).join('')+'</div>'):'')+(ex.note?'<p class="stats">'+esc(ex.note)+'</p>':'')+'</div>';}
       var wt=y.weekly_tips;
-      if(wt&&(wt.people||[]).length)h+='<div class="sect"><h3>Last week\'s tips by bartender'+(wt.week?', '+esc(wt.week):'')+'</h3><div class="ppl">'+wt.people.map(function(p){return '<div class="p"><span>'+esc(p.name)+'</span><small>'+(p.shifts||p.tips?'earned '+money(p.tips)+(p.shifts?', '+p.shifts+' shift'+(p.shifts>1?'s':''):''):'no tracked shifts yet')+(p.paid?'<br>paid '+money(p.paid)+' last week':'')+(p.last_paid&&p.last_paid.date?'<br>last payout '+money(p.last_paid.amount)+' on '+esc(p.last_paid.date):'')+(p.balance!=null?'<br>'+(p.balance>0.005?'<b class="owed">still owed in total '+money(p.balance)+(p.paid_through?' (paid through '+esc(p.paid_through)+')':'')+'</b>':p.balance<-0.005?'<b class="over">paid '+money(-p.balance)+' more than earned</b>':'<b class="ok">all paid</b>'):'')+'</small></div>'}).join('')+'</div>'+(wt.total?'<p class="stats">Last week: earned '+money(wt.total)+(wt.paid_total!=null?', paid out '+money(wt.paid_total):'')+(wt.note?'. '+esc(wt.note):'')+'</p>':'')+((wt.unmatched||[]).length?'<p class="stats">Payments I couldn\'t match to a bartender: '+wt.unmatched.map(function(u){return esc(u.name)+' '+money(u.amount)+(u.date?' ('+esc(u.date)+')':'')}).join('; ')+'</p>':'')+'</div>';
+      if(wt&&(wt.people||[]).length)h+='<div class="sect"><h3>Last week\'s tips by bartender'+(wt.week?', '+esc(wt.week):'')+'</h3>'+tipSummary(wt)+'<details class="more"><summary>Each bartender: earned, paid, owed</summary><div class="in"><div class="ppl">'+wt.people.map(function(p){return '<div class="p"><span>'+esc(p.name)+'</span><small>'+(p.shifts||p.tips?'earned '+money(p.tips)+(p.shifts?', '+p.shifts+' shift'+(p.shifts>1?'s':''):''):'no tracked shifts yet')+(p.paid?'<br>paid '+money(p.paid)+' last week':'')+(p.last_paid&&p.last_paid.date?'<br>last payout '+money(p.last_paid.amount)+' on '+esc(p.last_paid.date):'')+(p.balance!=null?'<br>'+(p.balance>0.005?'<b class="owed">still owed in total '+money(p.balance)+(p.paid_through?' (paid through '+esc(p.paid_through)+')':'')+'</b>':p.balance<-0.005?'<b class="over">paid '+money(-p.balance)+' more than earned</b>':'<b class="ok">all paid</b>'):'')+'</small></div>'}).join('')+'</div></div></details>'+(wt.total?'<p class="stats">Last week: earned '+money(wt.total)+(wt.paid_total!=null?', paid out '+money(wt.paid_total):'')+(wt.note?'. '+esc(wt.note):'')+'</p>':'')+((wt.unmatched||[]).length?'<p class="stats">Payments I couldn\'t match to a bartender: '+wt.unmatched.map(function(u){return esc(u.name)+' '+money(u.amount)+(u.date?' ('+esc(u.date)+')':'')}).join('; ')+'</p>':'')+'</div>';
       var bl=y.bills;
       if(bl){
         if((bl.overdue||[]).length)h+='<div class="alert"><b>Past due:</b> '+bl.overdue.map(function(x){return esc(x.vendor)+(x.amount!=null?' '+money(x.amount):'')+(x.due?' (due '+esc(x.due)+')':'')}).join('; ')+'</div>';
@@ -596,7 +598,7 @@ function buildCards(){
         (fo.next30?'<div><span>Next 30 days</span><b>~'+k(fo.next30.total)+'</b><small>likely '+k(fo.next30.low)+' to '+k(fo.next30.high)+'</small></div>':'')+
         '</div>'+(fo.basis?'<p class="stats" style="margin-top:6px">'+esc(fo.basis)+'</p>':'')+'</div>';
     }
-    if(y&&y.connections&&y.connections.length)h+='<div class="sect"><h3>What the numbers connect</h3>'+y.connections.map(function(c){return '<div class="conn"><b>'+esc(c.title)+'</b><span>'+esc(c.detail)+'</span></div>'}).join('')+(y.connections_basis?'<p class="stats">'+esc(y.connections_basis)+'</p>':'')+'</div>';
+    if(y&&y.connections&&y.connections.length)h+='<div class="sect"><h3>What the numbers connect</h3>'+y.connections.map(function(c){return '<details class="conn"><summary><b>'+esc(c.title)+'</b></summary><span>'+esc(c.detail)+'</span></details>'}).join('')+(y.connections_basis?more('Where these come from','<p class="stats">'+esc(y.connections_basis)+'</p>'):'')+'</div>';
     var ideas=(y&&y.ideas)||(u&&u.insight?[u.insight]:[]);
     if(ideas.length)h+='<div class="insight"><b>Ideas for this week</b>'+pts(ideas,'var(--teal)')+'</div>';
     if(u&&u.net!=null){
@@ -624,10 +626,12 @@ function buildCards(){
   }
   /* 4 · football */
   var fb=b.football||{};
-  var fbg=fb.games||[],fbz=fb.buzz||[];
-  if(fbg.length||fbz.length)cards.push({id:'fb',title:fbg.length?'Game day':'Football talk',sub:fbg.length?fbg.length+' game'+(fbg.length>1?'s':'')+' to know':'What people are talking about',color:'var(--leaf)',tint:'#E4F7E8',min:1,must:1,
-    body:(fbz.length?'<h3 style="font-size:16.5px;margin:0 0 8px">What people are talking about</h3><div class="list">'+fbz.map(function(z){return '<div class="fb"><div class="mu">'+esc(z.title)+'</div>'+(z.line?'<div style="margin-top:4px">'+esc(z.line)+'</div>':'')+'</div>'}).join('')+'</div>':'')+
-      (fbg.length?'<h3 style="font-size:16.5px;margin:'+(fbz.length?'16px':'0')+' 0 8px">Games to know</h3><div class="list">'+fbg.map(function(g){return '<div class="fb"><span class="tag">'+esc(g.league)+'</span><div class="mu">'+esc(g.matchup)+'</div><div class="row"><span class="chip">'+esc(g.kickoff)+'</span>'+(g.tv?'<span class="chip">'+esc(g.tv)+'</span>':'')+(g.spread?'<span class="chip">'+esc(g.spread)+'</span>':'')+'</div>'+(g.note?'<div style="margin-top:6px">'+esc(g.note)+'</div>':'')+(g.pick?'<div class="pick">Brief pick: '+esc(g.pick)+'</div>':'')+(g.your_bet?'<div class="bet">Your bet: '+esc(g.your_bet)+'</div>':'')+'</div>'}).join('')+'</div>':'')+(fb.link?'<p>'+linkify(fb.link,'Full Football Brief →')+'</p>':'')});
+  var fbg=fb.games||[],fbz=fb.buzz||[],f1=b.football_101;
+  if(fbg.length||fbz.length||f1)cards.push({id:'fb',title:fbg.length?'Game day':'Football',sub:(fbg.length?fbg.length+' game'+(fbg.length>1?'s':'')+' to know':'What people are talking about')+(f1&&f1.n?' · 101 lesson '+esc(f1.n):''),color:'var(--leaf)',tint:'#E4F7E8',min:f1?4:1,must:1,
+    body:(fbz.length?'<h3 style="font-size:16.5px;margin:0 0 8px">What people are talking about</h3>'+pts(fbz.map(function(z){return z.title+(z.line?': '+z.line:'')}),'var(--leaf)'):'')+
+      more('Games to know'+(fbg.length?' ('+fbg.length+')':''),fbg.length?'<div class="list">'+fbg.map(function(g){return '<div class="fb"><span class="tag">'+esc(g.league)+'</span><div class="mu">'+esc(g.matchup)+'</div><div class="row"><span class="chip">'+esc(g.kickoff)+'</span>'+(g.tv?'<span class="chip">'+esc(g.tv)+'</span>':'')+(g.spread?'<span class="chip">'+esc(g.spread)+'</span>':'')+'</div>'+(g.note?'<div style="margin-top:6px">'+esc(g.note)+'</div>':'')+(g.pick?'<div class="pick">Brief pick: '+esc(g.pick)+'</div>':'')+(g.your_bet?'<div class="bet">Your bet: '+esc(g.your_bet)+'</div>':'')+'</div>'}).join('')+'</div>':'')+
+      (f1?'<div class="sect"><h3>Football 101'+(f1.n?' · lesson '+esc(f1.n):'')+': '+esc(f1.title||'')+'</h3>'+(f1.hook?'<div class="hook">'+esc(f1.hook)+'</div>':'')+lesson(f1,'var(--leaf)','Break it down')+more('Watch for it (film room)',(f1.film?'<p>'+esc(f1.film)+'</p>':'')+(f1.history?'<p><b>From the history books:</b> '+esc(f1.history)+'</p>':''))+(f1.key_terms&&f1.key_terms.length?more('Key terms','<div class="terms">'+f1.key_terms.map(function(x){return '<div><b>'+esc(x.term)+'</b> — '+esc(x.def)+'</div>'}).join('')+'</div>'):'')+quizHTML(withIds(f1,'football'),'Football check')+'</div>':'')+
+      (fb.link?'<p>'+linkify(fb.link,'Full Football Brief →')+'</p>':'')});
   /* 5 · news */
   var nw=(b.news||[]).filter(function(n){return !/upserve/i.test(n.source||'')||!b.upserve});
   cards.push({id:'news',title:'The news',sub:nw.length+' stories, takeaway first',color:'var(--grape)',tint:'#EEE8FF',min:6,

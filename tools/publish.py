@@ -23,7 +23,7 @@ from cryptography.hazmat.primitives import hashes
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, 'data')
 ITER = 1000000
-TRACKS = {'kanji', 'bottle', 'wset', 'stocks', 'crypto', 'filipino'}
+TRACKS = {'kanji', 'bottle', 'wset', 'stocks', 'crypto', 'filipino', 'football'}
 
 # Furigana markup: {漢字|かんじ} shows kana under the kanji; {漢字|-} keeps it bare on purpose
 # (used when a quiz is testing that very reading). Kanji she has learned never need it.
@@ -142,6 +142,10 @@ def validate(b):
         if not sec.get('quiz'):
             errs.append(f'{k}.quiz is empty (every lesson ends in a check)')
         check_quiz(sec.get('quiz'), k + '.quiz', errs)
+    if b.get('football_101'):
+        if not b['football_101'].get('quiz'):
+            errs.append('football_101.quiz is empty (every lesson ends in a check)')
+        check_quiz(b['football_101'].get('quiz'), 'football_101.quiz', errs)
     for i, n in enumerate(b.get('news') or []):
         if not n.get('url'):
             errs.append(f'news[{i}] has no url')
@@ -162,8 +166,10 @@ def cmd_brief(path):
     if errs:
         sys.exit('Brief not published:\n  ' + '\n  '.join(errs))
     added = 0
-    for track in ('kanji', 'bottle', 'wset', 'stocks', 'crypto', 'filipino'):
-        sec = b[track]
+    for track in ('kanji', 'bottle', 'wset', 'stocks', 'crypto', 'filipino', 'football'):
+        sec = b.get('football_101') if track == 'football' else b[track]
+        if not sec:
+            continue
         ref = sec.get('ref') or sec.get('title') or track
         for i, q in enumerate(sec['quiz']):
             iid = hashlib.sha1(f'{track}|{ref}|{plain(q["q"])}'.encode()).hexdigest()[:12]
@@ -179,8 +185,8 @@ def cmd_brief(path):
     k = b['kanji']
     if isinstance(k.get('n'), int):
         st['counters']['kanji_next'] = max(st['counters'].get('kanji_next', 1), k['n'] + 1)
-    for t in ('wset', 'stocks', 'crypto', 'filipino'):
-        n = b[t].get('n')
+    for t in ('wset', 'stocks', 'crypto', 'filipino', 'football'):
+        n = ((b.get('football_101') if t == 'football' else b[t]) or {}).get('n')
         if isinstance(n, int):
             st['counters'][t] = max(st['counters'].get(t, 0), n)
     if d not in st['dates']:
