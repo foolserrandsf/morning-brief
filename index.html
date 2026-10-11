@@ -253,7 +253,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261011143744';
+var APP_BUILD='20261011144103';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -570,11 +570,11 @@ function buildCards(){
       var mt=y.mtd;
       if(mt&&mt.net!=null){var mu=(mt.pct||0)>=0;h+='<div class="ylines"><div><b>Month to date:</b> '+money(mt.net)+(mt.prev_net!=null?' vs '+money(mt.prev_net)+' '+esc(mt.prev_label||'at this point last month')+' <span class="delta '+(mu?'up':'dn')+'">'+(mu?'+':'−')+Math.abs(mt.pct)+'%</span>':'')+'</div></div>';}
       var ex=y.expenses;
-      if(ex)h+='<div class="sect"><h3>Expenses</h3><div class="tf">'+
-        '<div><span>Owed on open bills</span><b>'+money(ex.owed)+'</b><small>'+esc(String(ex.owed_count||''))+' bills'+(ex.past_due?', '+money(ex.past_due)+' past due':'')+'</small></div>'+
-        '<div><span>Paid in '+esc(ex.month||'')+'</span><b>'+money(ex.paid_month)+'</b><small>so far</small></div>'+
-        '<div style="grid-column:1/-1"><span>'+esc(ex.month||'')+' expenses so far</span><b>'+money(ex.total_month)+'</b><small>'+money(ex.invoices_month)+' in invoices + '+money(ex.fixed_month)+' fixed costs'+(ex.sales_month?' · sales '+money(ex.sales_month):'')+'</small></div></div>'+
-        (ex.note?'<p class="stats">'+esc(ex.note)+'</p>':'')+'</div>';
+      if(ex){var mo=esc(ex.month||''),rg=ex.range?' ('+esc(ex.range)+')':'';h+='<div class="sect"><h3>'+mo+' expenses so far'+rg+'</h3><div class="tf">'+
+        '<div><span>'+mo+' supplier bills</span><b>'+money(ex.invoices_month)+'</b><small>'+(ex.invoices_count?ex.invoices_count+' invoices dated in '+mo:'invoices dated in '+mo)+(ex.invoices_paid!=null?'. '+money(ex.invoices_paid)+' paid, '+money(ex.invoices_unpaid)+' not paid yet':'')+'</small></div>'+
+        '<div><span>'+mo+' fixed costs</span><b>'+money(ex.fixed_month)+'</b><small>full month: rent, payroll, utilities, insurance, debt payment</small></div>'+
+        '<div style="grid-column:1/-1"><span>'+mo+' total expenses so far</span><b>'+money(ex.total_month)+'</b><small>supplier bills + fixed costs'+(ex.sales_month?'. '+mo+' sales so far: '+money(ex.sales_month):'')+'</small></div></div>'+
+        (ex.note?'<p class="stats">'+esc(ex.note)+'</p>':'')+'</div>';}
       var wt=y.weekly_tips;
       if(wt&&(wt.people||[]).length)h+='<div class="sect"><h3>Tips by bartender, '+esc(wt.week||'last week')+'</h3><div class="ppl">'+wt.people.map(function(p){return '<div class="p"><span>'+esc(p.name)+'</span><small>'+(p.shifts||p.tips?'earned '+money(p.tips)+(p.shifts?', '+p.shifts+' shift'+(p.shifts>1?'s':''):''):'no tracked shifts yet')+(p.paid?'<br>paid '+money(p.paid)+(wt.since?' since '+esc(dshort(wt.since)):' this week'):'')+(p.last_paid&&p.last_paid.date?'<br>last payout '+money(p.last_paid.amount)+' on '+esc(p.last_paid.date):'')+(p.balance!=null?'<br>'+(p.balance>0.005?'<b class="owed">still owed '+money(p.balance)+(p.paid_through?' (paid through '+esc(p.paid_through)+')':'')+'</b>':p.balance<-0.005?'<b class="over">paid '+money(-p.balance)+' more than earned</b>':'<b class="ok">all paid</b>'):'')+'</small></div>'}).join('')+'</div>'+(wt.total?'<p class="stats">Earned '+money(wt.total)+(wt.paid_total!=null?', paid '+money(wt.paid_total):'')+(wt.note?'. '+esc(wt.note):'')+'</p>':'')+((wt.unmatched||[]).length?'<p class="stats">Payments I couldn\'t match to a bartender: '+wt.unmatched.map(function(u){return esc(u.name)+' '+money(u.amount)+(u.date?' ('+esc(u.date)+')':'')}).join('; ')+'</p>':'')+'</div>';
       var bl=y.bills;
