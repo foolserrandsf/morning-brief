@@ -270,7 +270,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261012090434';
+var APP_BUILD='20261012091246';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -566,8 +566,8 @@ function buildCards(){
         (jp.phrase.notes&&jp.phrase.notes.length?'<div class="chunks">'+jp.phrase.notes.map(function(n,i){return '<div class="c" style="--cc:'+cols[i%cols.length]+'"><b class="jp">'+esc(n.bit)+'</b><span>'+esc(n.means)+'</span></div>'}).join('')+'</div>':'')+'</div>';
     }
     if(jp.tip)gm+='<div class="back"><b>What you\'ll likely hear back</b>'+esc(jp.tip)+'</div>';
-    if(jp.scenario){var sc=jp.scenario,ln=function(x){return '<div class="sl"><div class="jp">'+esc(x.jp)+'</div><div class="ro">'+esc(x.romaji||'')+'</div><div class="en">'+esc(x.en||'')+'</div></div>'};
-      gm+=more(sc.title||'Practice scenario',(sc.setup?'<p>'+esc(sc.setup)+'</p>':'')+((sc.say||[]).length?'<h4 class="sch">What you can say</h4>'+sc.say.map(ln).join(''):'')+((sc.driver||[]).length?'<h4 class="sch">What the driver may ask, and your answer</h4>'+sc.driver.map(function(d){return '<div class="sq">'+ln(d)+(d.reply?'<div class="sa"><b>You:</b>'+ln(d.reply)+'</div>':'')+'</div>'}).join(''):'')+((sc.tips||[]).length?'<h4 class="sch">Good to know</h4><ul>'+sc.tips.map(function(t){return '<li>'+esc(t)+'</li>'}).join('')+'</ul>':''))}
+    (jp.scenarios||(jp.scenario?[jp.scenario]:[])).forEach(function(sc){var ln=function(x){return '<div class="sl"><div class="jp">'+esc(x.jp)+'</div><div class="ro">'+esc(x.romaji||'')+'</div><div class="en">'+esc(x.en||'')+'</div></div>'},they=sc.they||sc.driver||[];
+      gm+=more(sc.title||'Practice scenario',(sc.setup?'<p>'+esc(sc.setup)+'</p>':'')+((sc.say||[]).length?'<h4 class="sch">What you can say</h4>'+sc.say.map(ln).join(''):'')+(they.length?'<h4 class="sch">'+esc(sc.they_label||'What they may say, and your answer')+'</h4>'+they.map(function(d){return '<div class="sq">'+ln(d)+(d.reply?'<div class="sa"><b>You:</b>'+ln(d.reply)+'</div>':'')+'</div>'}).join(''):'')+((sc.tips||[]).length?'<h4 class="sch">Good to know</h4><ul>'+sc.tips.map(function(t){return '<li>'+esc(t)+'</li>'}).join('')+'</ul>':''))});
     gm+='</div>';
   }
   cards.push({id:'gm',title:'Good morning, Denise',sub:'Edition '+(b.edition||1),color:'var(--persimmon)',tint:'#FFF1CF',min:1,must:1,body:gm});
