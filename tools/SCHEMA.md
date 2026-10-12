@@ -50,3 +50,5 @@ The app builds the recall quizzes itself (every other day from Oct 9, 2026), the
 
 
 REPLIES (data/replies.enc, written by the 5-minute "Needs you replies" task via `python3 tools/publish.py reply <file>`): {"items": {"<ask id>": {"id": "a1791…", "date": "YYYY-MM-DD (brief date)", "status": "working|draft_ready|question|done|sent|error", "text": "1–3 friendly sentences on what Claude did or needs", "draft": {"to": "", "subject": "", "body": ""}, "draft_id": "Gmail draft id"}}}. `python3 tools/publish.py asks <sync blob file>` lists what she typed under Needs you items (type ask) and Send-it taps (type send) that still need handling.
+
+"coming": [{"date": "Mon Oct 12", "what": "Mama's birthday", "kind": "birthday|holiday|travel|appointment|event"}] — the next 3 days, shown on the Today card as a separate "Coming up" list with date badges (keep calendar[] for today only; don't put upcoming items in notes).

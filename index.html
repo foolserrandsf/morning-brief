@@ -49,6 +49,8 @@ button{font:inherit;cursor:pointer;border:0;color:inherit}
 .modes button{flex:1;background:transparent;border-radius:9px;padding:8px 6px;font-weight:600;font-size:14px;color:var(--soft)}
 .modes button.on{background:var(--ink);color:#fff}
 .bar{display:flex;gap:3px;margin:0 0 14px}
+.comehead{font-size:16.5px;margin:16px 0 8px}.coming{display:grid;gap:8px}.cu{display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:8px 12px;background:var(--paper)}.cd{flex:0 0 58px;text-align:center;border-radius:10px;background:#E4F1FF;color:#2E6FD6;padding:4px 0;line-height:1.15}.cd b{display:block;font-size:13px;letter-spacing:.02em}.cd span{font-size:16px;font-weight:700}.cw{font-size:16px;font-weight:600}.ci{margin-right:8px}
+
 .play{margin:12px 0;padding:10px;border:1px solid var(--line);border-radius:12px;background:#F4F9F2;color:var(--ink)}.play svg{width:100%;height:auto;display:block}.play figcaption{font-size:14.5px;margin-top:6px}.plegend{display:flex;flex-wrap:wrap;gap:10px;font-size:12.5px;color:var(--soft);margin-top:4px}.plegend i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:4px;vertical-align:middle}
 
 .askbox{display:flex;flex-direction:column;gap:6px;margin-top:10px}.askbox textarea{width:100%;box-sizing:border-box;font:15.5px/1.4 var(--sans);padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink);resize:vertical}.askbox .btn{align-self:flex-end;padding:10px 16px;font-size:15px}
@@ -266,7 +268,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261011173255';
+var APP_BUILD='20261011173415';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -566,9 +568,17 @@ function buildCards(){
   }
   cards.push({id:'gm',title:'Good morning, Denise',sub:'Edition '+(b.edition||1),color:'var(--persimmon)',tint:'#FFF1CF',min:1,must:1,body:gm});
   /* 2 · calendar */
-  var cal=b.calendar||[];
-  cards.push({id:'cal',title:'Today',sub:cal.length+' on the calendar',color:'var(--sky)',tint:'#E4F1FF',min:1,must:1,
-    body:cal.length?'<div class="list">'+cal.map(function(e){return '<div class="item"><div class="k">'+esc(e.time)+(e.end?'–'+esc(e.end):'')+' · '+esc(e.title)+'</div>'+(e.where?'<div class="m">'+esc(e.where)+'</div>':'')+(e.note?'<div class="m">'+esc(e.note)+'</div>':'')+'</div>'}).join('')+'</div>':'<p class="empty">Nothing scheduled. Wide-open day — protect a chunk of it for your one thing.</p>'});
+  var cal=b.calendar||[],coming=(b.coming||[]).slice();
+  // pull "Coming up: Mon Oct 12: Columbus Day · Wed Oct 14: Mama" out of notes into its own list
+  cal=cal.map(function(e){e=Object.assign({},e);var src=[e.note||''];if(/^coming up/i.test(e.title||'')){src.push(e.title.replace(/^coming up:?\s*/i,''));e._drop=1}
+    src.forEach(function(t,ix){var m=t.match(/coming up:?\s*(.*)$/i);var body=m?m[1]:(ix>0?t:null);if(body==null)return;
+      body.split(/\s*[·;]\s*/).forEach(function(x){var mm=x.match(/^((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)\w*,?\s+\w+\s+\d{1,2})\s*:\s*(.+)$/i);if(mm)coming.push({date:mm[1],what:mm[2]})});
+      if(m&&ix===0)e.note=t.slice(0,m.index).trim()});
+    return e}).filter(function(e){return !e._drop});
+  var kind=function(w){w=w.toLowerCase();return /birthday|bday/.test(w)?'🎂':/ua\d|flight|narita|sfo|→| to /.test(w)?'✈️':/ day$|holiday/.test(w)?'🗓️':'📌'};
+  var calHTML=cal.length?'<div class="list">'+cal.map(function(e){return '<div class="item"><div class="k">'+esc(e.time)+(e.end?'–'+esc(e.end):'')+' · '+esc(e.title)+'</div>'+(e.where?'<div class="m">'+esc(e.where)+'</div>':'')+(e.note?'<div class="m">'+esc(e.note)+'</div>':'')+'</div>'}).join('')+'</div>':'<p class="empty">Nothing scheduled today. Protect a chunk of it for your one thing.</p>';
+  if(coming.length)calHTML+='<h3 class="comehead">Coming up</h3><div class="coming">'+coming.map(function(c){var d=String(c.date).split(/,?\s+/);return '<div class="cu"><div class="cd"><b>'+esc(d[0].slice(0,3))+'</b><span>'+esc(d.slice(1).join(' '))+'</span></div><div class="cw"><span class="ci">'+(c.icon||{birthday:'🎂',holiday:'🗓️',travel:'✈️',appointment:'🩺',event:'📌'}[c.kind]||kind(c.what||''))+'</span>'+esc(c.what)+'</div></div>'}).join('')+'</div>';
+  cards.push({id:'cal',title:'Today',sub:cal.length+' today'+(coming.length?' · '+coming.length+' coming up':''),color:'var(--sky)',tint:'#E4F1FF',min:1,must:1,body:calHTML});
   /* 3 · inbox */
   var ib=b.inbox||[];
   cards.push({id:'inbox',title:'Needs you',sub:ib.length?ib.length+' email'+(ib.length>1?'s':'')+' waiting on you':'Inbox zero-ish',color:'var(--coral)',tint:'#FFE7E3',min:2,must:1,
