@@ -269,7 +269,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261012083503';
+var APP_BUILD='20261012083724';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -556,7 +556,7 @@ function buildCards(){
     var dm=String(jp.day||'').match(/^(.*?)(\d+)\s*(day|days)\b(.*)$/i);
     gm+='<div class="jpbox"><div class="jphead">'+(jp.headline?'<span class="t">'+esc(jp.headline)+'</span>':'<span class="t">'+esc(jp.day||'Japan trip')+'</span>')+'<span class="clock"><span id="jst"></span> in Japan</span></div>';
     var jw=w.japan||[];
-    if(jw.length)gm+='<div class="jwx">'+jw.map(function(c){return '<div class="c"><div class="top"><b>'+esc(c.city)+'</b>'+(c.when?'<span>'+esc(c.when)+'</span>':'')+'</div><div class="now"><span class="t">'+esc(c.hi)+'°</span><span>/ '+esc(c.lo)+'°</span></div><div class="sky">'+esc(c.sky||'')+(c.rain?', '+esc(c.rain)+' chance of rain':'')+'</div>'+(c.days&&c.days.length?'<div class="days">'+c.days.map(function(d){return '<span><b>'+esc(d.day)+'</b> '+esc(d.hi)+'°/'+esc(d.lo)+'° '+esc(d.sky||'')+(d.rain?', '+esc(d.rain)+' chance of rain':'')+'</span>'}).join('')+'</div>':'')+(c.note?'<div class="nt">'+esc(c.note)+'</div>':'')+'</div>'}).join('')+'</div>';
+    if(jw.length)gm+='<div class="jwx">'+jw.map(function(c){return '<div class="c"><div class="top"><b>'+esc(c.city)+'</b>'+(c.when?'<span>'+esc(c.when)+'</span>':'')+'</div><div class="now"><span class="t">'+esc(c.hi)+'°</span><span>/ '+esc(c.lo)+'°</span></div><div class="sky">'+esc(c.sky||'')+(c.rain?', '+esc(c.rain)+' chance of rain':'')+(c.humidity?'<br>Humidity '+esc(c.humidity):'')+'</div>'+(c.days&&c.days.length?'<div class="days">'+c.days.map(function(d){return '<span><b>'+esc(d.day)+'</b> '+esc(d.hi)+'°/'+esc(d.lo)+'° '+esc(d.sky||'')+(d.rain?', '+esc(d.rain)+' chance of rain':'')+(d.humidity?', humidity '+esc(d.humidity):'')+'</span>'}).join('')+'</div>':'')+(c.note?'<div class="nt">'+esc(c.note)+'</div>':'')+'</div>'}).join('')+'</div>';
     if(jp.facts&&jp.facts.length)gm+='<div class="facts">'+jp.facts.map(function(x){return '<div class="f"><span class="i">'+esc(x.icon||'•')+'</span><div><b>'+esc(x.label)+'</b><span>'+esc(x.value)+'</span></div></div>'}).join('')+'</div>';
     else if(jp.today)gm+='<p style="margin:10px 0 0">'+esc(firstS(jp.today))+'</p>'+more('Trip details','<p>'+esc(restS(jp.today))+'</p>');
     if(jp.phrase){
