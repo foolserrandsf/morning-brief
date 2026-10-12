@@ -52,3 +52,7 @@ The app builds the recall quizzes itself (every other day from Oct 9, 2026), the
 REPLIES (data/replies.enc, written by the 5-minute "Needs you replies" task via `python3 tools/publish.py reply <file>`): {"items": {"<ask id>": {"id": "a1791…", "date": "YYYY-MM-DD (brief date)", "status": "working|draft_ready|question|done|sent|error", "text": "1–3 friendly sentences on what Claude did or needs", "draft": {"to": "", "subject": "", "body": ""}, "draft_id": "Gmail draft id"}}}. `python3 tools/publish.py asks <sync blob file>` lists what she typed under Needs you items (type ask) and Send-it taps (type send) that still need handling.
 
 "coming": [{"date": "Mon Oct 12", "what": "Mama's birthday", "kind": "birthday|holiday|travel|appointment|event"}] — the next 3 days, shown on the Today card as a separate "Coming up" list with date badges (keep calendar[] for today only; don't put upcoming items in notes).
+
+## shopping_add (optional, top level)
+"shopping_add": [{"id": "stable id, e.g. cal-2026-10-28-dish-soap", "text": "Dish soap"}] — things she needs to buy that come from today's calendar (e.g. a "Buy …" entry) or a note in her email. The app adds each id to her in-app shopping list (Today card) only once, so repeating an id never duplicates it. Her current list (what she typed in the app and hasn't checked off) is printed by `publish.py progress` as "shopping"; don't repeat those items.
+

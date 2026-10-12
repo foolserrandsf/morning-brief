@@ -258,10 +258,26 @@ def cmd_progress(path):
     print(json.dumps({
         'answered': len(rows), 'mastered': len(mastered),
         'struggling': [{'track': t, 'ref': ref, 'q': q, 'misses': w} for w, b, t, ref, q in struggling[:20]],
-        'days_with_cards_done': sorted(prog.get('DONE', {}).keys())[-14:],
-        'one_thing': {d: last_focus(v) for d, v in sorted(prog.get('DONE', {}).items())[-3:]},
+        'days_with_cards_done': sorted(k for k in prog.get('DONE', {}) if k[:1].isdigit())[-14:],
+        'one_thing': {d: last_focus(v) for d, v in sorted((k, v) for k, v in prog.get('DONE', {}).items() if k[:1].isdigit())[-3:]},
         'phone_tz': phone_tz(prog),
+        'shopping': shopping(prog),
     }, ensure_ascii=False, indent=1))
+
+
+def shopping(prog):
+    """Her in-app shopping list (DONE['shop'] add/got/undo/del events): items still to buy."""
+    ev = sorted((v for v in prog.get('DONE', {}).get('shop', {}).values() if isinstance(v, dict) and v.get('k') == 'shop'), key=lambda v: v.get('t', 0))
+    items = {}
+    for e in ev:
+        if e.get('a') == 'add':
+            items[e.get('id')] = {'text': e.get('text', ''), 'got': False, 'del': False}
+        elif e.get('id') in items:
+            it = items[e['id']]
+            if e.get('a') == 'got': it['got'] = True
+            if e.get('a') == 'undo': it['got'] = False
+            if e.get('a') == 'del': it['del'] = True
+    return [it['text'] for it in items.values() if not it['got'] and not it['del']]
 
 
 def phone_tz(prog):

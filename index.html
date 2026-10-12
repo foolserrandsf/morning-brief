@@ -243,6 +243,7 @@ details.more>.in p:first-child{margin-top:0}
 .conn summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:10px;align-items:baseline}.conn summary::-webkit-details-marker{display:none}.conn summary::after{content:'+';font-weight:700;color:var(--soft);font-size:18px}.conn[open] summary::after{content:'−'}.conn span{margin-top:4px}
 .conn{padding:10px 0;border-top:1px solid rgba(127,127,127,.18)}.conn:first-of-type{border-top:0}.conn b{display:block;font-size:16.5px;margin-bottom:2px}.conn span{display:block}
 .ylines{display:grid;gap:6px;font-size:16.5px;margin-top:6px}
+.shop{margin-top:14px}.shop h3{margin-bottom:6px}.shop .si{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--line);font-size:16px}.shop .si input{width:22px;height:22px;flex:none;accent-color:var(--teal)}.shop .si span{flex:1}.shop .si.got span{text-decoration:line-through;color:var(--soft)}.shop .si button{border:0;background:none;color:var(--soft);font-size:18px;padding:0 4px}.shop .sadd{display:flex;gap:8px;margin-top:10px}.shop .sadd input{flex:1;min-width:0;font:inherit;font-size:16px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card,#fff);color:inherit}.shop .sadd .btn{flex:none;padding:10px 16px}
 .tipsplit{margin:6px 0 2px 2px;border-left:3px solid var(--line);padding-left:10px;display:grid;gap:4px}.tipsplit div{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:15px}.tipsplit span{color:var(--soft)}.tipsplit small{display:block;font-size:13px}.tipsplit b{font-size:18px;font-variant-numeric:tabular-nums;color:var(--ink)}.reg{margin:3px 0 0 12px;font-size:15.5px}
 .yshift{display:flex;flex-wrap:wrap;gap:6px}
 .yshift span{background:var(--wash);border:1px solid var(--line);border-radius:10px;padding:5px 10px;font-size:14.5px}
@@ -268,7 +269,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261011184135';
+var APP_BUILD='20261011185008';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -578,7 +579,8 @@ function buildCards(){
   var kind=function(w){w=w.toLowerCase();return /birthday|bday/.test(w)?'🎂':/ua\d|flight|narita|sfo|→| to /.test(w)?'✈️':/ day$|holiday/.test(w)?'🗓️':'📌'};
   var calHTML=cal.length?'<div class="list">'+cal.map(function(e){return '<div class="item"><div class="k">'+esc(e.time)+(e.end?'–'+esc(e.end):'')+' · '+esc(e.title)+'</div>'+(e.where?'<div class="m">'+esc(e.where)+'</div>':'')+(e.note?'<div class="m">'+esc(e.note)+'</div>':'')+'</div>'}).join('')+'</div>':'<p class="empty">Nothing scheduled today. Protect a chunk of it for your one thing.</p>';
   if(coming.length)calHTML+='<h3 class="comehead">Coming up</h3><div class="coming">'+coming.map(function(c){var d=String(c.date).split(/,?\s+/);return '<div class="cu"><div class="cd"><b>'+esc(d[0].slice(0,3))+'</b><span>'+esc(d.slice(1).join(' '))+'</span></div><div class="cw"><span class="ci">'+(c.icon||{birthday:'🎂',holiday:'🗓️',travel:'✈️',appointment:'🩺',event:'📌'}[c.kind]||kind(c.what||''))+'</span>'+esc(c.what)+'</div></div>'}).join('')+'</div>';
-  cards.push({id:'cal',title:'Today',sub:cal.length+' today'+(coming.length?' · '+coming.length+' coming up':''),color:'var(--sky)',tint:'#E4F1FF',min:1,must:1,body:calHTML});
+  shopSeed(b.shopping_add);calHTML+=shopHTML();var shopN=shopList().filter(function(x){return !x.got}).length;
+  cards.push({id:'cal',title:'Today',sub:cal.length+' today'+(coming.length?' · '+coming.length+' coming up':'')+(shopN?' · '+shopN+' to buy':''),color:'var(--sky)',tint:'#E4F1FF',min:1,must:1,body:calHTML});
   /* 3 · inbox */
   var ib=b.inbox||[];
   cards.push({id:'inbox',title:'Needs you',sub:ib.length?ib.length+' email'+(ib.length>1?'s':'')+' waiting on you':'Inbox zero-ish',color:'var(--coral)',tint:'#FFE7E3',min:2,must:1,
@@ -890,6 +892,20 @@ var TK={};
 function fkeyDate(){return S.brief.date}
 function tState(k){var x=(DONE[fkeyDate()]||{}),best={s:'',t:0};Object.keys(x).forEach(function(n){if(n.slice(0,2)==='f_'){var v=x[n];if(v&&(v.k||'focus')===k&&(v.t||0)>best.t)best=v}});return best}
 function focusState(){return tState('focus')}
+/* shopping list: add/check/remove events kept in DONE.shop, so they sync across devices like everything else */
+function shopEv(o){o.k='shop';o.t=Date.now();var d=DONE.shop=DONE.shop||{};d['f_'+o.t+'_'+Math.random().toString(36).slice(2,6)]=o;ls('mb_done',DONE);queueSync(300)}
+function shopList(){var ev=Object.keys(DONE.shop||{}).map(function(k){return DONE.shop[k]}).filter(function(e){return e&&e.k==='shop'}).sort(function(a,b){return (a.t||0)-(b.t||0)}),m={},order=[];
+  ev.forEach(function(e){if(e.a==='add'){if(!m[e.id])order.push(e.id);m[e.id]={id:e.id,text:e.text,got:0,del:0,t:e.t}}else if(m[e.id]){if(e.a==='got')m[e.id].got=e.t;if(e.a==='undo')m[e.id].got=0;if(e.a==='del')m[e.id].del=1}});
+  var cut=Date.now()-18*36e5;return order.map(function(id){return m[id]}).filter(function(x){return !x.del&&(!x.got||x.got>cut)})}
+function shopKnown(id){return Object.keys(DONE.shop||{}).some(function(k){var e=DONE.shop[k];return e&&e.id===id})}
+function shopSeed(items){(items||[]).forEach(function(it){var id=it.id||('b:'+String(it.text||it).toLowerCase());if(!shopKnown(id))shopEv({a:'add',id:id,text:it.text||String(it)})})}
+function shopHTML(){var L=shopList(),open=L.filter(function(x){return !x.got}).length;
+  return '<div class="shop" id="shopbox"><h3 class="comehead">Shopping list'+(open?' ('+open+')':'')+'</h3>'+(L.length?L.map(function(x){return '<label class="si'+(x.got?' got':'')+'"><input type="checkbox" '+(x.got?'checked ':'')+'onchange="shopTog(\''+esc(x.id)+'\',this.checked)"><span>'+esc(x.text)+'</span><button type="button" aria-label="Remove '+esc(x.text)+'" onclick="event.preventDefault();shopDel(\''+esc(x.id)+'\')">×</button></label>'}).join(''):'<p class="empty">Nothing on the list. Add things here as you think of them.</p>')+
+  '<div class="sadd"><input id="shopin" placeholder="Add something to buy" enterkeyhint="done" onkeydown="if(event.key===\'Enter\'){event.preventDefault();shopAdd()}"><button type="button" class="btn ghost" onclick="shopAdd()">Add</button></div></div>'}
+function shopRefresh(){var b=$('shopbox');if(b)b.outerHTML=shopHTML()}
+function shopAdd(){var i=$('shopin'),v=(i&&i.value||'').trim();if(!v)return;shopEv({a:'add',id:'u'+Date.now().toString(36),text:v.slice(0,80)});shopRefresh();var n=$('shopin');if(n)n.focus()}
+function shopTog(id,on){shopEv({a:on?'got':'undo',id:id});if(on)cheer('Got it!',10);shopRefresh()}
+function shopDel(id){shopEv({a:'del',id:id});shopRefresh()}
 function tEvent(k,o){o.k=k;o.t=Date.now();var d=DONE[fkeyDate()]=DONE[fkeyDate()]||{};d['f_'+o.t]=o;ls('mb_done',DONE);queueSync(300)}
 function fmtTime(iso){return new Date(iso).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}
 function tStatus(k){
