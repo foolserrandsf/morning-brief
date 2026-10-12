@@ -254,7 +254,7 @@ details.more>.in p:first-child{margin-top:0}
 .fes{margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}.fes>h3{font-size:17.5px;margin:0 0 4px;display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:2px 10px}.fes>h3 small{font:500 13.5px var(--sans);color:var(--soft)}
 .fel{font-size:13.5px;font-weight:700;color:var(--soft);margin:14px 0 0}.fes>.fel:first-of-type{margin-top:8px}.fes .alert{margin-top:12px}
 .fenote{font-size:14px;color:var(--soft);margin:10px 0 0}.dl{font-weight:700}.dl.up{color:#1F7445}.dl.dn{color:#B23A2F}
-.fes .tf{margin-top:8px}.fes .conn summary b{font-size:16px;font-weight:600}
+.fes .tf{margin-top:8px}.fes .conn summary b{font-size:16px;font-weight:600}.fedr>.fed:first-child{margin-top:0}.fed>summary span small{display:block;font:500 14px var(--sans);color:var(--soft);margin-top:2px}.fed>summary span small.lowh{color:#B23A2F;font-weight:700}.fed>summary{font-size:16.5px}.fed .more{background:var(--paper)}.fed>.in>.fel:first-child,.fed>.in>.frl:first-child{margin-top:0}
 .ylines{display:grid;gap:6px;font-size:16.5px;margin-top:6px}
 .sch{margin:12px 0 4px;font-size:15px}.sl{margin:6px 0 8px}.sl .jp{font-size:17px}.sl .ro{font-size:13px;color:var(--soft)}.sl .en{font-size:14px}.sq{border-left:3px solid var(--line);padding-left:10px;margin:8px 0 12px}.sa{margin-left:6px}.sa>b{font-size:13px;color:var(--teal)}
 .tipsplit .lowinv b{color:#C0392B}
@@ -284,7 +284,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261012121146';
+var APP_BUILD='20261012124336';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -602,7 +602,9 @@ function buildCards(){
     var FR=function(n,v,m,c){return '<div class="fr'+(c?' '+c:'')+'"><div class="n">'+n+'</div>'+(v!=null&&v!==''?'<div class="v">'+v+'</div>':'')+(m?'<div class="m">'+String(m).replace(/^([a-z])/,function(c){return c.toUpperCase()})+'</div>':'')+'</div>'},
       SEC=function(t,body,aside){return body?'<div class="fes"><h3>'+t+(aside?' <small>'+aside+'</small>':'')+'</h3>'+body+'</div>':''},
       SPL=function(s){var m=/^(.*?)\s*\(([^()]*)\)\s*$/.exec(s||'');return m?[m[1],m[2]]:[s||'','']},
-      FIRST=function(s){var m=/^(.+?\.)(\s|$)/.exec(s||'');return m?m[1]:(s||'')};
+      FIRST=function(s){var m=/^(.+?\.)(\s|$)/.exec(s||'');return m?m[1]:(s||'')},
+      DRW=function(t,hint,body,hc){return body?'<details class="more fed"><summary><span>'+t+(hint?'<small'+(hc?' class="'+hc+'"':'')+'>'+hint+'</small>':'')+'</span></summary><div class="in">'+body+'</div></details>':''},
+      DR=[],IDEAS=[];
     if(y){
       if(y.status==='closed')h+='<div class="lead">'+esc(y.note||'No row for '+wdn+' on the Daily tab. The bar may have been closed.')+'</div>';
       else if(y.status==='not_yet')h+='<div class="lead">'+esc(y.note||wdn+'\'s numbers aren\'t on the Daily tab yet.')+'</div>';
@@ -619,10 +621,16 @@ function buildCards(){
         if(mt&&mt.net!=null){var mu=(mt.pct||0)>=0;top+=FR('Month to date',money(mt.net),mt.prev_net!=null?'<span class="dl '+(mu?'up':'dn')+'">'+(mu?'+':'−')+Math.abs(mt.pct)+'%</span> vs '+money(mt.prev_net)+' '+esc(mt.prev_label||'at this point last month'):'')}
         h+='<div class="frl">'+top+'</div>';
         var rg=y.regulars||[];
-        h+=rg.length?'<div class="fel">'+esc((y.regulars_label||'Regulars in').replace(/:\s*$/,''))+'</div><div class="frl">'+rg.map(function(r){return FR(esc(r.name),'',r.note?esc(r.note):r.visits+' visits')}).join('')+'</div>':'<p class="fesub">No regulars from the Regulars tab came in.</p>';
+        h+=rg.length?'<div class="fel">'+esc((y.regulars_label||'Regulars in').replace(/:\s*$/,''))+'</div><div class="frl">'+rg.map(function(r){
+          var ln=[];
+          if(r.time||r.tip!=null)ln.push((r.time?'In at '+esc(r.time):'')+(r.time&&r.tip!=null?', ':'')+(r.tip!=null?(r.time?'tipped ':'Tipped ')+(r.tip%1?money2(r.tip):money(r.tip)):'')+'.');
+          if(r.streak)ln.push(esc(r.streak)+'.');
+          if(r.since_spent!=null)ln.push(esc(r.since_label||'So far')+': '+money2(r.since_spent)+' spent'+(r.since_tipped!=null?', '+money2(r.since_tipped)+' tipped':'')+'.');
+          if(!ln.length)ln.push(r.note?esc(r.note):r.visits+' visits');
+          return FR(esc(r.name),r.spent!=null?money2(r.spent):'',ln.join('<br>'))}).join('')+'</div>':'<p class="fesub">No regulars from the Regulars tab came in.</p>';
       }
       var ideas0=(y.ideas)||[];
-      if(ideas0.length)h+='<div class="insight"><b>Ideas for this week</b>'+pts(ideas0,'var(--teal)')+'</div>';
+      IDEAS=ideas0;
       // What's left: wine by the glass and kegs
       var inv='',how='';
       [['pours','By the glass, glasses left','glasses','5 oz pours: a 750ml bottle gives about 5 glasses, a 1L about 13½. Sales come from the Upserve product mix; when a count was taken mid-day, that day is split by the share of sales after the count.'],['kegs','On tap, pours left','pours','A 1/2 barrel holds about 124 sixteen-ounce pours (165 twelve-ounce); a 1/6 barrel about 41 sixteen-ounce (55 twelve-ounce). Upserve rings draft as "$9 Beer" or "$12 Beer", not by keg, so each keg\'s share is estimated.']].forEach(function(cfg){
@@ -632,7 +640,8 @@ function buildCards(){
         inv+='<div class="fel">'+cfg[1]+'</div><div class="frl">'+pw.map(function(o){var p=o.p;return FR((o.tap<99?'<span class="tapn">'+o.tap+'</span>':'')+(p.alert?'<span class="lowp">Low</span>':'')+esc(o.sp[0]),p.left!=null?(p.est&&!/^~/.test(String(p.left))?'~':'')+esc(p.left):'',(o.sp[1]?esc(o.sp[1])+'. ':'')+esc(p.alert?p.summary||'':FIRST(p.summary)),p.alert?'low':'')}).join('')+'</div>';
         how+='<p class="fel">'+cfg[1].split(',')[0]+'</p>'+pw.map(function(o){var p=o.p;return '<p><b>'+esc(p.wine||p.keg)+'</b><br><span class="fesub">'+esc(p.summary||'')+'</span></p><ul>'+(p.steps||[]).map(function(t){return '<li>'+esc(t)+'</li>'}).join('')+'</ul>'}).join('')+'<p class="stats">'+esc(cfg[3])+'</p>';
       });
-      if(inv)h+=SEC('What\'s left',inv+more('How these are worked out',how)+(y.kegs_note?'<p class="fenote">'+esc(y.kegs_note)+'</p>':''));
+      var nlow=['pours','kegs'].reduce(function(a,k){return a+(y[k]||[]).filter(function(p){return p.alert}).length},0);
+      if(inv)DR.push(DRW('What\'s left',nlow?nlow+' running low':'Nothing running low',inv+more('How these are worked out',how)+(y.kegs_note?'<p class="fenote">'+esc(y.kegs_note)+'</p>':''),nlow?'lowh':''));
       // Profit
       var pr='',phow='',ptot=0,pdays='';
       [['btg_profit','Wine by the glass'],['beer_profit','Beer']].forEach(function(cfg){var bp=y[cfg[0]];if(!bp||!(bp.rows||[]).length)return;
@@ -640,7 +649,7 @@ function buildCards(){
         pr+='<div class="fel">'+cfg[1]+'</div><div class="frl">'+bp.rows.map(function(r){var tot=r.days.reduce(function(a,d){return a+(d?d[2]:0)},0),sp=SPL(r.wine||r.item);ptot+=tot;
           return FR(esc(sp[0]),money(tot),(sp[1]?esc(sp[1])+'. ':'')+r.days.map(function(d,i){var dl=esc((bp.days[i]||'').split(' ')[0]);return d?dl+' '+money(d[2])+' ('+d[0]+' '+(r.unit||'gl')+')':dl+' no data'}).join(', '))}).join('')+'</div>';
         phow+='<p class="fel">'+cfg[1]+'</p>'+bp.rows.map(function(r){return '<p><b>'+esc(r.wine||r.item)+'</b>: $'+r.price+' each; costs about $'+r.cost_glass.toFixed(2)+' each ('+r.pct+'% of the price). '+esc(r.basis)+'.</p>'}).join('')+(bp.missing?'<p>'+esc(bp.missing)+'</p>':'')+(bp.note?'<p class="stats">'+esc(bp.note)+'</p>':'')});
-      if(pr)h+=SEC('Profit',pr+'<div class="frl">'+FR('Wine and beer together',money(ptot),'','tot')+'</div>'+more('How profit is worked out',phow),esc(pdays));
+      if(pr)DR.push(DRW('Profit',money(ptot)+', '+esc(pdays),pr+'<div class="frl">'+FR('Wine and beer together',money(ptot),'','tot')+'</div>'+more('How profit is worked out',phow)));
       // Tips by bartender
       var wt=y.weekly_tips;
       if(wt&&(wt.people||[]).length){
@@ -652,7 +661,8 @@ function buildCards(){
           if(p.balance<-0.005)ow+=FR(esc(p.name),money(-p.balance),'Paid more than earned','low')});
         var each='<div class="ppl">'+wt.people.map(function(p){return '<div class="p"><span>'+esc(p.name)+'</span><small>'+(!p.tips&&p.opener_pay?'opener shifts only, no tips'+(p.shifts?' ('+p.shifts+' shift'+(p.shifts>1?'s':'')+')':''):p.shifts||p.tips?'earned '+money(p.tips)+' in tips'+(p.shifts?', '+p.shifts+' shift'+(p.shifts>1?'s':''):''):'no tracked shifts yet')+(p.opener_pay?'<br>'+money(p.opener_pay)+' opener pay'+(p.opener_owed!=null?(p.opener_owed>0.005?', '+money(p.opener_owed)+' owed':', all paid'):''):'')+(p.last_paid&&p.last_paid.date?'<br>last payout '+money(p.last_paid.amount)+' on '+esc(p.last_paid.date):'')+(p.balance!=null?'<br>'+(p.balance>0.005?'<b class="owed">tips owed '+money(p.balance)+'</b>':p.balance<-0.005?'<b class="over">paid '+money(-p.balance)+' more than earned</b>':'<b class="ok">tips all paid</b>'):'')+'</small></div>'}).join('')+'</div>'+
           (wt.note?'<p class="stats">'+esc(wt.note)+'</p>':'')+((wt.unmatched||[]).length?'<p class="stats">Payments I couldn\'t match to a bartender: '+wt.unmatched.map(function(u){return esc(u.name)+' '+money(u.amount)+(u.date?' ('+esc(u.date)+')':'')}).join('; ')+'</p>':'');
-        h+=SEC('Tips by bartender','<div class="frl">'+tr+'</div>'+(ow?'<div class="fel">Still owed</div><div class="frl">'+ow+'</div>':'<p class="fesub">Everyone is paid up.</p>')+more('Each bartender, and how it\'s counted',each),esc(wt.week||''));
+        var owt=wt.people.reduce(function(a,p){return a+(p.balance>0.005?p.balance:0)+((p.opener_owed||0)>0.005?p.opener_owed:0)},0);
+        DR.push(DRW('Tips by bartender',(owt?money(owt)+' still owed':'Everyone paid')+(wt.week?', '+esc(SPL(wt.week)[0]):''),'<div class="frl">'+tr+'</div>'+(ow?'<div class="fel">Still owed</div><div class="frl">'+ow+'</div>':'<p class="fesub">Everyone is paid up.</p>')+more('Each bartender, and how it\'s counted',each)));
       }
       // Trend
       if(y.trend||y.forecast){
@@ -678,10 +688,10 @@ function buildCards(){
       var ebd=(bl&&(bl.due_soon||[]).length?'<p class="fel">Due in the next 7 days</p><div class="frl">'+bl.due_soon.map(function(x){var sp=SPL(x.vendor);return FR(esc(sp[0]),money(x.amount),'Due '+esc(x.due)+(sp[1]?', '+esc(sp[1]):''))}).join('')+'</div>':'')+(od&&od.length?'<p class="fel">Past due</p><div class="frl">'+od.map(function(x){return FR(esc(x.vendor),x.amount!=null?money(x.amount):'',x.due?'Was due '+esc(x.due):'')}).join('')+'</div>':'')+
         (ex&&(ex.fixed_items||[]).length?'<p class="fel">Fixed costs, one by one</p><div class="frl">'+ex.fixed_items.map(function(f){return FR(esc(f.name),money(f.amount),f.note?esc(f.note):'')}).join('')+'</div>':'')+(ex&&ex.note?'<p class="stats">'+esc(ex.note)+'</p>':'');
       if(eb)h+=SEC((ex?esc(ex.month||'')+' expenses and bills':'Bills'),eb+more('Each bill, fixed costs and what\'s counted',ebd),ex&&ex.range?esc(ex.range):'');
+      if(DR.length)h+='<div class="fes fedr">'+DR.join('')+'</div>';
     }
     if(y&&y.connections&&y.connections.length)h+='<div class="fes"><h3>What the numbers connect</h3>'+y.connections.map(function(c){return '<details class="conn"><summary><b>'+esc(c.title)+'</b></summary><span>'+esc(c.detail)+'</span></details>'}).join('')+(y.connections_basis?more('Where these come from','<p class="stats">'+esc(y.connections_basis)+'</p>'):'')+'</div>';
-    var ideas=(y&&y.ideas)?[]:(u&&u.insight?[u.insight]:[]);
-    if(ideas.length)h+='<div class="insight"><b>Ideas for this week</b>'+pts(ideas,'var(--teal)')+'</div>';
+    if(!IDEAS.length&&u&&u.insight)IDEAS=[u.insight];
     if(u&&u.net!=null){
       var dd='';
       if(!y){var d=u.vs_last_week_pct;dd+='<div class="money"><span class="v">'+money(u.net)+'</span>'+(d!=null?'<span class="delta '+(d>=0?'up':'dn')+'">'+(d>=0?'+':'')+d+'% vs last '+wdn+'</span>':'')+'</div><div class="stats">'+u.checks+' checks, '+money(u.avg_check)+' average, '+money(u.tips)+' in tips</div>';}
@@ -704,6 +714,7 @@ function buildCards(){
         ((sp.due_soon||[]).length?'<div class="alert"><b>Due soon:</b> '+sp.due_soon.map(function(x){return esc(x.vendor)+' '+money(x.amount)+' ('+esc(x.due)+')'}).join(', ')+'</div>':'')+(sp.note?'<p class="stats">'+esc(sp.note)+'</p>':''));
       h+='</div>';
     }
+    if(IDEAS.length)h+='<div class="fes fedr">'+DRW('Ideas for this week',IDEAS.length+' idea'+(IDEAS.length>1?'s':''),'<div class="insight" style="margin-top:0">'+pts(IDEAS,'var(--teal)')+'</div>')+'</div>';
     cards.push({id:'fe',title:'Fool\'s Errand yesterday',sub:wdn+' '+shortDate(ydate).replace(/^\w+,\s*/,''),color:'var(--teal)',tint:'#E0F6F3',min:1,must:1,body:h});
   }
   /* 4 · football */
