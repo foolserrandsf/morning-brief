@@ -49,6 +49,8 @@ button{font:inherit;cursor:pointer;border:0;color:inherit}
 .modes button{flex:1;background:transparent;border-radius:9px;padding:8px 6px;font-weight:600;font-size:14px;color:var(--soft)}
 .modes button.on{background:var(--ink);color:#fff}
 .bar{display:flex;gap:3px;margin:0 0 14px}
+.play{margin:12px 0;padding:10px;border:1px solid var(--line);border-radius:12px;background:#F4F9F2;color:var(--ink)}.play svg{width:100%;height:auto;display:block}.play figcaption{font-size:14.5px;margin-top:6px}.plegend{display:flex;flex-wrap:wrap;gap:10px;font-size:12.5px;color:var(--soft);margin-top:4px}.plegend i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:4px;vertical-align:middle}
+
 .askbox{display:flex;flex-direction:column;gap:6px;margin-top:10px}.askbox textarea{width:100%;box-sizing:border-box;font:15.5px/1.4 var(--sans);padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink);resize:vertical}.askbox .btn{align-self:flex-end;padding:10px 16px;font-size:15px}
 .more.ask{margin-top:8px}.more summary .dot,.bar i.attn::after{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--coral);margin-right:8px;vertical-align:middle}.more.attn summary{font-weight:700;color:var(--coral)}
 .bar i.attn{position:relative}.bar i.attn::after{content:'';position:absolute;top:-5px;right:-2px;margin:0;box-shadow:0 0 0 2px var(--bg)}
@@ -264,7 +266,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261011172739';
+var APP_BUILD='20261011173255';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -644,7 +646,7 @@ function buildCards(){
   if(fbg.length||fbz.length||f1)cards.push({id:'fb',title:fbg.length?'Game day':'Football',sub:(fbg.length?fbg.length+' game'+(fbg.length>1?'s':'')+' to know':'What people are talking about')+(f1&&f1.n?' · 101 lesson '+esc(f1.n):''),color:'var(--leaf)',tint:'#E4F7E8',min:f1?4:1,must:1,
     body:(fbz.length?'<h3 style="font-size:16.5px;margin:0 0 8px">What people are talking about</h3>'+pts(fbz.map(function(z){return z.title+(z.line?': '+z.line:'')}),'var(--leaf)'):'')+
       more('Games to know'+(fbg.length?' ('+fbg.length+')':''),fbg.length?'<div class="list">'+fbg.map(function(g){return '<div class="fb"><span class="tag">'+esc(g.league)+'</span><div class="mu">'+esc(g.matchup)+'</div><div class="row"><span class="chip">'+esc(localKick(g))+'</span>'+(g.tv?'<span class="chip">'+esc(g.tv)+'</span>':'')+(g.spread?'<span class="chip">'+esc(g.spread)+'</span>':'')+'</div>'+(g.note?'<div style="margin-top:6px">'+esc(g.note)+'</div>':'')+(g.pick?'<div class="pick">Brief pick: '+esc(g.pick)+'</div>':'')+(g.your_bet?'<div class="bet">Your bet: '+esc(g.your_bet)+'</div>':'')+'</div>'}).join('')+'</div>':'')+
-      (f1?'<div class="sect"><h3>Football 101'+(f1.n?' · lesson '+esc(f1.n):'')+': '+esc(f1.title||'')+'</h3>'+(f1.hook?'<div class="hook">'+esc(f1.hook)+'</div>':'')+lesson(f1,'var(--leaf)','Break it down')+more('Watch for it (film room)',(f1.film?'<p>'+esc(f1.film)+'</p>':'')+(f1.history?'<p><b>From the history books:</b> '+esc(f1.history)+'</p>':''))+(f1.key_terms&&f1.key_terms.length?more('Key terms','<div class="terms">'+f1.key_terms.map(function(x){return '<div><b>'+esc(x.term)+'</b> — '+esc(x.def)+'</div>'}).join('')+'</div>'):'')+quizHTML(withIds(f1,'football'),'Football check')+'</div>':'')+
+      (f1?'<div class="sect"><h3>Football 101'+(f1.n?' · lesson '+esc(f1.n):'')+': '+esc(f1.title||'')+'</h3>'+(f1.hook?'<div class="hook">'+esc(f1.hook)+'</div>':'')+(f1.diagrams||[]).map(playSVG).join('')+lesson(f1,'var(--leaf)','Break it down')+more('Watch for it (film room)',(f1.film?'<p>'+esc(f1.film)+'</p>':'')+(f1.history?'<p><b>From the history books:</b> '+esc(f1.history)+'</p>':''))+(f1.key_terms&&f1.key_terms.length?more('Key terms','<div class="terms">'+f1.key_terms.map(function(x){return '<div><b>'+esc(x.term)+'</b> — '+esc(x.def)+'</div>'}).join('')+'</div>'):'')+quizHTML(withIds(f1,'football'),'Football check')+'</div>':'')+
       (fb.link?'<p>'+linkify(fb.link,'Full Football Brief →')+'</p>':'')});
   /* 5 · news */
   var nw=(b.news||[]).filter(function(n){return !/upserve/i.test(n.source||'')||!b.upserve});
@@ -824,6 +826,26 @@ async function checkBuild(){try{var lt=await (await fetch('data/latest.json?'+Da
 function phoneTZ(){try{return Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){return ''}}
 function noteTZ(){var tz=phoneTZ();if(tz&&tz!==ls('mb_tz')){ls('mb_tz',tz);tEvent('tz',{tz:tz,off:-new Date().getTimezoneOffset()})}}
 function localKick(g){if(!g.kickoff_iso)return g.kickoff;try{return new Date(g.kickoff_iso).toLocaleString('en-US',{weekday:'short',hour:'numeric',minute:'2-digit'})}catch(e){return g.kickoff}}
+
+/* ---------- football play diagrams: offense (O, circles) at the bottom, defense (D, X's) at the top; LOS at y=0, y = yards downfield ---------- */
+function playSVG(d){
+  if(!d||!(d.players||[]).length)return '';
+  var W=340,H=230,ymin=d.ymin!=null?d.ymin:-8,ymax=d.ymax!=null?d.ymax:14;
+  var X=function(x){return 12+x/100*(W-24)},Y=function(y){return H-14-(y-ymin)/(ymax-ymin)*(H-28)};
+  var g='';
+  for(var yd=Math.ceil(ymin/5)*5;yd<=ymax;yd+=5)if(yd!==0)g+='<line x1="8" x2="'+(W-8)+'" y1="'+Y(yd)+'" y2="'+Y(yd)+'" stroke="currentColor" stroke-opacity=".12"/>';
+  g+='<line x1="8" x2="'+(W-8)+'" y1="'+Y(0)+'" y2="'+Y(0)+'" stroke="#2E6FD6" stroke-width="2" stroke-dasharray="6 4"/>';
+  var col={pass:'#E0592A',run:'#2F9460',block:'#8A93A6',motion:'#6A57D6',coverage:'#B3366A'};
+  (d.routes||[]).forEach(function(r){var p=d.players[r.from];if(!p)return;var pts=[[p.x,p.y]].concat(r.points||[]);
+    var path=pts.map(function(q,i){return (i?'L':'M')+X(q[0]).toFixed(1)+' '+Y(q[1]).toFixed(1)}).join(' '),c=col[r.style]||col.pass;
+    g+='<path d="'+path+'" fill="none" stroke="'+c+'" stroke-width="2.4" '+(r.style==='motion'||r.style==='coverage'?'stroke-dasharray="5 4" ':'')+'marker-end="url(#ah-'+(r.style||'pass')+')"/>';});
+  d.players.forEach(function(p){var x=X(p.x),y=Y(p.y);
+    if(p.side==='D')g+='<g stroke="#1D2740" stroke-width="2.4"><line x1="'+(x-6)+'" y1="'+(y-6)+'" x2="'+(x+6)+'" y2="'+(y+6)+'"/><line x1="'+(x+6)+'" y1="'+(y-6)+'" x2="'+(x-6)+'" y2="'+(y+6)+'"/></g>'+(p.label?'<text x="'+x+'" y="'+(y-10)+'" text-anchor="middle" font-size="10" fill="currentColor">'+esc(p.label)+'</text>':'');
+    else g+='<circle cx="'+x+'" cy="'+y+'" r="'+(p.label&&p.label.length>2?11:9)+'" fill="'+(p.hi?'#FFE3B3':'#fff')+'" stroke="#1D2740" stroke-width="2"/>'+(p.label?'<text x="'+x+'" y="'+(y+3.5)+'" text-anchor="middle" font-size="'+(p.label.length>2?8:9.5)+'" font-weight="700" fill="#1D2740">'+esc(p.label)+'</text>':'');});
+  var mk=Object.keys(col).map(function(k){return '<marker id="ah-'+k+'" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="'+col[k]+'"/></marker>'}).join('');
+  var legend=(d.routes||[]).map(function(r){return r.style||'pass'}).filter(function(v,i,a){return a.indexOf(v)===i}).map(function(k){return '<span><i style="background:'+(col[k]||col.pass)+'"></i>'+({pass:'pass route',run:'run',block:'block',motion:'motion',coverage:'coverage'}[k]||k)+'</span>'}).join('');
+  return '<figure class="play"><svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(d.caption||'Play diagram')+'"><defs>'+mk+'</defs>'+g+'</svg>'+(legend?'<div class="plegend"><span><b style="color:#2E6FD6">- - -</b> line of scrimmage</span>'+legend+'</div>':'')+(d.caption?'<figcaption>'+esc(d.caption)+'</figcaption>':'')+'</figure>';
+}
 function setMode(m,q){S.mode=m;S.quick=q;S.i=0;var done=DONE[S.brief.date]||{},cs=visible();for(var i=0;i<cs.length;i++){if(!done[cs[i].id]){S.i=i;break}}render()}
 function jump(i){S.touched=1;S.mode='flow';S.quick=false;S.i=i;render()}
 function mark(){var cs=visible(),c=cs[S.i];var d=DONE[S.brief.date]=DONE[S.brief.date]||{};if(!d[c.id]){d[c.id]=Date.now();ls('mb_done',DONE);queueSync()}}
