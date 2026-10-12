@@ -268,7 +268,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261011175806';
+var APP_BUILD='20261011180347';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -595,7 +595,7 @@ function buildCards(){
         h+='<div class="money"><span class="v">'+money(y.net)+'</span>'+(v.pct!=null?'<span class="delta '+(up?'up':'dn')+'">'+(up?'+':'−')+money(Math.abs(v.diff))+' ('+(up?'+':'−')+Math.abs(v.pct)+'%)</span>':'')+'</div>'+
           '<div class="ylines"><div>'+esc(String(y.guests))+' guests'+(y.avg_check?', '+money2(y.avg_check)+' average check':'')+'</div>'+
           '<div>'+(y.tips_real?'<b>'+money(y.tips)+' in tips</b>'+(y.tip_pct!=null?' ('+y.tip_pct+'% of sales)':''):'real tips aren\'t in yet (estimate '+money(y.tips)+')')+
-          ((y.shifts||[]).length?'<div class="tipsplit">'+y.shifts.map(function(x){return '<div><span>'+esc(x.hours||x.shift)+(x.who?'<small>'+esc(x.who)+'</small>':'')+'</span><b>'+money(x.tips)+'</b></div>'}).join('')+'</div>':'')+'</div>'+
+          ((y.shifts||[]).length?'<div class="tipsplit">'+y.shifts.map(function(x){var tp=x.tip_pct!=null?x.tip_pct:(x.sales?Math.round(x.tips/x.sales*1000)/10:null);return '<div><span>'+esc(x.hours||x.shift)+(x.who?'<small>'+esc(x.who)+'</small>':'')+(x.sales!=null?'<small>'+money(x.sales)+' sales'+(x.est?' (est.)':'')+(tp!=null?', '+tp.toFixed(1)+'% tips':'')+'</small>':'')+'</span><b>'+money(x.tips)+'</b></div>'}).join('')+'</div>':'')+'</div>'+
           (v.net!=null?'<div>Last '+wdn+': '+money(v.net)+'</div>':'')+
           ((y.regulars||[]).length?'<div><b>'+esc(y.regulars_label||'Regulars in')+':</b>'+y.regulars.map(function(r){return '<div class="reg"><b>'+esc(r.name)+'</b>'+(r.note?' '+esc(r.note):' ('+r.visits+' visits)')+'</div>'}).join('')+'</div>':'<div>No regulars from the Regulars tab came in.</div>')+'</div>';
       }
