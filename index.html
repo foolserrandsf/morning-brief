@@ -270,7 +270,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261012093017';
+var APP_BUILD='20261012093137';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -430,9 +430,10 @@ async function load(first,date){
   var d=date||lt.date;
   S.state=await decFile('data/state.enc',lt.v);
   S.brief=await decFile('data/briefs/'+d+'.enc',lt.v);
+  try{S.pb=await decFile('data/phrasebook.enc',lt.v)}catch(e){S.pb=S.pb||null}
   loadReplies();noteTZ();
   S.latest=lt;
-  ls('mb_cache',{brief:S.brief,state:S.state,latest:lt});
+  ls('mb_cache',{brief:S.brief,state:S.state,latest:lt,pb:S.pb});
   build();
 }
 async function boot(){
@@ -442,7 +443,7 @@ async function boot(){
   try{await load()}catch(e){
     if(e&&e.name==='OperationError'){localStorage.removeItem('mb_key');lockScreen('Your passphrase changed — type the new one.');return}
     var c=ls('mb_cache');
-    if(c&&c.brief){S.brief=c.brief;S.state=c.state;S.latest=c.latest;build();toast('Offline — showing your last brief')}
+    if(c&&c.brief){S.brief=c.brief;S.state=c.state;S.pb=c.pb||null;S.latest=c.latest;build();toast('Offline — showing your last brief')}
     else lockScreen('Couldn\'t load today\'s brief. Check your connection, or re-enter the passphrase.');
   }
   syncNow();
@@ -665,13 +666,23 @@ function buildCards(){
       return '<div class="item news"><span class="tag">'+esc(n.source)+'</span><div class="hl">'+esc(n.headline)+'</div>'+top+(n.why?'<div class="nwhy"><b>For you:</b> '+esc(n.why)+'</div>':'')+more('The full story',deep)+'</div>'}).join('')+'</div>'});
   /* Japanese for the trip: practice situations, each line broken into parts like "Say it today" */
   var JS=(b.japan&&(b.japan.scenarios||(b.japan.scenario?[b.japan.scenario]:[])))||[],JP=(b.japan&&b.japan.active&&b.japan.phrase)?b.japan:null;
-  if(JS.length||JP){var jcols=['#3070D0','#EC6A3A','#2F9460','#B3366A','#6A57D6'];
+  var PBD=((S.pb&&S.pb.days)?Object.keys(S.pb.days).sort().reverse().filter(function(d){return d!==b.date}):[]);
+  if(JS.length||JP||PBD.length){var jcols=['#3070D0','#EC6A3A','#2F9460','#B3366A','#6A57D6'];
+    var sayIt=function(ph,lbl){return '<div class="phrase"><div class="lbl">'+esc(lbl)+'</div><div class="say jp">'+esc(ph.jp)+'</div><div class="ro">'+esc(ph.romaji||'')+'</div><div class="en">'+esc(ph.en||'')+'</div>'+((ph.notes||[]).length?'<div class="chunks">'+ph.notes.map(function(n,i){return '<div class="c" style="--cc:'+jcols[i%jcols.length]+'"><b class="jp">'+esc(n.bit)+'</b><span>'+esc(n.means)+'</span></div>'}).join('')+'</div>':'')+'</div>'};
+    var scDrawer=null,pbHTML=null;
     var jl=function(x){return '<div class="sl"><div class="jp">'+esc(x.jp)+'</div><div class="ro">'+esc(x.romaji||'')+'</div><div class="en">'+esc(x.en||'')+'</div>'+((x.notes||[]).length?'<div class="chunks">'+x.notes.map(function(n,i){return '<div class="c" style="--cc:'+jcols[i%jcols.length]+'"><b class="jp">'+esc(n.bit)+'</b><span>'+esc(n.means)+'</span></div>'}).join('')+'</div>':'')+'</div>'};
-    cards.push({id:'jpx',title:'Japanese for the trip',sub:(JP?'Say it today':'')+(JP&&JS.length?' · ':'')+(JS.length?JS.length+' situations, line by line':''),color:'#3070D0',tint:'#E4F1FF',min:2,
-      body:(JP?(function(){var jp=JP,cols=jcols;var h='<div class="phrase"><div class="lbl">Say it today</div><div class="say jp">'+esc(jp.phrase.jp)+'</div><div class="ro">'+esc(jp.phrase.romaji)+'</div><div class="en">'+esc(jp.phrase.en)+'</div>'+(jp.phrase.notes&&jp.phrase.notes.length?'<div class="chunks">'+jp.phrase.notes.map(function(n,i){return '<div class="c" style="--cc:'+cols[i%cols.length]+'"><b class="jp">'+esc(n.bit)+'</b><span>'+esc(n.means)+'</span></div>'}).join('')+'</div>':'')+'</div>';
+    scDrawer=function(sc){var they=sc.they||sc.driver||[];
+        return more(sc.title||'Practice',(sc.setup?'<p>'+esc(sc.setup)+'</p>':'')+((sc.say||[]).length?'<h4 class="sch">What you can say</h4>'+sc.say.map(jl).join(''):'')+(they.length?'<h4 class="sch">'+esc(sc.they_label||'What they may say, and your answer')+'</h4>'+they.map(function(d){return '<div class="sq">'+jl(d)+(d.reply?'<div class="sa"><b>You:</b>'+jl(d.reply)+'</div>':'')+'</div>'}).join(''):'')+((sc.tips||[]).length?'<h4 class="sch">Good to know</h4><ul>'+sc.tips.map(function(t){return '<li>'+esc(t)+'</li>'}).join('')+'</ul>':''))};
+    pbHTML=function(){if(!PBD.length)return '';var seen={};JS.forEach(function(x){seen[x.title]=1});var old=[];
+      PBD.forEach(function(d){((S.pb.days[d].scenarios)||[]).forEach(function(x){if(!seen[x.title]){seen[x.title]=1;old.push(x)}})});
+      var fd=function(d){return new Date(d+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})};
+      return '<h3 class="comehead">Your phrasebook</h3><p class="small" style="margin-top:0">Everything from earlier briefs stays here.</p>'+
+        PBD.filter(function(d){return S.pb.days[d].phrase}).map(function(d){var x=S.pb.days[d];return more(fd(d)+': '+(x.phrase.en||'Say it today'),sayIt(x.phrase,'Say it ('+fd(d)+')')+(x.tip?'<p>'+esc(x.tip)+'</p>':'')+((x.hear||[]).length?'<h4 class="sch">What you\'ll likely hear back</h4>'+x.hear.map(jl).join(''):''))}).join('')+
+        old.map(scDrawer).join('')};
+    cards.push({id:'jpx',title:'Japanese for the trip',sub:(JP?'Say it today':'')+(JP&&JS.length?' · ':'')+(JS.length?JS.length+' situations, line by line':'')+(PBD.length?((JP||JS.length)?' · ':'')+'phrasebook':''),color:'#3070D0',tint:'#E4F1FF',min:2,
+      body:(JP?(function(){var jp=JP;var h=sayIt(jp.phrase,'Say it today');
           if((jp.hear||[]).length)h+=more('What you\'ll likely hear back',(jp.tip?'<p>'+esc(jp.tip)+'</p>':'')+jp.hear.map(jl).join(''));else if(jp.tip)h+=more('What you\'ll likely hear back','<p>'+esc(jp.tip)+'</p>');
-          return h})():'')+(JS.length?'<h3 class="comehead">Practice by situation</h3><p class="small" style="margin-top:0">Open one at a time. Each line is broken into its parts.</p>':'')+JS.map(function(sc){var they=sc.they||sc.driver||[];
-        return more(sc.title||'Practice',(sc.setup?'<p>'+esc(sc.setup)+'</p>':'')+((sc.say||[]).length?'<h4 class="sch">What you can say</h4>'+sc.say.map(jl).join(''):'')+(they.length?'<h4 class="sch">'+esc(sc.they_label||'What they may say, and your answer')+'</h4>'+they.map(function(d){return '<div class="sq">'+jl(d)+(d.reply?'<div class="sa"><b>You:</b>'+jl(d.reply)+'</div>':'')+'</div>'}).join(''):'')+((sc.tips||[]).length?'<h4 class="sch">Good to know</h4><ul>'+sc.tips.map(function(t){return '<li>'+esc(t)+'</li>'}).join('')+'</ul>':''))}).join('')});
+          return h})():'')+(JS.length?'<h3 class="comehead">Practice by situation</h3><p class="small" style="margin-top:0">Open one at a time. Each line is broken into its parts.</p>':'')+JS.map(scDrawer).join('')+pbHTML()});
   }
   /* 6 · kanji */
   var k=b.kanji||{};

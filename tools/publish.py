@@ -212,6 +212,7 @@ def cmd_brief(path):
     os.makedirs(os.path.join(DATA, 'briefs'), exist_ok=True)
     enc(b, os.path.join(DATA, 'briefs', d + '.enc'))
     save_state(st)
+    save_phrasebook(d, b.get('japan'))
     bump_version(d)
     print(f'Published {d}: {added} new quiz items, pool now {len(st["pool"])}')
 
@@ -357,6 +358,27 @@ def cmd_asks(path):
     print(json.dumps(todo, ensure_ascii=False, indent=1))
 
 
+PHRASEBOOK = os.path.join(DATA, 'phrasebook.enc')
+
+
+def save_phrasebook(d, jp):
+    """Keep every day's Japanese (Say it today, what you'll hear back, practice situations) forever in data/phrasebook.enc."""
+    if not jp or not (jp.get('phrase') or jp.get('scenarios')):
+        return
+    pb = dec(PHRASEBOOK) if os.path.exists(PHRASEBOOK) else {'days': {}}
+    pb['days'][d] = {k: jp[k] for k in ('phrase', 'hear', 'tip', 'scenarios') if jp.get(k)}
+    enc(pb, PHRASEBOOK)
+
+
+def cmd_phrasebook_backfill():
+    """Rebuild data/phrasebook.enc from every published brief."""
+    for f in sorted(os.listdir(os.path.join(DATA, 'briefs'))):
+        if f.endswith('.enc'):
+            b = dec(os.path.join(DATA, 'briefs', f))
+            save_phrasebook(f[:-4], b.get('japan'))
+    print(json.dumps({d: list(v) for d, v in dec(PHRASEBOOK)['days'].items()}))
+
+
 def cmd_reply(path):
     """Merge reply entries [{id, date, status, text, draft{to,subject,body}, draft_id}] into data/replies.enc (keeps 14 days)."""
     new = json.load(open(path))
@@ -378,4 +400,4 @@ if __name__ == '__main__':
         sys.exit(__doc__)
     {'state': lambda: cmd_state(), 'check': lambda: cmd_check(),
      'brief': lambda: cmd_brief(a[1]), 'recs': lambda: cmd_recs(a[1]),
-     'progress': lambda: cmd_progress(a[1]), 'asks': lambda: cmd_asks(a[1]), 'reply': lambda: cmd_reply(a[1]), 'birthdays': lambda: cmd_birthdays(a[1])}[a[0]]()
+     'progress': lambda: cmd_progress(a[1]), 'asks': lambda: cmd_asks(a[1]), 'reply': lambda: cmd_reply(a[1]), 'birthdays': lambda: cmd_birthdays(a[1]), 'phrasebook': lambda: cmd_phrasebook_backfill()}[a[0]]()
