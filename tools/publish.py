@@ -155,8 +155,24 @@ def validate(b):
     return errs
 
 
+def shuffle_options(b):
+    """Put each quiz's right answer in a varied position (stable per question), so it's never always A."""
+    import random
+    for k in ('kanji', 'bottle', 'wset', 'stocks', 'crypto', 'filipino', 'football_101'):
+        for q in (b.get(k) or {}).get('quiz') or []:
+            o, a = q.get('o'), q.get('a')
+            if not isinstance(o, list) or not isinstance(a, int) or not 0 <= a < len(o):
+                continue
+            right = o[a]
+            r = random.Random(hashlib.sha1(plain(q['q']).encode()).hexdigest())
+            o2 = o[:]
+            r.shuffle(o2)
+            q['o'], q['a'] = o2, o2.index(right)
+
+
 def cmd_brief(path):
     b = json.load(open(path))
+    shuffle_options(b)
     errs = validate(b)
     st = load_state()
     d = b['date']
