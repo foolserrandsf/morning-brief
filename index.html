@@ -284,7 +284,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261012115458';
+var APP_BUILD='20261012115527';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -629,7 +629,7 @@ function buildCards(){
         var pw=(y[cfg[0]]||[]).map(function(p,i){var nm=p.wine||p.keg||'',t=/^Tap\s*(\d+):\s*/.exec(nm);return {p:p,tap:t?+t[1]:99,i:i,sp:SPL(t?nm.slice(t[0].length):nm)}});
         if(!pw.length)return;
         pw.sort(function(a,b){return (b.p.alert?1:0)-(a.p.alert?1:0)||a.tap-b.tap||a.i-b.i});
-        inv+='<div class="fel">'+cfg[1]+'</div><div class="frl">'+pw.map(function(o){var p=o.p;return FR((o.tap<99?'<span class="tapn">'+o.tap+'</span>':'')+(p.alert?'<span class="lowp">Low</span>':'')+esc(o.sp[0]),p.left!=null?(p.est?'~':'')+esc(p.left):'',(o.sp[1]?esc(o.sp[1])+'. ':'')+esc(p.alert?p.summary||'':FIRST(p.summary)),p.alert?'low':'')}).join('')+'</div>';
+        inv+='<div class="fel">'+cfg[1]+'</div><div class="frl">'+pw.map(function(o){var p=o.p;return FR((o.tap<99?'<span class="tapn">'+o.tap+'</span>':'')+(p.alert?'<span class="lowp">Low</span>':'')+esc(o.sp[0]),p.left!=null?(p.est&&!/^~/.test(String(p.left))?'~':'')+esc(p.left):'',(o.sp[1]?esc(o.sp[1])+'. ':'')+esc(p.alert?p.summary||'':FIRST(p.summary)),p.alert?'low':'')}).join('')+'</div>';
         how+='<p class="fel">'+cfg[1].split(',')[0]+'</p>'+pw.map(function(o){var p=o.p;return '<p><b>'+esc(p.wine||p.keg)+'</b><br><span class="fesub">'+esc(p.summary||'')+'</span></p><ul>'+(p.steps||[]).map(function(t){return '<li>'+esc(t)+'</li>'}).join('')+'</ul>'}).join('')+'<p class="stats">'+esc(cfg[3])+'</p>';
       });
       if(inv)h+=SEC('What\'s left',inv+more('How these are worked out',how)+(y.kegs_note?'<p class="fenote">'+esc(y.kegs_note)+'</p>':''));
