@@ -284,7 +284,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261012120428';
+var APP_BUILD='20261012120844';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -625,7 +625,7 @@ function buildCards(){
       if(ideas0.length)h+='<div class="insight"><b>Ideas for this week</b>'+pts(ideas0,'var(--teal)')+'</div>';
       // What's left: wine by the glass and kegs
       var inv='',how='';
-      [['pours','By the glass, glasses left','glasses','5 oz pours: a 750ml bottle gives about 5 glasses, a 1L about 13½. Sales come from the Upserve product mix; when a count was taken mid-day, that day is split by the share of sales after the count.'],['kegs','On tap, pours left','pours','A 1/2 barrel holds about 124 sixteen-ounce pours (165 twelve-ounce); a 1/4 barrel about 82 twelve-ounce; a 1/6 barrel about 41 sixteen-ounce (55 twelve-ounce). Upserve rings draft as "$9 Beer" or "$12 Beer", not by keg, so each keg\'s share is estimated.']].forEach(function(cfg){
+      [['pours','By the glass, glasses left','glasses','5 oz pours: a 750ml bottle gives about 5 glasses, a 1L about 13½. Sales come from the Upserve product mix; when a count was taken mid-day, that day is split by the share of sales after the count.'],['kegs','On tap, pours left','pours','A 1/2 barrel holds about 124 sixteen-ounce pours (165 twelve-ounce); a 1/6 barrel about 41 sixteen-ounce (55 twelve-ounce). Upserve rings draft as "$9 Beer" or "$12 Beer", not by keg, so each keg\'s share is estimated.']].forEach(function(cfg){
         var pw=(y[cfg[0]]||[]).map(function(p,i){var nm=p.wine||p.keg||'',t=/^Tap\s*(\d+):\s*/.exec(nm);return {p:p,tap:t?+t[1]:99,i:i,sp:SPL(t?nm.slice(t[0].length):nm)}});
         if(!pw.length)return;
         pw.sort(function(a,b){return (b.p.alert?1:0)-(a.p.alert?1:0)||a.tap-b.tap||a.i-b.i});
