@@ -270,7 +270,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261012091246';
+var APP_BUILD='20261012092810';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -566,8 +566,6 @@ function buildCards(){
         (jp.phrase.notes&&jp.phrase.notes.length?'<div class="chunks">'+jp.phrase.notes.map(function(n,i){return '<div class="c" style="--cc:'+cols[i%cols.length]+'"><b class="jp">'+esc(n.bit)+'</b><span>'+esc(n.means)+'</span></div>'}).join('')+'</div>':'')+'</div>';
     }
     if(jp.tip)gm+='<div class="back"><b>What you\'ll likely hear back</b>'+esc(jp.tip)+'</div>';
-    (jp.scenarios||(jp.scenario?[jp.scenario]:[])).forEach(function(sc){var ln=function(x){return '<div class="sl"><div class="jp">'+esc(x.jp)+'</div><div class="ro">'+esc(x.romaji||'')+'</div><div class="en">'+esc(x.en||'')+'</div></div>'},they=sc.they||sc.driver||[];
-      gm+=more(sc.title||'Practice scenario',(sc.setup?'<p>'+esc(sc.setup)+'</p>':'')+((sc.say||[]).length?'<h4 class="sch">What you can say</h4>'+sc.say.map(ln).join(''):'')+(they.length?'<h4 class="sch">'+esc(sc.they_label||'What they may say, and your answer')+'</h4>'+they.map(function(d){return '<div class="sq">'+ln(d)+(d.reply?'<div class="sa"><b>You:</b>'+ln(d.reply)+'</div>':'')+'</div>'}).join(''):'')+((sc.tips||[]).length?'<h4 class="sch">Good to know</h4><ul>'+sc.tips.map(function(t){return '<li>'+esc(t)+'</li>'}).join('')+'</ul>':''))});
     gm+='</div>';
   }
   cards.push({id:'gm',title:'Good morning, Denise',sub:'Edition '+(b.edition||1),color:'var(--persimmon)',tint:'#FFF1CF',min:1,must:1,body:gm});
@@ -671,6 +669,14 @@ function buildCards(){
       var top=n.points&&n.points.length?pts(n.points,'var(--grape)'):(n.tldr?'<p>'+esc(n.tldr)+'</p>':(sm[0]?'<p>'+esc(sm[0])+'</p>':''));
       var deep=(n.points&&n.points.length||n.tldr?sm:sm.slice(1)).map(function(p){return '<p>'+esc(p)+'</p>'}).join('')+(n.coverage?'<p><b>Coverage:</b> '+esc(n.coverage)+'</p>':'')+(n.url?'<p>'+linkify(n.url,'Read the original')+'</p>':'');
       return '<div class="item news"><span class="tag">'+esc(n.source)+'</span><div class="hl">'+esc(n.headline)+'</div>'+top+(n.why?'<div class="nwhy"><b>For you:</b> '+esc(n.why)+'</div>':'')+more('The full story',deep)+'</div>'}).join('')+'</div>'});
+  /* Japanese for the trip: practice situations, each line broken into parts like "Say it today" */
+  var JS=(b.japan&&(b.japan.scenarios||(b.japan.scenario?[b.japan.scenario]:[])))||[];
+  if(JS.length){var jcols=['#3070D0','#EC6A3A','#2F9460','#B3366A','#6A57D6'];
+    var jl=function(x){return '<div class="sl"><div class="jp">'+esc(x.jp)+'</div><div class="ro">'+esc(x.romaji||'')+'</div><div class="en">'+esc(x.en||'')+'</div>'+((x.notes||[]).length?'<div class="chunks">'+x.notes.map(function(n,i){return '<div class="c" style="--cc:'+jcols[i%jcols.length]+'"><b class="jp">'+esc(n.bit)+'</b><span>'+esc(n.means)+'</span></div>'}).join('')+'</div>':'')+'</div>'};
+    cards.push({id:'jpx',title:'Japanese for the trip',sub:JS.length+' real situations, line by line',color:'#3070D0',tint:'#E4F1FF',min:2,
+      body:'<p class="small" style="margin-top:0">Open one at a time. Each line is broken into its parts, like Say it today.</p>'+JS.map(function(sc){var they=sc.they||sc.driver||[];
+        return more(sc.title||'Practice',(sc.setup?'<p>'+esc(sc.setup)+'</p>':'')+((sc.say||[]).length?'<h4 class="sch">What you can say</h4>'+sc.say.map(jl).join(''):'')+(they.length?'<h4 class="sch">'+esc(sc.they_label||'What they may say, and your answer')+'</h4>'+they.map(function(d){return '<div class="sq">'+jl(d)+(d.reply?'<div class="sa"><b>You:</b>'+jl(d.reply)+'</div>':'')+'</div>'}).join(''):'')+((sc.tips||[]).length?'<h4 class="sch">Good to know</h4><ul>'+sc.tips.map(function(t){return '<li>'+esc(t)+'</li>'}).join('')+'</ul>':''))}).join('')});
+  }
   /* 6 · kanji */
   var k=b.kanji||{};
   cards.push({id:'kanji',title:'Kanji of the day',sub:'#'+esc(k.n)+' of 270 · KEIRO deck',color:'#D2453A',tint:'#FFE7E3',min:2,
@@ -714,7 +720,7 @@ function buildCards(){
     if(sc.length)cards.push({id:'second',title:'Second chance',sub:sc.length+' you missed before',color:'var(--grape)',tint:'#EEE8FF',min:2,body:quizHTML(sc.map(recallQ),'Try these again')});
   }
   /* Denise's order (Oct 11) */
-  var ORDER=['gm','cal','inbox','fe','bottle','recs','wset','fb','news','kanji','fil','stocks','crypto','sun','recall','second'];
+  var ORDER=['gm','cal','inbox','fe','bottle','recs','wset','fb','news','kanji','jpx','fil','stocks','crypto','sun','recall','second'];
   cards.sort(function(x,y){var i=ORDER.indexOf(x.id),j=ORDER.indexOf(y.id);return (i<0?99:i)-(j<0?99:j)});
   return cards;
 }
