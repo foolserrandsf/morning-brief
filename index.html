@@ -264,7 +264,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261011172346';
+var APP_BUILD='20261011172739';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -420,6 +420,7 @@ function lockScreen(msg){
 /* ---------- load ---------- */
 async function load(first,date){
   var lt=await (await fetch('data/latest.json?'+Date.now(),{cache:'no-store'})).json();
+  if(lt.app&&lt.app!==APP_BUILD){var k='mb_reload_'+lt.app;try{if(!sessionStorage.getItem(k)){sessionStorage.setItem(k,'1');location.reload();return}}catch(e){}}
   var d=date||lt.date;
   S.state=await decFile('data/state.enc',lt.v);
   S.brief=await decFile('data/briefs/'+d+'.enc',lt.v);
@@ -817,7 +818,8 @@ function pendingAttn(){var n=0;for(var id in REP){var r=REP[id];if(!SEEN[id]&&r.
 function badge(){var n=pendingAttn(),b=document.querySelectorAll('.bar i');(S.cards||[]).forEach(function(c,i){if(c.id==='inbox'&&b[i])b[i].classList.toggle('attn',n>0)})}
 async function loadReplies(){if(!S.key)return;try{var r=await decFile('data/replies.enc',Date.now());var before=JSON.stringify(REP);REP=r.items||{};if(JSON.stringify(REP)!==before){var n=pendingAttn();if(n)toast(n+' repl'+(n>1?'ies':'y')+' from Claude in Needs you');if(S.brief&&S.mode==='flow'&&visible()[S.i]&&visible()[S.i].id==='inbox'&&!document.activeElement.matches('textarea')){S.keepScroll=true;build()}else badge()}}catch(e){}}
 setInterval(function(){if(document.visibilityState==='visible')loadReplies()},60000);
-document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')loadReplies()});
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'){loadReplies();checkBuild()}});
+async function checkBuild(){try{var lt=await (await fetch('data/latest.json?'+Date.now(),{cache:'no-store'})).json();if(lt.app&&lt.app!==APP_BUILD){var k='mb_reload_'+lt.app;if(!sessionStorage.getItem(k)){sessionStorage.setItem(k,'1');location.reload()}}}catch(e){}}
 
 function phoneTZ(){try{return Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){return ''}}
 function noteTZ(){var tz=phoneTZ();if(tz&&tz!==ls('mb_tz')){ls('mb_tz',tz);tEvent('tz',{tz:tz,off:-new Date().getTimezoneOffset()})}}
@@ -847,7 +849,7 @@ function finish(){
   $('app').innerHTML=header()+'<div class="card done-wrap"><img src="icons/icon-192.png" alt="" style="width:72px;height:72px;border-radius:16px;margin-bottom:6px"><div class="big">'+(left.length?'Musts done!':'Brief complete!')+'</div><p>'+(left.length?left.length+' cards are waiting whenever you want them.':'You showed up for yourself this morning. That counts.')+'</p>'+stats+'<div class="foot">'+(left.length?'<button class="btn sun" onclick="setMode(\'flow\',false)">Keep going</button>':'')+'<button class="btn ink" onclick="setMode(\'all\',false)">Overview</button></div></div>'+extras();furi($('app'));
 }
 async function openDay(d){try{S.brief=await decFile('data/briefs/'+d+'.enc',S.latest.v);S._landed=0;S.mode='flow';S.quick=false;build()}catch(e){toast('Couldn\'t open that day')}}
-async function refresh(){toast('Checking for a fresh brief…');try{S._landed=0;await load();toast('Up to date')}catch(e){toast('Offline — try again soon')}}
+async function refresh(){toast('Checking for a fresh brief…');try{S._landed=0;await checkBuild();await load();toast('Up to date')}catch(e){toast('Offline — try again soon')}}
 function tickJST(){var e=$('jst');if(!e)return;e.textContent=new Date().toLocaleTimeString('en-US',{timeZone:'Asia/Tokyo',hour:'numeric',minute:'2-digit'})}
 setInterval(tickJST,30000);
 var SPR=null;
