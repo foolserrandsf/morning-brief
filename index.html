@@ -255,6 +255,13 @@ details.more>.in p:first-child{margin-top:0}
 .fel{font-size:13.5px;font-weight:700;color:var(--soft);margin:14px 0 0}.fes>.fel:first-of-type{margin-top:8px}.fes .alert{margin-top:12px}
 .fenote{font-size:14px;color:var(--soft);margin:10px 0 0}.dl{font-weight:700}.dl.up{color:#1F7445}.dl.dn{color:#B23A2F}
 .fes .tf{margin-top:8px}.fes .conn summary b{font-size:16px;font-weight:600}.fedr>.fed:first-child{margin-top:0}.fed>summary span small{display:block;font:500 14px var(--sans);color:var(--soft);margin-top:2px}.fed>summary span small.lowh{color:#B23A2F;font-weight:700}.fed>summary{font-size:16.5px}.fed .more{background:var(--paper)}.fed>.in>.fel:first-child,.fed>.in>.frl:first-child{margin-top:0}
+.jrow{display:flex;align-items:flex-start;gap:10px}.jrow>.jp,.jrow>.say{flex:1;min-width:0}
+.spk{flex:0 0 auto;width:38px;height:38px;border-radius:12px;border:1px solid #CFE0FA;background:#E4F1FF;color:#3070D0;display:grid;place-items:center;padding:0;cursor:pointer;box-shadow:0 2px 0 #CFE0FA;-webkit-tap-highlight-color:transparent}
+.spk svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}.spk .spk-b{fill:currentColor;stroke-width:1.6}
+.spk:active{transform:translateY(2px);box-shadow:none}.spk:focus-visible{outline:3px solid #3070D0;outline-offset:2px}
+.spk.speaking{background:#3070D0;color:#fff;border-color:#3070D0}.spk.speaking .spk-w1{animation:spkw 1s ease-in-out infinite}.spk.speaking .spk-w2{animation:spkw 1s ease-in-out .25s infinite}
+@keyframes spkw{0%,100%{opacity:1}50%{opacity:.25}}@media (prefers-reduced-motion:reduce){.spk.speaking path{animation:none}}
+.chunks .c[data-say]{cursor:pointer}.chunks .c.speaking{outline:2px solid var(--cc);outline-offset:1px}
 .ylines{display:grid;gap:6px;font-size:16.5px;margin-top:6px}
 .sch{margin:12px 0 4px;font-size:15px}.sl{margin:6px 0 8px}.sl .jp{font-size:17px}.sl .ro{font-size:13px;color:var(--soft)}.sl .en{font-size:14px}.sq{border-left:3px solid var(--line);padding-left:10px;margin:8px 0 12px}.sa{margin-left:6px}.sa>b{font-size:13px;color:var(--teal)}
 .tipsplit .lowinv b{color:#C0392B}
@@ -284,7 +291,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261013134823';
+var APP_BUILD='20261013083640';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -543,6 +550,15 @@ function sents(t){return String(t||'').match(/[^.!?]+(?:[.!?]+["'”’)\]]*|$)\
 function firstS(t){var x=sents(t);return x.length?x[0].trim():''}
 function restS(t){return sents(t).slice(1).join('').trim()}
 function pts(a,dot){return a&&a.length?'<ul class="pts"'+(dot?' style="--dot:'+dot+'"':'')+'>'+a.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul>':''}
+var SPKSVG='<svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk-b" d="M4 9.5h3.2L11.5 6v12l-4.3-3.5H4z"/><path class="spk-w1" d="M14.6 9.2a4 4 0 0 1 0 5.6"/><path class="spk-w2" d="M17.3 6.6a7.6 7.6 0 0 1 0 10.8"/></svg>';
+function SPK(t){return t?'<button class="spk" type="button" data-say="'+esc(t)+'" aria-label="Hear it said">'+SPKSVG+'</button>':''}
+var JAV=null;function jaVoice(){if(!('speechSynthesis' in window))return null;var vs=speechSynthesis.getVoices().filter(function(v){return /^ja/i.test(v.lang)});if(!vs.length)return null;var pref=['Kyoko (Enhanced)','Otoya (Enhanced)','O-Ren','Hattori','Kyoko (Premium)','Google 日本語','Kyoko','Otoya'];for(var i=0;i<pref.length;i++){for(var j=0;j<vs.length;j++)if(vs[j].name.indexOf(pref[i])===0)return vs[j]}return vs.filter(function(v){return /enhanced|premium|neural|natural/i.test(v.name)})[0]||vs[0]}
+if('speechSynthesis' in window){try{speechSynthesis.onvoiceschanged=function(){JAV=jaVoice()};JAV=jaVoice()}catch(e){}}
+document.addEventListener('click',function(e){var el=e.target.closest&&e.target.closest('[data-say]');if(!el)return;e.preventDefault();e.stopPropagation();
+  if(!('speechSynthesis' in window)){alert('This phone can\'t play speech here.');return}
+  var t=el.getAttribute('data-say');speechSynthesis.cancel();document.querySelectorAll('.speaking').forEach(function(x){x.classList.remove('speaking')});
+  var u=new SpeechSynthesisUtterance(t);u.lang='ja-JP';JAV=JAV||jaVoice();if(JAV)u.voice=JAV;u.rate=el.classList.contains('c')?0.8:0.9;
+  el.classList.add('speaking');u.onend=u.onerror=function(){el.classList.remove('speaking')};speechSynthesis.speak(u)},true);
 function more(label,html){return html?'<details class="more"><summary>'+esc(label)+'</summary><div class="in">'+html+'</div></details>':''}
 function paras(a){return (a||[]).map(function(p){return '<p>'+esc(p)+'</p>'}).join('')}
 function money(n){return '$'+Math.round(+n||0).toLocaleString('en-US')}
@@ -737,9 +753,9 @@ function buildCards(){
   var JS=(b.japan&&(b.japan.scenarios||(b.japan.scenario?[b.japan.scenario]:[])))||[],JP=(b.japan&&b.japan.active&&b.japan.phrase)?b.japan:null;
   var PBD=((S.pb&&S.pb.days)?Object.keys(S.pb.days).sort().reverse().filter(function(d){return d!==b.date}):[]);
   if(JS.length||JP||PBD.length){var jcols=['#3070D0','#EC6A3A','#2F9460','#B3366A','#6A57D6'];
-    var sayIt=function(ph,lbl){return '<div class="phrase"><div class="lbl">'+esc(lbl)+'</div><div class="say jp">'+esc(ph.jp)+'</div><div class="ro">'+esc(ph.romaji||'')+'</div><div class="en">'+esc(ph.en||'')+'</div>'+((ph.notes||[]).length?'<div class="chunks">'+ph.notes.map(function(n,i){return '<div class="c" style="--cc:'+jcols[i%jcols.length]+'"><b class="jp">'+esc(n.bit)+'</b><span>'+esc(n.means)+'</span></div>'}).join('')+'</div>':'')+'</div>'};
+    var sayIt=function(ph,lbl){return '<div class="phrase"><div class="lbl">'+esc(lbl)+'</div><div class="jrow"><div class="say jp">'+esc(ph.jp)+'</div>'+SPK(ph.jp)+'</div><div class="ro">'+esc(ph.romaji||'')+'</div><div class="en">'+esc(ph.en||'')+'</div>'+((ph.notes||[]).length?'<div class="chunks">'+ph.notes.map(function(n,i){return '<div class="c" data-say="'+esc(n.bit)+'" style="--cc:'+jcols[i%jcols.length]+'"><b class="jp">'+esc(n.bit)+'</b><span>'+esc(n.means)+'</span></div>'}).join('')+'</div>':'')+'</div>'};
     var scDrawer=null,pbHTML=null;
-    var jl=function(x){return '<div class="sl"><div class="jp">'+esc(x.jp)+'</div><div class="ro">'+esc(x.romaji||'')+'</div><div class="en">'+esc(x.en||'')+'</div>'+((x.notes||[]).length?'<div class="chunks">'+x.notes.map(function(n,i){return '<div class="c" style="--cc:'+jcols[i%jcols.length]+'"><b class="jp">'+esc(n.bit)+'</b><span>'+esc(n.means)+'</span></div>'}).join('')+'</div>':'')+'</div>'};
+    var jl=function(x){return '<div class="sl"><div class="jrow"><div class="jp">'+esc(x.jp)+'</div>'+SPK(x.jp)+'</div><div class="ro">'+esc(x.romaji||'')+'</div><div class="en">'+esc(x.en||'')+'</div>'+((x.notes||[]).length?'<div class="chunks">'+x.notes.map(function(n,i){return '<div class="c" data-say="'+esc(n.bit)+'" style="--cc:'+jcols[i%jcols.length]+'"><b class="jp">'+esc(n.bit)+'</b><span>'+esc(n.means)+'</span></div>'}).join('')+'</div>':'')+'</div>'};
     scDrawer=function(sc){var they=sc.they||sc.driver||[];
         return more(sc.title||'Practice',(sc.setup?'<p>'+esc(sc.setup)+'</p>':'')+((sc.say||[]).length?'<h4 class="sch">What you can say</h4>'+sc.say.map(jl).join(''):'')+(they.length?'<h4 class="sch">'+esc(sc.they_label||'What they may say, and your answer')+'</h4>'+they.map(function(d){return '<div class="sq">'+jl(d)+(d.reply?'<div class="sa"><b>You:</b>'+jl(d.reply)+'</div>':'')+'</div>'}).join(''):'')+((sc.tips||[]).length?'<h4 class="sch">Good to know</h4><ul>'+sc.tips.map(function(t){return '<li>'+esc(t)+'</li>'}).join('')+'</ul>':''))};
     pbHTML=function(){if(!PBD.length)return '';var seen={};JS.forEach(function(x){seen[x.title]=1});var old=[];

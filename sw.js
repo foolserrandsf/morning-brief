@@ -1,5 +1,5 @@
 // Network first, cache as backup, so the app opens offline with your last brief.
-var C='mb-v20261013134823';
+var C='mb-v20261013083640';
 self.addEventListener('install',function(e){self.skipWaiting();e.waitUntil(caches.open(C).then(function(c){return c.addAll(['./','index.html','manifest.webmanifest','icons/icon-192.png','icons/icon-512.png'])}))});
 self.addEventListener('activate',function(e){e.waitUntil(self.clients.claim())});
 self.addEventListener('fetch',function(e){
