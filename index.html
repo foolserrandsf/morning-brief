@@ -295,7 +295,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261013084201';
+var APP_BUILD='20261013084400';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -556,7 +556,7 @@ function restS(t){return sents(t).slice(1).join('').trim()}
 function pts(a,dot){return a&&a.length?'<ul class="pts"'+(dot?' style="--dot:'+dot+'"':'')+'>'+a.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul>':''}
 var SPKSVG='<svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk-b" d="M4 9.5h3.2L11.5 6v12l-4.3-3.5H4z"/><path class="spk-w1" d="M14.6 9.2a4 4 0 0 1 0 5.6"/><path class="spk-w2" d="M17.3 6.6a7.6 7.6 0 0 1 0 10.8"/></svg>';
 function SPK(t){return t?'<button class="spk" type="button" data-say="'+esc(t)+'" aria-label="Hear it said">'+SPKSVG+'</button>':''}
-var JAV=null;function jaVoice(){if(!('speechSynthesis' in window))return null;var vs=speechSynthesis.getVoices().filter(function(v){return /^ja/i.test(v.lang)});if(!vs.length)return null;var pref=['Kyoko (Enhanced)','Otoya (Enhanced)','O-Ren','Hattori','Kyoko (Premium)','Google 日本語','Kyoko','Otoya'];for(var i=0;i<pref.length;i++){for(var j=0;j<vs.length;j++)if(vs[j].name.indexOf(pref[i])===0)return vs[j]}return vs.filter(function(v){return /enhanced|premium|neural|natural/i.test(v.name)})[0]||vs[0]}
+var JAV=null;function jaVoice(){if(!('speechSynthesis' in window))return null;var vs=speechSynthesis.getVoices().filter(function(v){return /^ja/i.test(v.lang)});if(!vs.length)return null;var pref=['Kyoko (Premium)','Kyoko (Enhanced)','Kyoko','Otoya (Enhanced)','O-Ren','Hattori','Google 日本語','Otoya'];for(var i=0;i<pref.length;i++){for(var j=0;j<vs.length;j++)if(vs[j].name.indexOf(pref[i])===0)return vs[j]}return vs.filter(function(v){return /enhanced|premium|neural|natural/i.test(v.name)})[0]||vs[0]}
 if('speechSynthesis' in window){try{speechSynthesis.onvoiceschanged=function(){JAV=jaVoice()};JAV=jaVoice()}catch(e){}}
 document.addEventListener('click',function(e){var el=e.target.closest&&e.target.closest('[data-say]');if(!el)return;e.preventDefault();e.stopPropagation();
   if(!('speechSynthesis' in window)){alert('This phone can\'t play speech here.');return}
