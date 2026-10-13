@@ -62,3 +62,6 @@ LABEL PHOTOS: only bottles from the bottle list (never by-the-glass wines) get a
 
 
 KANJI CARD LAYOUT (no run-on sentences): "readings": [{"type": "on"|"kun", "kana": "ブン", "romaji": "bun", "note": "short use, e.g. minutes"}], "hook": ["3–4 short sentences, one idea each"], "example" (jp with {kanji|kana} furigana), "example_romaji", "example_en" (just the translation), "example_note" (optional one short sentence of context), "words": [{"jp": "{気分|きぶん}", "reading": "きぶん", "en": "mood"}] (3–6 everyday words she'll see), "spot_it": ["2–3 short lines"]. Keep "reading" as a one-line fallback.
+
+
+TRIP PLANS SOURCE OF TRUTH: the Japan itinerary is Denise's calendar artifact "Japan · Oct 13–28, 2026" (https://claude.ai/artifact/Vt8UmmAaoWwoKZdogkxzN8). Read it every morning (Artifact tool, action read) before writing japan, coming, focus or scenarios. Never use plans that aren't on it (e.g. the Yokohama izakaya was cancelled); when it disagrees with Google Calendar or older briefs, the artifact wins.
