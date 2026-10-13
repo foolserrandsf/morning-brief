@@ -255,7 +255,7 @@ details.more>.in p:first-child{margin-top:0}
 .fel{font-size:13.5px;font-weight:700;color:var(--soft);margin:14px 0 0}.fes>.fel:first-of-type{margin-top:8px}.fes .alert{margin-top:12px}
 .fenote{font-size:14px;color:var(--soft);margin:10px 0 0}.dl{font-weight:700}.dl.up{color:#1F7445}.dl.dn{color:#B23A2F}
 .fes .tf{margin-top:8px}.fes .conn summary b{font-size:16px;font-weight:600}.fedr>.fed:first-child{margin-top:0}.fed>summary span small{display:block;font:500 14px var(--sans);color:var(--soft);margin-top:2px}.fed>summary span small.lowh{color:#B23A2F;font-weight:700}.fed>summary{font-size:16.5px}.fed .more{background:var(--paper)}.fed>.in>.fel:first-child,.fed>.in>.frl:first-child{margin-top:0}
-.kmean{text-align:center;font-weight:700;font-size:17px;margin:-4px 0 6px}
+.voc>summary small{font:600 13px var(--sans);color:var(--soft);margin-left:auto;margin-right:8px}.voc .more{background:var(--paper)}.kmean{text-align:center;font-weight:700;font-size:17px;margin:-4px 0 6px}
 .ksec{margin-top:18px}.ksec>h4{font-size:13.5px;font-weight:700;color:var(--soft);margin:0 0 6px}
 .krow{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--line)}.ksec .krow:last-child{border-bottom:0}
 .kr{flex:1;min-width:0;display:flex;flex-direction:column}.kr b{font-size:20px;line-height:1.3}.kr small{color:var(--soft);font-size:14px}
@@ -302,7 +302,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261013112031';
+var APP_BUILD='20261013132935';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -787,7 +787,9 @@ function buildCards(){
     cards.push({id:'jpx',title:'Japanese for the trip',sub:(JP?'Say it today':'')+(JP&&JS.length?' · ':'')+(JS.length?JS.length+' situations, line by line':'')+(PBD.length?((JP||JS.length)?' · ':'')+'phrasebook':''),color:'#3070D0',tint:'#E4F1FF',min:2,
       body:(JP?(function(){var jp=JP;var h=sayIt(jp.phrase,'Say it today');
           if((jp.hear||[]).length)h+=more('What you\'ll likely hear back',(jp.tip?'<p>'+esc(jp.tip)+'</p>':'')+jp.hear.map(jl).join(''));else if(jp.tip)h+=more('What you\'ll likely hear back','<p>'+esc(jp.tip)+'</p>');
-          return h})():'')+(JS.length?'<h3 class="comehead">Practice by situation</h3><p class="small" style="margin-top:0">Open one at a time. Each line is broken into its parts.</p>':'')+JS.map(scDrawer).join('')+pbHTML()});
+          return h})():'')+(function(){var G=[],add=function(gs){(gs||[]).forEach(function(g){var c=G.filter(function(x){return x.title===g.title})[0];if(!c){c={title:g.title,items:[]};G.push(c)}var hv={};c.items.forEach(function(i){hv[i.jp]=1});(g.items||[]).forEach(function(i){if(!hv[i.jp]){hv[i.jp]=1;c.items.push(i)}})})};add(S.pb&&S.pb.vocab);add(b.japan&&b.japan.vocab);
+            if(!G.length)return '';var n=G.reduce(function(a,g){return a+g.items.length},0);
+            return '<details class="more voc"><summary>Useful words and phrases <small>'+n+'</small></summary><div class="in">'+G.map(function(g){return more(g.title,g.items.map(jl).join(''))}).join('')+'</div></details>'})()+(JS.length?'<h3 class="comehead">Practice by situation</h3><p class="small" style="margin-top:0">Open one at a time. Each line is broken into its parts.</p>':'')+JS.map(scDrawer).join('')+pbHTML()});
   }
   /* 6 · kanji */
   var k=b.kanji||{};

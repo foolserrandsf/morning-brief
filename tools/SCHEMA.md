@@ -65,3 +65,6 @@ KANJI CARD LAYOUT (no run-on sentences): "readings": [{"type": "on"|"kun", "kana
 
 
 TRIP PLANS SOURCE OF TRUTH: the Japan itinerary is Denise's calendar artifact "Japan · Oct 13–28, 2026" (https://claude.ai/artifact/Vt8UmmAaoWwoKZdogkxzN8). Read it every morning (Artifact tool, action read) before writing japan, coming, focus or scenarios. Never use plans that aren't on it (e.g. the Yokohama izakaya was cancelled); when it disagrees with Google Calendar or older briefs, the artifact wins.
+
+
+JAPANESE VOCAB DRAWER: japan.vocab = [{"title": "Catching up with friends", "items": [{"jp", "romaji", "en", "notes"?}]}]. It's one growing list kept in the phrasebook (publish.py merges by group title; nothing is dropped). Add 3–6 new useful items most days, tied to what's coming up (people she'll see, places, situations), local-sounding and short; reuse existing group titles when they fit.

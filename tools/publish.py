@@ -363,10 +363,19 @@ PHRASEBOOK = os.path.join(DATA, 'phrasebook.enc')
 
 def save_phrasebook(d, jp):
     """Keep every day's Japanese (Say it today, what you'll hear back, practice situations) forever in data/phrasebook.enc."""
-    if not jp or not (jp.get('phrase') or jp.get('scenarios')):
+    if not jp or not (jp.get('phrase') or jp.get('scenarios') or jp.get('vocab')):
         return
     pb = dec(PHRASEBOOK) if os.path.exists(PHRASEBOOK) else {'days': {}}
     pb['days'][d] = {k: jp[k] for k in ('phrase', 'hear', 'tip', 'scenarios') if jp.get(k)}
+    # Useful words & phrases: one growing list, grouped by title; new items are added, nothing is dropped.
+    voc = pb.setdefault('vocab', [])
+    for g in jp.get('vocab') or []:
+        cur = next((x for x in voc if x['title'] == g['title']), None)
+        if not cur:
+            cur = {'title': g['title'], 'items': []}
+            voc.append(cur)
+        have = {i['jp'] for i in cur['items']}
+        cur['items'] += [i for i in g.get('items', []) if i['jp'] not in have]
     enc(pb, PHRASEBOOK)
 
 
