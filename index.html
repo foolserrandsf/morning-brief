@@ -255,7 +255,14 @@ details.more>.in p:first-child{margin-top:0}
 .fel{font-size:13.5px;font-weight:700;color:var(--soft);margin:14px 0 0}.fes>.fel:first-of-type{margin-top:8px}.fes .alert{margin-top:12px}
 .fenote{font-size:14px;color:var(--soft);margin:10px 0 0}.dl{font-weight:700}.dl.up{color:#1F7445}.dl.dn{color:#B23A2F}
 .fes .tf{margin-top:8px}.fes .conn summary b{font-size:16px;font-weight:600}.fedr>.fed:first-child{margin-top:0}.fed>summary span small{display:block;font:500 14px var(--sans);color:var(--soft);margin-top:2px}.fed>summary span small.lowh{color:#B23A2F;font-weight:700}.fed>summary{font-size:16.5px}.fed .more{background:var(--paper)}.fed>.in>.fel:first-child,.fed>.in>.frl:first-child{margin-top:0}
-.jrow{display:flex;align-items:flex-start;gap:10px}.jrow>.jp,.jrow>.say{flex:1;min-width:0}
+.kmean{text-align:center;font-weight:700;font-size:17px;margin:-4px 0 6px}
+.ksec{margin-top:18px}.ksec>h4{font-size:13.5px;font-weight:700;color:var(--soft);margin:0 0 6px}
+.krow{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--line)}.ksec .krow:last-child{border-bottom:0}
+.kr{flex:1;min-width:0;display:flex;flex-direction:column}.kr b{font-size:20px;line-height:1.3}.kr small{color:var(--soft);font-size:14px}
+.ktag{flex:0 0 auto;font:700 12px/1 var(--sans);border-radius:6px;padding:5px 7px;background:#FFE7E3;color:#D2453A}.ktag.kun{background:#E4F1FF;color:#3070D0}
+.kl{margin:0;padding-left:18px}.kl li{margin:4px 0;line-height:1.45}.hook .kl{padding-left:18px}
+.kex .kexj{font-size:20px;font-weight:700;line-height:1.5}.kex .ro{color:var(--soft);font-size:14.5px;margin-top:2px}.kex .en{margin-top:4px}.kex .small{margin-top:4px}
+.kread{display:inline-flex;align-items:center;gap:10px}.jrow{display:flex;align-items:flex-start;gap:10px}.jrow>.jp,.jrow>.say{flex:1;min-width:0}
 .spk{flex:0 0 auto;width:38px;height:38px;border-radius:12px;border:1px solid #CFE0FA;background:#E4F1FF;color:#3070D0;display:grid;place-items:center;padding:0;cursor:pointer;box-shadow:0 2px 0 #CFE0FA;-webkit-tap-highlight-color:transparent}
 .spk svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}.spk .spk-b{fill:currentColor;stroke-width:1.6}
 .spk:active{transform:translateY(2px);box-shadow:none}.spk:focus-visible{outline:3px solid #3070D0;outline-offset:2px}
@@ -295,7 +302,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261013084400';
+var APP_BUILD='20261013085128';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -555,7 +562,7 @@ function firstS(t){var x=sents(t);return x.length?x[0].trim():''}
 function restS(t){return sents(t).slice(1).join('').trim()}
 function pts(a,dot){return a&&a.length?'<ul class="pts"'+(dot?' style="--dot:'+dot+'"':'')+'>'+a.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul>':''}
 var SPKSVG='<svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk-b" d="M4 9.5h3.2L11.5 6v12l-4.3-3.5H4z"/><path class="spk-w1" d="M14.6 9.2a4 4 0 0 1 0 5.6"/><path class="spk-w2" d="M17.3 6.6a7.6 7.6 0 0 1 0 10.8"/></svg>';
-function SPK(t){return t?'<button class="spk" type="button" data-say="'+esc(t)+'" aria-label="Hear it said">'+SPKSVG+'</button>':''}
+function SPK(t){t=String(t||'').replace(/\{([^|}]+)\|[^}]*\}/g,'$1');return t?'<button class="spk" type="button" data-say="'+esc(t)+'" aria-label="Hear it said">'+SPKSVG+'</button>':''}
 var JAV=null;function jaVoice(){if(!('speechSynthesis' in window))return null;var vs=speechSynthesis.getVoices().filter(function(v){return /^ja/i.test(v.lang)});if(!vs.length)return null;var pref=['Kyoko (Premium)','Kyoko (Enhanced)','Kyoko','Otoya (Enhanced)','O-Ren','Hattori','Google 日本語','Otoya'];for(var i=0;i<pref.length;i++){for(var j=0;j<vs.length;j++)if(vs[j].name.indexOf(pref[i])===0)return vs[j]}return vs.filter(function(v){return /enhanced|premium|neural|natural/i.test(v.name)})[0]||vs[0]}
 if('speechSynthesis' in window){try{speechSynthesis.onvoiceschanged=function(){JAV=jaVoice()};JAV=jaVoice()}catch(e){}}
 document.addEventListener('click',function(e){var el=e.target.closest&&e.target.closest('[data-say]');if(!el)return;e.preventDefault();e.stopPropagation();
@@ -785,7 +792,18 @@ function buildCards(){
   /* 6 · kanji */
   var k=b.kanji||{};
   cards.push({id:'kanji',title:'Kanji of the day',sub:'#'+esc(k.n)+' of 270 · KEIRO deck',color:'#D2453A',tint:'#FFE7E3',min:2,
-    body:'<div class="kanji">'+esc(k.kanji)+'</div><div class="center"><span class="big jp" style="font-size:26px">'+esc(k.reading)+'</span><br><b>'+esc(k.meaning)+'</b></div>'+(k.hook?'<div class="hook">'+esc(k.hook)+'</div>':'')+(k.example?'<p class="jp"><b>'+esc(k.example)+'</b> '+(k.example_romaji?'<span class="small">('+esc(k.example_romaji)+')</span>':'')+'<br>'+esc(k.example_en)+'</p>':'')+(k.spot_it?'<p><b>Spot it:</b> '+esc(k.spot_it)+'</p>':'')+quizHTML(withIds(k,'kanji'),'Lock it in')});
+    body:(function(){
+      var SENT=function(x){return Array.isArray(x)?x:String(x||'').split(/(?<=[.;])\s+(?=[A-Z0-9{(　-鿿])/).filter(Boolean)},
+        LI=function(a){return '<ul class="kl">'+a.map(function(t){return '<li>'+esc(t)+'</li>'}).join('')+'</ul>'},
+        h='<div class="kanji">'+esc(k.kanji)+'</div><div class="kmean">'+esc(k.meaning)+'</div>';
+      if((k.readings||[]).length){
+        h+='<div class="ksec"><h4>Readings</h4>'+k.readings.map(function(r){return '<div class="krow"><span class="ktag '+(r.type==='kun'?'kun':'on')+'">'+(r.type==='kun'?'kun':'on')+'</span><div class="kr"><b class="jp">'+esc(r.kana)+'</b><small>'+esc(r.romaji||'')+(r.note?', '+esc(r.note):'')+'</small></div>'+SPK(String(r.kana).split('/')[0])+'</div>'}).join('')+'</div>';
+      }else if(k.reading)h+='<div class="center"><span class="kread"><span class="big jp" style="font-size:22px">'+esc(k.reading)+'</span>'+SPK(String(k.reading||'').replace(/\((on|kun)\)/gi,'').replace(/[A-Za-z]+/g,'').replace(/[()（）]/g,'').split(/[\s・\/,、·]+/).filter(Boolean).filter(function(x,i,a){return a.indexOf(x)===i}).join('、'))+'</span></div>';
+      if(k.hook)h+='<div class="ksec"><h4>Remember it</h4><div class="hook">'+LI(SENT(k.hook))+'</div></div>';
+      if(k.example)h+='<div class="ksec"><h4>In a sentence</h4><div class="kex"><div class="jrow"><div class="jp kexj">'+esc(k.example)+'</div>'+SPK(k.example)+'</div>'+(k.example_romaji?'<div class="ro">'+esc(k.example_romaji)+'</div>':'')+'<div class="en">'+esc(k.example_en||'')+'</div>'+(k.example_note?'<div class="small">'+esc(k.example_note)+'</div>':'')+'</div></div>';
+      if((k.words||[]).length)h+='<div class="ksec"><h4>Words you\'ll see</h4>'+k.words.map(function(w){return '<div class="krow"><div class="kr"><b class="jp">'+esc(w.jp)+'</b><small>'+(w.reading?esc(w.reading)+', ':'')+esc(w.en||'')+'</small></div>'+SPK(w.reading||w.jp)+'</div>'}).join('')+'</div>';
+      if(k.spot_it)h+='<div class="ksec"><h4>Spot it</h4>'+LI(SENT(k.spot_it))+'</div>';
+      return h+quizHTML(withIds(k,'kanji'),'Lock it in')})()});
   /* 7 · bottle */
   var bt=b.bottle||{};
   cards.push({id:'bottle',title:'Bottle of the day',sub:(bt.group||'')+(bt.price?', $'+esc(bt.price)+' on the chalk':''),color:'var(--plum)',tint:'#FDE6EA',min:3,

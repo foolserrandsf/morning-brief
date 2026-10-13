@@ -59,3 +59,6 @@ REPLIES (data/replies.enc, written by the 5-minute "Needs you replies" task via 
 
 
 LABEL PHOTOS: only bottles from the bottle list (never by-the-glass wines) get a small label thumbnail (tap to enlarge). The app matches names against the Bottle Master photo list built into index.html (LBLS) automatically. For any bottle it can't match (e.g. new bottles), set "photo" on that item (bottle, recs try/push) to https://foolserrandsf.github.io/fe-bottles/photos/<ID>.jpg when the ID has a photo, else save the label from Drive ("ORIGINAL BOTTLE PHOTOS - MASTER ARCHIVE" or the booklet pages) into this repo as photos/<ID or slug>.jpg (~1200px JPEG) and use https://foolserrandsf.github.io/morning-brief/photos/<name>.jpg.
+
+
+KANJI CARD LAYOUT (no run-on sentences): "readings": [{"type": "on"|"kun", "kana": "ブン", "romaji": "bun", "note": "short use, e.g. minutes"}], "hook": ["3–4 short sentences, one idea each"], "example" (jp with {kanji|kana} furigana), "example_romaji", "example_en" (just the translation), "example_note" (optional one short sentence of context), "words": [{"jp": "{気分|きぶん}", "reading": "きぶん", "en": "mood"}] (3–6 everyday words she'll see), "spot_it": ["2–3 short lines"]. Keep "reading" as a one-line fallback.
