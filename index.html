@@ -295,7 +295,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261013083953';
+var APP_BUILD='20261013084201';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -666,7 +666,7 @@ function buildCards(){
         var pw=(y[cfg[0]]||[]).map(function(p,i){var nm=p.wine||p.keg||'',t=/^Tap\s*(\d+):\s*/.exec(nm);return {p:p,tap:t?+t[1]:99,i:i,sp:SPL(t?nm.slice(t[0].length):nm)}});
         if(!pw.length)return;
         pw.sort(function(a,b){return (b.p.alert?1:0)-(a.p.alert?1:0)||a.tap-b.tap||a.i-b.i});
-        inv+='<div class="fel">'+cfg[1]+'</div><div class="frl">'+pw.map(function(o){var p=o.p;return FR((o.tap<99?'<span class="tapn">'+o.tap+'</span>':TH(p.wine,p.photo,'sm'))+(p.alert?'<span class="lowp">Low</span>':'')+esc(o.sp[0]),p.left!=null?(p.est&&!/^~/.test(String(p.left))?'~':'')+esc(p.left):'',(o.sp[1]?esc(o.sp[1])+'. ':'')+esc(p.alert?p.summary||'':FIRST(p.summary)),p.alert?'low':'')}).join('')+'</div>';
+        inv+='<div class="fel">'+cfg[1]+'</div><div class="frl">'+pw.map(function(o){var p=o.p;return FR((o.tap<99?'<span class="tapn">'+o.tap+'</span>':'')+(p.alert?'<span class="lowp">Low</span>':'')+esc(o.sp[0]),p.left!=null?(p.est&&!/^~/.test(String(p.left))?'~':'')+esc(p.left):'',(o.sp[1]?esc(o.sp[1])+'. ':'')+esc(p.alert?p.summary||'':FIRST(p.summary)),p.alert?'low':'')}).join('')+'</div>';
         how+='<p class="fel">'+cfg[1].split(',')[0]+'</p>'+pw.map(function(o){var p=o.p;return '<p><b>'+esc(p.wine||p.keg)+'</b><br><span class="fesub">'+esc(p.summary||'')+'</span></p><ul>'+(p.steps||[]).map(function(t){return '<li>'+esc(t)+'</li>'}).join('')+'</ul>'}).join('')+'<p class="stats">'+esc(cfg[3])+'</p>';
       });
       var nlow=['pours','kegs'].reduce(function(a,k){return a+(y[k]||[]).filter(function(p){return p.alert}).length},0);
@@ -676,7 +676,7 @@ function buildCards(){
       [['btg_profit','Wine by the glass'],['beer_profit','Beer']].forEach(function(cfg){var bp=y[cfg[0]];if(!bp||!(bp.rows||[]).length)return;
         pdays=pdays||(bp.days||[]).join(' and ');
         pr+='<div class="fel">'+cfg[1]+'</div><div class="frl">'+bp.rows.map(function(r){var tot=r.days.reduce(function(a,d){return a+(d?d[2]:0)},0),sp=SPL(r.wine||r.item);ptot+=tot;
-          return FR(TH(r.wine||r.item,r.photo,'sm')+esc(sp[0]),money(tot),(sp[1]?esc(sp[1])+'. ':'')+r.days.map(function(d,i){var dl=esc((bp.days[i]||'').split(' ')[0]);return d?dl+' '+money(d[2])+' ('+d[0]+' '+(r.unit||'gl')+')':dl+' no data'}).join(', '))}).join('')+'</div>';
+          return FR(esc(sp[0]),money(tot),(sp[1]?esc(sp[1])+'. ':'')+r.days.map(function(d,i){var dl=esc((bp.days[i]||'').split(' ')[0]);return d?dl+' '+money(d[2])+' ('+d[0]+' '+(r.unit||'gl')+')':dl+' no data'}).join(', '))}).join('')+'</div>';
         phow+='<p class="fel">'+cfg[1]+'</p>'+bp.rows.map(function(r){return '<p><b>'+esc(r.wine||r.item)+'</b>: $'+r.price+' each; costs about $'+r.cost_glass.toFixed(2)+' each ('+r.pct+'% of the price). '+esc(r.basis)+'.</p>'}).join('')+(bp.missing?'<p>'+esc(bp.missing)+'</p>':'')+(bp.note?'<p class="stats">'+esc(bp.note)+'</p>':'')});
       if(pr)DR.push(DRW('Profit',money(ptot)+', '+esc(pdays),pr+'<div class="frl">'+FR('Wine and beer together',money(ptot),'','tot')+'</div>'+more('How profit is worked out',phow)));
       // Tips by bartender
