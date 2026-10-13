@@ -262,6 +262,10 @@ details.more>.in p:first-child{margin-top:0}
 .spk.speaking{background:#3070D0;color:#fff;border-color:#3070D0}.spk.speaking .spk-w1{animation:spkw 1s ease-in-out infinite}.spk.speaking .spk-w2{animation:spkw 1s ease-in-out .25s infinite}
 @keyframes spkw{0%,100%{opacity:1}50%{opacity:.25}}@media (prefers-reduced-motion:reduce){.spk.speaking path{animation:none}}
 .chunks .c[data-say]{cursor:pointer}.chunks .c.speaking{outline:2px solid var(--cc);outline-offset:1px}
+.th{flex:0 0 auto;padding:0;border:1px solid var(--line);border-radius:7px;background:var(--wash);overflow:hidden;width:42px;height:56px;cursor:zoom-in;display:inline-block;vertical-align:middle}.th img{width:100%;height:100%;object-fit:cover;display:block}
+.th.sm{width:30px;height:40px;border-radius:5px;margin-right:8px;vertical-align:-12px}.th.big{width:72px;height:96px;border-radius:10px}
+.throw{display:flex;align-items:center;gap:12px}.throw>.k,.throw>.lead{flex:1;min-width:0}.thstrip{float:right;margin:0 0 4px 8px;display:flex;gap:4px}.thstrip .th.sm{margin:0}
+.lbox{position:fixed;inset:0;z-index:99;background:rgba(15,20,35,.82);display:grid;place-items:center;padding:24px;cursor:zoom-out}.lbox img{max-width:100%;max-height:86vh;border-radius:12px;background:#fff}
 .ylines{display:grid;gap:6px;font-size:16.5px;margin-top:6px}
 .sch{margin:12px 0 4px;font-size:15px}.sl{margin:6px 0 8px}.sl .jp{font-size:17px}.sl .ro{font-size:13px;color:var(--soft)}.sl .en{font-size:14px}.sq{border-left:3px solid var(--line);padding-left:10px;margin:8px 0 12px}.sa{margin-left:6px}.sa>b{font-size:13px;color:var(--teal)}
 .tipsplit .lowinv b{color:#C0392B}
@@ -291,7 +295,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261013083640';
+var APP_BUILD='20261013083953';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -559,6 +563,15 @@ document.addEventListener('click',function(e){var el=e.target.closest&&e.target.
   var t=el.getAttribute('data-say');speechSynthesis.cancel();document.querySelectorAll('.speaking').forEach(function(x){x.classList.remove('speaking')});
   var u=new SpeechSynthesisUtterance(t);u.lang='ja-JP';JAV=JAV||jaVoice();if(JAV)u.voice=JAV;u.rate=el.classList.contains('c')?0.8:0.9;
   el.classList.add('speaking');u.onend=u.onerror=function(){el.classList.remove('speaking')};speechSynthesis.speak(u)},true);
+var LBLS=[["adrien renoir","le terroir","b52"],["paul gosset","au fil du temps","b64"],["chartogne taillet","sainte anne","b54"],["bereche","mailly champagne","b53"],["jerome prevost","les beguines","b61"],["jacques lassaigne","les vignes de montgueux","b59"],["jacques lassaigne","millesime 2017","b60"],["freres mignon","l aventure","b62"],["stephane regnault","chromatique","b63"],["helene","vieilles vignes","b58"],["robert moncuit","les grands blancs","b65"],["kobza","sparkling chenin","b51"],["moritz kissinger","winzersekt","b66"],["arnot roberts","chardonnay","b84"],["granville","nova ridge","b83"],["florez","pope smoke","b142"],["driftwood cottage","sangiovese","b143"],["commune","carignan","b144"],["anne amie","pinot noir","b145"],["granville","koosah","b141"],["lauer","no 6","b105"],["lauer","no 11","b107"],["lauer","no 12","b104"],["lauer","no 13","b106"],["lauer","no 25","b108"],["schafer frohlich","schiefergestein","b97"],["keller","von der fels","b101"],["groebe","morstein","b100"],["eva fricke","melange","b98"],["eva fricke","riesling trocken","b99"],["falkenstein","altenberg","b103"],["twardowski","hofberg","b86"],["stein","palmberg","b92"],["stein","holle","b91"],["weiser kunstler","riesling","b95"],["weiser kunstler","schlossberg","b96"],["vollenweider","steffensberg","b93"],["vollenweider","burgberg","b94"],["julian haart","j j","b88"],["julian haart","moselle","b89"],["julian haart","lottie","b87"],["ebner ebenauer","poysdorf","b72"],["ebner ebenauer","black edition","b71"],["stekar","emilio","b123"],["vinas mora","kaamen","b146"],["vaskapu","kadarka","b147"],["stekar","oliver","b166"],["naboso","zore","b165"],["ameztoi","rubentis","b125"],["oltretorrente","bianco","b110"],["vallisassoli","per una volta","b109"],["remelluri","reserva","b169"],["lupier","el terroir","b168"],["colombera","cottignano","b151"],["cantina del pino","ovello","b148"],["brandini","la morra","b149"],["burlotto","pelaverga","b150"],["paolo bea","cotidie","b153"],["paolo bea","san valentino","b154"],["sylvain pataille","auvonnes","b81"],["chantereves","miarlons","b79"],["benoit ente","antichtone","b78"],["galeyrand","alligotay","b80"],["saisons","saint veran","b82"],["chantereves","yume utai","b74"],["pattes loup","vent d ange","b75"],["bartschi","sous les rochers","b111"],["dame jeanne","artemisia","b76"],["bartschi","coup de foug","b112"],["saisons","jacquere","b114"],["girondales","jonona","b113"],["vin noe","gueule d amour","b132"],["galeyrand","champs de vosger","b137"],["saisons","couchois","b138"],["marthe henry","vignots","b139"],["santini","champs pernin","b134"],["lepetit de la bigne","cuvee ronde","b135"],["dame jeanne","pensee sauvage","b133"],["petit roy","fleurie","b129"],["yann bertrand","folie","b130"],["lindenlaub","equilibre","b68"],["lindenlaub","matin fou","b69"],["justin boxler","deux micas","b70"],["domaine 7","la nouette","b117"],["breteches","bois renault","b116"],["danjou banessy","supernova","b115"],["bretaudeau","ornate","b157"],["pacalet","cornas","b159"],["jean louis chave","saint joseph","b162"],["chave","offerus","b163"],["gonon","saint joseph","b164"],["olivier pithon","lais","b156"],["maxime magnon","rozeta","b155"],["plaisance","serr da beg","b167"],["gerbais","grandes cotes","b56"],["sylvain pataille","fleur de pinot","b126"],["stater west","saumur rouge","b120"],["chai de la dive","les moulins","b118"],["terres d imaginaire","obscur","b158"],["saisons","savigny","b140"],["marie courtin","efflorescence","new1"],["kilburg","treppchen","new2"]];
+function lnorm(t){return String(t||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ')}
+function labelFor(text,photo){
+  if(photo){var m=/\/photos\/(b\d+)\.jpg/.exec(photo);return m&&LBLS.some(function(e){return e[2]===m[1]})?{t:'https://foolserrandsf.github.io/fe-bottles/thumbs/'+m[1]+'.jpg',f:photo}:{t:photo,f:photo}}
+  var n=' '+lnorm(text)+' ';for(var i=0;i<LBLS.length;i++){var e=LBLS[i];if(n.indexOf(' '+e[0]+' ')>=0&&n.indexOf(' '+e[1]+' ')>=0)return {t:'https://foolserrandsf.github.io/fe-bottles/thumbs/'+e[2]+'.jpg',f:'https://foolserrandsf.github.io/fe-bottles/photos/'+e[2]+'.jpg'}}return null}
+function labelsIn(text){var n=' '+lnorm(text)+' ',out=[];LBLS.forEach(function(e){if(n.indexOf(' '+e[0]+' ')>=0&&n.indexOf(' '+e[1]+' ')>=0)out.push({t:'https://foolserrandsf.github.io/fe-bottles/thumbs/'+e[2]+'.jpg',f:'https://foolserrandsf.github.io/fe-bottles/photos/'+e[2]+'.jpg'})});return out}
+function TH(text,photo,cls){var l=labelFor(text,photo);return l?'<button type="button" class="th'+(cls?' '+cls:'')+'" data-full="'+esc(l.f)+'" aria-label="See the label"><img src="'+esc(l.t)+'" alt="" loading="lazy" onerror="this.parentNode.remove()"></button>':''}
+document.addEventListener('click',function(e){var th=e.target.closest&&e.target.closest('.th[data-full]');if(!th)return;e.preventDefault();e.stopPropagation();
+  var o=document.createElement('div');o.className='lbox';o.innerHTML='<img src="'+th.getAttribute('data-full')+'" alt="Label">';o.onclick=function(){o.remove()};document.body.appendChild(o)},true);
 function more(label,html){return html?'<details class="more"><summary>'+esc(label)+'</summary><div class="in">'+html+'</div></details>':''}
 function paras(a){return (a||[]).map(function(p){return '<p>'+esc(p)+'</p>'}).join('')}
 function money(n){return '$'+Math.round(+n||0).toLocaleString('en-US')}
@@ -653,7 +666,7 @@ function buildCards(){
         var pw=(y[cfg[0]]||[]).map(function(p,i){var nm=p.wine||p.keg||'',t=/^Tap\s*(\d+):\s*/.exec(nm);return {p:p,tap:t?+t[1]:99,i:i,sp:SPL(t?nm.slice(t[0].length):nm)}});
         if(!pw.length)return;
         pw.sort(function(a,b){return (b.p.alert?1:0)-(a.p.alert?1:0)||a.tap-b.tap||a.i-b.i});
-        inv+='<div class="fel">'+cfg[1]+'</div><div class="frl">'+pw.map(function(o){var p=o.p;return FR((o.tap<99?'<span class="tapn">'+o.tap+'</span>':'')+(p.alert?'<span class="lowp">Low</span>':'')+esc(o.sp[0]),p.left!=null?(p.est&&!/^~/.test(String(p.left))?'~':'')+esc(p.left):'',(o.sp[1]?esc(o.sp[1])+'. ':'')+esc(p.alert?p.summary||'':FIRST(p.summary)),p.alert?'low':'')}).join('')+'</div>';
+        inv+='<div class="fel">'+cfg[1]+'</div><div class="frl">'+pw.map(function(o){var p=o.p;return FR((o.tap<99?'<span class="tapn">'+o.tap+'</span>':TH(p.wine,p.photo,'sm'))+(p.alert?'<span class="lowp">Low</span>':'')+esc(o.sp[0]),p.left!=null?(p.est&&!/^~/.test(String(p.left))?'~':'')+esc(p.left):'',(o.sp[1]?esc(o.sp[1])+'. ':'')+esc(p.alert?p.summary||'':FIRST(p.summary)),p.alert?'low':'')}).join('')+'</div>';
         how+='<p class="fel">'+cfg[1].split(',')[0]+'</p>'+pw.map(function(o){var p=o.p;return '<p><b>'+esc(p.wine||p.keg)+'</b><br><span class="fesub">'+esc(p.summary||'')+'</span></p><ul>'+(p.steps||[]).map(function(t){return '<li>'+esc(t)+'</li>'}).join('')+'</ul>'}).join('')+'<p class="stats">'+esc(cfg[3])+'</p>';
       });
       var nlow=['pours','kegs'].reduce(function(a,k){return a+(y[k]||[]).filter(function(p){return p.alert}).length},0);
@@ -663,7 +676,7 @@ function buildCards(){
       [['btg_profit','Wine by the glass'],['beer_profit','Beer']].forEach(function(cfg){var bp=y[cfg[0]];if(!bp||!(bp.rows||[]).length)return;
         pdays=pdays||(bp.days||[]).join(' and ');
         pr+='<div class="fel">'+cfg[1]+'</div><div class="frl">'+bp.rows.map(function(r){var tot=r.days.reduce(function(a,d){return a+(d?d[2]:0)},0),sp=SPL(r.wine||r.item);ptot+=tot;
-          return FR(esc(sp[0]),money(tot),(sp[1]?esc(sp[1])+'. ':'')+r.days.map(function(d,i){var dl=esc((bp.days[i]||'').split(' ')[0]);return d?dl+' '+money(d[2])+' ('+d[0]+' '+(r.unit||'gl')+')':dl+' no data'}).join(', '))}).join('')+'</div>';
+          return FR(TH(r.wine||r.item,r.photo,'sm')+esc(sp[0]),money(tot),(sp[1]?esc(sp[1])+'. ':'')+r.days.map(function(d,i){var dl=esc((bp.days[i]||'').split(' ')[0]);return d?dl+' '+money(d[2])+' ('+d[0]+' '+(r.unit||'gl')+')':dl+' no data'}).join(', '))}).join('')+'</div>';
         phow+='<p class="fel">'+cfg[1]+'</p>'+bp.rows.map(function(r){return '<p><b>'+esc(r.wine||r.item)+'</b>: $'+r.price+' each; costs about $'+r.cost_glass.toFixed(2)+' each ('+r.pct+'% of the price). '+esc(r.basis)+'.</p>'}).join('')+(bp.missing?'<p>'+esc(bp.missing)+'</p>':'')+(bp.note?'<p class="stats">'+esc(bp.note)+'</p>':'')});
       if(pr)DR.push(DRW('Profit',money(ptot)+', '+esc(pdays),pr+'<div class="frl">'+FR('Wine and beer together',money(ptot),'','tot')+'</div>'+more('How profit is worked out',phow)));
       // Tips by bartender
@@ -730,7 +743,7 @@ function buildCards(){
         ((sp.due_soon||[]).length?'<div class="alert"><b>Due soon:</b> '+sp.due_soon.map(function(x){return esc(x.vendor)+' '+money(x.amount)+' ('+esc(x.due)+')'}).join(', ')+'</div>':'')+(sp.note?'<p class="stats">'+esc(sp.note)+'</p>':''));
       h+='</div>';
     }
-    if(IDEAS.length)h+='<div class="fes fedr">'+DRW('Ideas for this week',IDEAS.length+' idea'+(IDEAS.length>1?'s':''),'<div class="insight" style="margin-top:0">'+pts(IDEAS,'var(--teal)')+'</div>')+'</div>';
+    if(IDEAS.length)h+='<div class="fes fedr">'+DRW('Ideas for this week',IDEAS.length+' idea'+(IDEAS.length>1?'s':''),'<div class="insight" style="margin-top:0">'+'<ul class="pts" style="--dot:var(--teal)">'+IDEAS.map(function(x){var ls=labelsIn(x);return '<li>'+(ls.length?'<span class="thstrip">'+ls.map(function(l){return '<button type="button" class="th sm" data-full="'+esc(l.f)+'"><img src="'+esc(l.t)+'" alt="" loading="lazy" onerror="this.parentNode.remove()"></button>'}).join('')+'</span>':'')+esc(x)+'</li>'}).join('')+'</ul>'+'</div>')+'</div>';
     cards.push({id:'fe',title:'Fool\'s Errand yesterday',sub:wdn+' '+shortDate(ydate).replace(/^\w+,\s*/,''),color:'var(--teal)',tint:'#E0F6F3',min:1,must:1,body:h});
   }
   /* 4 · football */
@@ -775,14 +788,14 @@ function buildCards(){
     body:'<div class="kanji">'+esc(k.kanji)+'</div><div class="center"><span class="big jp" style="font-size:26px">'+esc(k.reading)+'</span><br><b>'+esc(k.meaning)+'</b></div>'+(k.hook?'<div class="hook">'+esc(k.hook)+'</div>':'')+(k.example?'<p class="jp"><b>'+esc(k.example)+'</b> '+(k.example_romaji?'<span class="small">('+esc(k.example_romaji)+')</span>':'')+'<br>'+esc(k.example_en)+'</p>':'')+(k.spot_it?'<p><b>Spot it:</b> '+esc(k.spot_it)+'</p>':'')+quizHTML(withIds(k,'kanji'),'Lock it in')});
   /* 7 · bottle */
   var bt=b.bottle||{};
-  cards.push({id:'bottle',title:'Bottle of the day',sub:esc(bt.group||'')+(bt.price?', $'+esc(bt.price)+' on the chalk':''),color:'var(--plum)',tint:'#FDE6EA',min:3,
-    body:(bt.photo?'<img class="label" src="'+esc(bt.photo)+'" alt="Label: '+esc(bt.title)+'">':'')+'<div class="lead" style="margin-bottom:6px">'+esc(bt.producer)+(bt.wine?', '+esc(bt.wine):'')+'</div><div class="chips">'+[bt.grapes,bt.place,bt.vintage].filter(Boolean).map(function(x){return '<span>'+esc(x)+'</span>'}).join('')+'</div>'+
+  cards.push({id:'bottle',title:'Bottle of the day',sub:(bt.group||'')+(bt.price?', $'+esc(bt.price)+' on the chalk':''),color:'var(--plum)',tint:'#FDE6EA',min:3,
+    body:'<div class="throw">'+TH(bt.title,bt.photo,'big')+'<div class="lead" style="margin-bottom:6px">'+esc(bt.producer)+(bt.wine?', '+esc(bt.wine):'')+'</div></div><div class="chips">'+[bt.grapes,bt.place,bt.vintage].filter(Boolean).map(function(x){return '<span>'+esc(x)+'</span>'}).join('')+'</div>'+
       (bt.hook?'<div class="hook">'+esc(bt.hook)+'</div>':'')+(bt.tasting&&bt.tasting.length?'<p style="margin-bottom:0"><b>In the glass</b></p>'+pts(bt.tasting,'var(--plum)'):'')+
       (bt.story&&bt.story.length?'<div class="sect"><h3>Stories to tell</h3><p class="stats" style="margin:0 0 6px">Beyond the booklet page</p>'+pts(bt.story,'var(--plum)')+'</div>':'')+(bt.pitch?'<div class="pitch"><b>Your 30-second pitch</b>'+esc(bt.pitch)+'</div>':'')+
       more('Why it tastes that way, and the producer',(bt.terroir?'<p>'+esc(bt.terroir)+'</p>':'')+(bt.producer_notes&&bt.producer_notes.length?pts(bt.producer_notes,'var(--plum)'):''))+quizHTML(withIds(bt,'bottle'),'Remember it')});
   /* 8 · WSET */
   var ws=b.wset||{};
-  cards.push({id:'wset',title:ws.title||'WSET concept',sub:esc(ws.level||'WSET Level 2')+' · concept '+esc(ws.n||''),color:'var(--teal)',tint:'#E0F6F3',min:3,
+  cards.push({id:'wset',title:ws.title||'WSET concept',sub:(ws.level||'WSET Level 2')+' · concept '+esc(ws.n||''),color:'var(--teal)',tint:'#E0F6F3',min:3,
     body:(ws.lead?'<div class="lead">'+esc(ws.lead)+'</div>':'')+lesson(ws,'var(--teal)','Explain it fully')+(ws.tie_in?'<div class="hook">On our shelves: '+esc(ws.tie_in)+'</div>':'')+(ws.try_it?'<p><b>Try it tonight:</b> '+esc(ws.try_it)+'</p>':'')+quizHTML(withIds(ws,'wset'),'Competency check')});
   /* 9 · stocks + 10 · crypto */
   [['stocks','Stocks & bonds','var(--sky)','#E4F1FF'],['crypto','Crypto','var(--ochre)','#FFF3D6']].forEach(function(t){
@@ -792,12 +805,12 @@ function buildCards(){
   });
   /* 11 · Filipino */
   var fl=b.filipino||{};
-  cards.push({id:'fil',title:'Filipino daily',sub:esc(fl.lang||'Tagalog')+' · '+esc(fl.n?'lesson '+fl.n:''),color:'var(--teal)',tint:'#E4ECFF',min:2,
+  cards.push({id:'fil',title:'Filipino daily',sub:(fl.lang||'Tagalog')+' · '+esc(fl.n?'lesson '+fl.n:''),color:'var(--teal)',tint:'#E4ECFF',min:2,
     body:'<div class="big" style="font-size:30px">'+esc(fl.phrase)+'</div>'+(fl.say_it?'<div class="small">say it: <b>'+esc(fl.say_it)+'</b></div>':'')+'<p><b>'+esc(fl.meaning)+'</b></p>'+(fl.breakdown&&fl.breakdown.length?'<div class="terms">'+fl.breakdown.map(function(x){return '<div><b>'+esc(x.word)+'</b> — '+esc(x.means)+'</div>'}).join('')+'</div>':'')+(fl.use_it?'<p><b>Use it today:</b> '+esc(fl.use_it)+'</p>':'')+quizHTML(withIds(fl,'filipino'),'Quick check')});
   /* 12 · bottle recs (Tue 6 PM / Sat 1:30 PM) */
   var rc=b.recs;
-  if(rc)cards.push({id:'recs',title:rc.title,sub:esc(rc.posted||''),color:'var(--rose)',tint:'#FFE6F1',min:2,
-    body:'<p><b>Try these yourself</b></p><div class="list">'+(rc.try||[]).map(function(x){return '<div class="item">'+(x.photo?'<img class="label" style="max-height:180px" src="'+esc(x.photo)+'" alt="">':'')+'<div class="k">'+esc(x.name)+(x.price?' · $'+esc(x.price):'')+'</div><div class="m">'+esc(x.why)+'</div>'+(x.story?'<div class="m"><b>The story:</b> '+esc(x.story)+'</div>':'')+'</div>'}).join('')+'</div><p style="margin-top:14px"><b>Push these on shift</b></p><div class="list">'+(rc.push||[]).map(function(x){return '<div class="item">'+(x.photo?'<img class="label" style="max-height:180px" src="'+esc(x.photo)+'" alt="">':'')+'<div class="k">'+esc(x.name)+'</div><div class="m">'+esc(x.pitch)+'</div>'+(x.pair_with?'<div class="m">For the guest who likes: '+esc(x.pair_with)+'</div>':'')+(x.story?'<div class="m"><b>The story:</b> '+esc(x.story)+'</div>':'')+'</div>'}).join('')+'</div>'});
+  if(rc)cards.push({id:'recs',title:rc.title,sub:(rc.posted||''),color:'var(--rose)',tint:'#FFE6F1',min:2,
+    body:'<p><b>Try these yourself</b></p><div class="list">'+(rc.try||[]).map(function(x){return '<div class="item">'+'<div class="throw">'+TH(x.name,x.photo)+'<div class="k">'+esc(x.name)+(x.price?' · $'+esc(x.price):'')+'</div></div><div class="m">'+esc(x.why)+'</div>'+(x.story?'<div class="m"><b>The story:</b> '+esc(x.story)+'</div>':'')+'</div>'}).join('')+'</div><p style="margin-top:14px"><b>Push these on shift</b></p><div class="list">'+(rc.push||[]).map(function(x){return '<div class="item">'+'<div class="throw">'+TH(x.name,x.photo)+'<div class="k">'+esc(x.name)+'</div></div><div class="m">'+esc(x.pitch)+'</div>'+(x.pair_with?'<div class="m">For the guest who likes: '+esc(x.pair_with)+'</div>':'')+(x.story?'<div class="m"><b>The story:</b> '+esc(x.story)+'</div>':'')+'</div>'}).join('')+'</div>'});
   /* 13 · quizzes */
   if(wd===0){
     var sk=recallItems('sunday');

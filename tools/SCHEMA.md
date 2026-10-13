@@ -56,3 +56,6 @@ REPLIES (data/replies.enc, written by the 5-minute "Needs you replies" task via 
 ## shopping_add (optional, top level)
 "shopping_add": [{"id": "stable id, e.g. cal-2026-10-28-dish-soap", "text": "Dish soap"}] — things she needs to buy that come from today's calendar (e.g. a "Buy …" entry) or a note in her email. The app adds each id to her in-app shopping list (Today card) only once, so repeating an id never duplicates it. Her current list (what she typed in the app and hasn't checked off) is printed by `publish.py progress` as "shopping"; don't repeat those items.
 
+
+
+LABEL PHOTOS: every bottle shown in the brief gets a small label thumbnail (tap to enlarge). The app matches names against the Bottle Master photo list built into index.html (LBLS) automatically. For any bottle it can't match (new bottles, BTG wines), set "photo" on that item (bottle, recs try/push, fe_yesterday.pours[], btg_profit.rows[]) to https://foolserrandsf.github.io/fe-bottles/photos/<ID>.jpg when the ID has a photo, else save the label from Drive ("ORIGINAL BOTTLE PHOTOS - MASTER ARCHIVE" or the booklet pages) into this repo as photos/<ID or slug>.jpg (~1200px JPEG) and use https://foolserrandsf.github.io/morning-brief/photos/<name>.jpg.
