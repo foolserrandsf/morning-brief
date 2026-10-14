@@ -302,7 +302,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261013132935';
+var APP_BUILD='20261013224233';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -459,6 +459,8 @@ function lockScreen(msg){
 async function load(first,date){
   var lt=await (await fetch('data/latest.json?'+Date.now(),{cache:'no-store'})).json();
   if(lt.app&&lt.app!==APP_BUILD){var k='mb_reload_'+lt.app;try{if(!sessionStorage.getItem(k)){sessionStorage.setItem(k,'1');location.reload();return}}catch(e){}}
+  var mc=ls('mb_cache');
+  if(!date&&mc&&mc.brief&&mc.latest&&mc.latest.date>lt.date){S.brief=mc.brief;S.state=mc.state;S.pb=mc.pb||null;S.latest=mc.latest;build();toast('Offline — showing your last brief');return}
   var d=date||lt.date;
   S.state=await decFile('data/state.enc',lt.v);
   S.brief=await decFile('data/briefs/'+d+'.enc',lt.v);
