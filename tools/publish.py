@@ -113,8 +113,15 @@ def save_state(st):
 
 
 def bump_version(date):
-    json.dump({'date': date, 'v': datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).strftime('%Y%m%d%H%M%S')},
-              open(os.path.join(DATA, 'latest.json'), 'w'))
+    p = os.path.join(DATA, 'latest.json')
+    try:
+        old = json.load(open(p))
+    except Exception:
+        old = {}
+    new = {'date': date, 'v': datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).strftime('%Y%m%d%H%M%S')}
+    if old.get('app'):
+        new['app'] = old['app']  # keep the app build stamp so phones still notice app updates
+    json.dump(new, open(p, 'w'))
 
 
 def check_quiz(items, where, errs):
