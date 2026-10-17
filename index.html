@@ -213,6 +213,8 @@ details.more>.in p:first-child{margin-top:0}
 .wsvg .pin{fill:var(--plum);stroke:#fff;stroke-width:2.2}.wsvg .pl{font:700 12.5px system-ui;fill:#2B2620;paint-order:stroke;stroke:#fff;stroke-width:3.5px}
 .wsvg .box{fill:none;stroke:var(--plum);stroke-width:1.6}.wload{padding:40px 12px;text-align:center;color:var(--soft);font-size:14px}
 .wmap figcaption{font-size:14px;color:var(--soft);margin-top:6px;line-height:1.45}.wmap figcaption a{white-space:nowrap}
+.jsay{cursor:pointer;border-bottom:1.5px dotted #6FA0E6;border-radius:2px;-webkit-tap-highlight-color:transparent}.jsay::after{content:"";display:inline-block;width:.78em;height:.78em;margin-left:2px;vertical-align:-.06em;background:#3070D0;-webkit-mask:var(--spkm) center/contain no-repeat;mask:var(--spkm) center/contain no-repeat;opacity:.8}.jsay.speaking{background:#E4F1FF}.jsay.nw{white-space:nowrap}
+:root{--spkm:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 9v6h4l5 4V5L7 9H3z'/%3E%3Cpath d='M15.5 8.5a5 5 0 0 1 0 7' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E")}
 .pitch b{display:block;color:var(--plum);font-size:14px;margin-bottom:4px}
 .money{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:6px 0 2px}
 .money .v{font:700 40px/1 var(--display);letter-spacing:-.03em}
@@ -311,7 +313,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261017161302';
+var APP_BUILD='20261017161927';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -609,6 +611,21 @@ function wSVG(G,m,W,H,span,main){
   if(!main){var hh=(m._sp||m.span||1.4)*k,hw2=hh*400/290;s+='<rect class="box" x="'+(W/2-hw2).toFixed(1)+'" y="'+(H/2-hh).toFixed(1)+'" width="'+(2*hw2).toFixed(1)+'" height="'+(2*hh).toFixed(1)+'"/>'}
   return s+'</svg>'}
 new MutationObserver(function(){var l=document.querySelectorAll('.wsvg[data-m]');for(var i=0;i<l.length;i++)wDraw(l[i])}).observe(document.documentElement,{childList:true,subtree:true});
+/* Tap any Japanese inside English text to hear it (speaker buttons already cover full phrases). */
+var JRE=/[぀-ヿ㐀-鿿々〜～ー]/,JTOK=/([぀-ヿ㐀-鿿々〜～ー、。！？「」・]+)/;
+function jwrap(root){if(!root||!root.querySelectorAll)return;
+  var SKIP='button,[data-say],.q,.opt,.why,.jsay,.jp,.say,.jrow,.chunks,script,style,svg,textarea,input,.ic,.bar,rt';
+  var els=[root].concat([].slice.call(root.querySelectorAll('*')));
+  els.forEach(function(el){if(el.nodeType!==1||el.tagName==='RUBY'||el.tagName==='RT'||(el.closest&&el.closest(SKIP)))return;
+    var fs=parseFloat(getComputedStyle(el).fontSize)||16;if(fs>21)return;var kids=[].slice.call(el.childNodes);if(!kids.some(function(n){return (n.nodeType===3&&JRE.test(n.nodeValue))||n.tagName==='RUBY'}))return;
+    var grp=[];function flush(){if(!grp.length)return;var txt='',say='';grp.forEach(function(n){if(n.nodeType===3){txt+=n.nodeValue;say+=n.nodeValue}else{var rt=n.querySelector('rt'),bs=n.cloneNode(true);[].forEach.call(bs.querySelectorAll('rt,rp'),function(x){x.remove()});txt+=bs.textContent;say+=(rt&&rt.textContent.trim()&&rt.textContent.trim()!=='-'?rt.textContent:bs.textContent)}});
+      if(JRE.test(txt)&&say.replace(/[、。！？「」・\s]/g,'').length){var sp=document.createElement('span');sp.className='jsay'+(txt.trim().length<=14?' nw':'');sp.setAttribute('data-say',say.trim());sp.setAttribute('role','button');sp.setAttribute('aria-label','Hear '+txt.trim());grp[0].parentNode.insertBefore(sp,grp[0]);grp.forEach(function(n){sp.appendChild(n)})}grp=[]}
+    kids.forEach(function(n){if(n.nodeType===3){var parts=n.nodeValue.split(JTOK);if(parts.length<2){if(/^\s*$/.test(n.nodeValue)&&grp.length)return;flush();return}
+        var frag=document.createDocumentFragment(),nodes=[];parts.forEach(function(t){if(!t)return;var tn=document.createTextNode(t);frag.appendChild(tn);nodes.push([tn,JTOK.test(t)&&JRE.test(t)])});el.replaceChild(frag,n);
+        nodes.forEach(function(x){if(x[1])grp.push(x[0]);else flush()})}
+      else if(n.tagName==='RUBY')grp.push(n);else flush()});
+    flush()})}
+var _furi0=furi;furi=function(r){_furi0(r);try{jwrap(r)}catch(e){}};
 function pts(a,dot){return a&&a.length?'<ul class="pts"'+(dot?' style="--dot:'+dot+'"':'')+'>'+a.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul>':''}
 var SPKSVG='<svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk-b" d="M4 9.5h3.2L11.5 6v12l-4.3-3.5H4z"/><path class="spk-w1" d="M14.6 9.2a4 4 0 0 1 0 5.6"/><path class="spk-w2" d="M17.3 6.6a7.6 7.6 0 0 1 0 10.8"/></svg>';
 function SPK(t){t=String(t||'').replace(/\{([^|}]+)\|[^}]*\}/g,'$1');return t?'<button class="spk" type="button" data-say="'+esc(t)+'" aria-label="Hear it said">'+SPKSVG+'</button>':''}
