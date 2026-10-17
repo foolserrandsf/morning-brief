@@ -68,3 +68,7 @@ TRIP PLANS SOURCE OF TRUTH: the Japan itinerary is Denise's calendar artifact "J
 
 
 JAPANESE VOCAB DRAWER: japan.vocab = [{"title": "Catching up with friends", "items": [{"jp", "romaji", "en", "notes"?}]}]. It's one growing list kept in the phrasebook (publish.py merges by group title; nothing is dropped). Add 3–6 new useful items most days, tied to what's coming up (people she'll see, places, situations), local-sounding and short; reuse existing group titles when they fit.
+
+
+## fe_yesterday.menu_updates
+{"checked": "Sun Oct 18, 7:58 AM (Japan)", "btg": [{"when": "Thu Oct 15, 11:52 PM (SF)", "what": "Tap 2: Mo Strata → Ghost Town Butchery IPA, 7.2%"}], "bottles": [{"when": "...", "what": "86'd: Producer Cuvée vintage (by Mia)"}], "flags": ["one short line"]}. Shown as the "Menu updates" drawer on the Fool's Errand card. Filled every day from the BTG & Taps app (BTG+Beer Menu sheet Change Log) and the bottle app (86 log, Bottle log, app-stamped rows). Empty lists are fine.
