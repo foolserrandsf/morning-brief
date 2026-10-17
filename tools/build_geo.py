@@ -33,18 +33,18 @@ def rings(g):
     if g['type']=='MultiLineString': return g['coordinates']
     return []
 C=json.load(open(D+'cultural/ne_10m_admin_0_countries.json'))
-world=[];det=[]
-for f in C['features']:
+world=[];det=[];worldc=[];detc=[]
+for fi,f in enumerate([f for f in C['features'] if rings(f['geometry'])]):
     nm=f['properties'].get('NAME_EN') or f['properties']['NAME']
     for r in rings(f['geometry']):
         b=bbox(r)
         if (b[2]-b[0])*(b[3]-b[1])<0.02 and not inbox(b): continue
         if inbox(b):
             s=dp(r,0.012)
-            if len(s)>=4: det.append(enc(s))
+            if len(s)>=4: det.append(enc(s)); detc.append(fi)
         else:
             s=dp(r,0.12)
-            if len(s)>=4: world.append(enc(s))
+            if len(s)>=4: world.append(enc(s)); worldc.append(fi)
 names=[]
 def area(r):
     return abs(sum(r[i][0]*r[i-1][1]-r[i-1][0]*r[i][1] for i in range(len(r))))/2
@@ -84,7 +84,7 @@ for f in P['features']:
     p=f['properties']; x,y=f['geometry']['coordinates']
     lim=8 if inbox((x,y,x,y)) else 2
     if p['scalerank']<=lim: cities.append([p['name'],round(x,2),round(y,2),p['scalerank']])
-out={'v':1,'world':world,'det':det,'names':names,'rivers':riv,'lakes':lakes,'cities':cities}
+out={'v':2,'world':world,'det':det,'worldc':worldc,'detc':detc,'names':names,'rivers':riv,'lakes':lakes,'cities':cities}
 s=json.dumps(out,separators=(',',':'),ensure_ascii=False)
 open(sys.argv[1],'w').write(s)
 print(len(s), {k:len(json.dumps(v,separators=(',',':'))) for k,v in out.items() if k!='v'})

@@ -199,6 +199,8 @@ def cmd_brief(path):
             item = dict(q, id=iid, track=track, date=d, ref=ref, title=sec.get('title', ''))
             if track == 'bottle' and sec.get('photo'):
                 item.setdefault('img', sec['photo'])
+                if sec.get('photo_blur') is not None:
+                    item.setdefault('blur', sec['photo_blur'])
             if iid not in st['pool']:
                 added += 1
             st['pool'][iid] = item
