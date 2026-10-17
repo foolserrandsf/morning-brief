@@ -204,6 +204,15 @@ details.more>.in p:first-child{margin-top:0}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
 .chips span{background:var(--wash);border:1px solid var(--line);border-radius:999px;padding:4px 11px;font-size:14.5px;font-weight:500}
 .pitch{background:#FBF0F4;border-radius:14px;padding:14px 15px;margin-top:14px;font-size:16.5px;line-height:1.6}
+.wmap{margin:12px 0 4px}.wsvg{position:relative;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#DCEBF5}
+.wsvg svg{display:block}.wm{width:100%;height:auto}.wi{position:absolute;top:8px;right:8px;width:30%;height:auto;border:1px solid rgba(0,0,0,.18);border-radius:7px;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.wsvg .sea{fill:#DCEBF5}.wsvg .land{fill:#F6F1E7;stroke:#B9AE9C;stroke-width:.7;stroke-linejoin:round}.wsvg .lake{fill:#DCEBF5;stroke:#9DBBD3;stroke-width:.5}
+.wsvg .riv{fill:none;stroke:#6C9CC6;stroke-linecap:round;stroke-linejoin:round}.wsvg .rl{font:italic 600 10.5px var(--body,system-ui);fill:#3F74A3;paint-order:stroke;stroke:#F6F1E7;stroke-width:3px}
+.wsvg .cd{fill:#5E5648}.wsvg .cl{font:500 10.5px system-ui;fill:#4A4337;paint-order:stroke;stroke:#F6F1E7;stroke-width:3px}
+.wsvg .cn{font:700 10px system-ui;letter-spacing:.06em;text-transform:uppercase;fill:#9A8F7C;text-anchor:middle}.wsvg .cn.sm{font-size:9px;letter-spacing:.06em}
+.wsvg .pin{fill:var(--plum);stroke:#fff;stroke-width:2.2}.wsvg .pl{font:700 12.5px system-ui;fill:#2B2620;paint-order:stroke;stroke:#fff;stroke-width:3.5px}
+.wsvg .box{fill:none;stroke:var(--plum);stroke-width:1.6}.wload{padding:40px 12px;text-align:center;color:var(--soft);font-size:14px}
+.wmap figcaption{font-size:14px;color:var(--soft);margin-top:6px;line-height:1.45}.wmap figcaption a{white-space:nowrap}
 .pitch b{display:block;color:var(--plum);font-size:14px;margin-bottom:4px}
 .money{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:6px 0 2px}
 .money .v{font:700 40px/1 var(--display);letter-spacing:-.03em}
@@ -302,7 +311,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261017160044';
+var APP_BUILD='20261017161302';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -562,6 +571,44 @@ function card(c){
 function sents(t){return String(t||'').match(/[^.!?]+(?:[.!?]+["'”’)\]]*|$)\s*/g)||[]}
 function firstS(t){var x=sents(t);return x.length?x[0].trim():''}
 function restS(t){return sents(t).slice(1).join('').trim()}
+/* Wine maps: m = {pins:[{name,lat,lng}], span (deg, half-height; default 1.4), caption}. Drawn offline from data/geo.json (Natural Earth, public domain). */
+var GEO=null,GEOP=null;
+function geoLoad(){if(GEO)return Promise.resolve(GEO);if(!GEOP)GEOP=fetch('data/geo.json').then(function(r){return r.json()}).then(function(d){GEO=d;return d});return GEOP}
+function WMAP(m){if(!m||!m.pins||!m.pins.length)return '';var q=m.pins[0];
+  return '<figure class="wmap"><div class="wsvg" data-m="'+esc(JSON.stringify(m))+'"><div class="wload">Loading map…</div></div>'+
+  '<figcaption>'+(m.caption?esc(m.caption):'')+' <a href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q.name+(q.q?' '+q.q:''))+'" target="_blank" rel="noopener">Open in Maps</a></figcaption></figure>'}
+function geoDec(a){var o=[],x=0,y=0;for(var i=0;i<a.length;i+=2){x+=a[i];y+=a[i+1];o.push([x/100,y/100])}return o}
+function wDraw(el){var m;try{m=JSON.parse(el.getAttribute('data-m'))}catch(e){return}
+  el.removeAttribute('data-m');
+  geoLoad().then(function(G){el.innerHTML=wSVG(G,m,400,290,m.span||1.4,true)+wSVG(G,m,130,100,Math.max(5,(m.span||1.4)*4),false)}).catch(function(){el.innerHTML='<div class="wload">Map needs one online open first.</div>'})}
+function wSVG(G,m,W,H,span,main){
+  var lat0=0,lng0=0;m.pins.forEach(function(p){lat0+=p.lat;lng0+=p.lng});lat0/=m.pins.length;lng0/=m.pins.length;
+  if(main&&m.pins.length>1){var dl=0;m.pins.forEach(function(p){dl=Math.max(dl,Math.abs(p.lat-lat0)*1.6,Math.abs(p.lng-lng0)*Math.cos(lat0*Math.PI/180)*H/W*1.8)});span=Math.max(span,dl)}
+  if(main)m._sp=span;
+  var k=H/2/span,cs=Math.cos(lat0*Math.PI/180),hw=W/2/k/cs;
+  function X(l){return (l-lng0)*cs*k+W/2}function Y(l){return H/2-(l-lat0)*k}
+  function bbHit(pts){var a=1e9,b=-1e9,c=1e9,d=-1e9;pts.forEach(function(p){if(p[0]<a)a=p[0];if(p[0]>b)b=p[0];if(p[1]<c)c=p[1];if(p[1]>d)d=p[1]});return !(b<lng0-hw||a>lng0+hw||d<lat0-span||c>lat0+span)}
+  function path(pts,close){return 'M'+pts.map(function(p){return X(p[0]).toFixed(1)+' '+Y(p[1]).toFixed(1)}).join('L')+(close?'Z':'')}
+  var occ=[],lbl='';
+  function fits(r){if(r[0]<2||r[1]<2||r[2]>W-2||r[3]>H-2)return false;if(main&&r[2]>W*0.67&&r[1]<H*0.4)return false;for(var i=0;i<occ.length;i++){var o=occ[i];if(r[0]<o[2]&&r[2]>o[0]&&r[1]<o[3]&&r[3]>o[1])return false}return true}
+  function put(x,y,txt,cls,fs,cands,anchorMid){var w=txt.length*fs*0.58+4,h=fs+3;for(var i=0;i<cands.length;i++){var c=cands[i],ax=x+c[0],ay=y+c[1],r=c[2]==='end'?[ax-w,ay-h+3,ax,ay+3]:c[2]==='middle'?[ax-w/2,ay-h+3,ax+w/2,ay+3]:[ax,ay-h+3,ax+w,ay+3];if(fits(r)){occ.push(r);lbl+='<text class="'+cls+'" x="'+ax.toFixed(1)+'" y="'+ay.toFixed(1)+'" text-anchor="'+(c[2]||'start')+'">'+esc(txt)+'</text>';return true}}return false}
+  var s='<svg class="'+(main?'wm':'wi')+'" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Map: '+esc(m.pins.map(function(p){return p.name}).join(', '))+'"><rect width="'+W+'" height="'+H+'" class="sea"/>';
+  (span<12?G.det.concat(G.world):G.world.concat(G.det)).forEach(function(r){var p=geoDec(r);if(bbHit(p))s+='<path class="land" d="'+path(p,1)+'"/>'});
+  G.lakes.forEach(function(r){var p=geoDec(r);if(bbHit(p))s+='<path class="lake" d="'+path(p,1)+'"/>'});
+  var rivs=[];
+  if(span<8)G.rivers.forEach(function(r){var p=geoDec(r[2]);if(!bbHit(p))return;s+='<path class="riv" style="stroke-width:'+(main?(r[1]<=4?2:r[1]<=6?1.4:1):.8)+'" d="'+path(p,0)+'"/>';if(main&&r[0])rivs.push([r,p])});
+  var pp=[];
+  if(main)m.pins.forEach(function(p){var x=X(p.lng),y=Y(p.lat);pp.push([x,y,p.name]);occ.push([x-7,y-7,x+7,y+7]);s+='<circle class="pin" cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="5.5"/>'});
+  pp.forEach(function(q){put(q[0],q[1],q[2],'pl',12.5,[[9,4.5],[-9,4.5,'end'],[9,-8],[9,17],[-9,-8,'end'],[-9,17,'end'],[0,-11,'middle'],[0,22,'middle'],[12,-20],[12,30]])});
+  if(main){var rl={};rivs.sort(function(a,b){return a[0][1]-b[0][1]}).forEach(function(rp){var r=rp[0],nm=r[0];if(rl[nm]||r[1]>8)return;var inn=rp[1].filter(function(q){var x=X(q[0]),y=Y(q[1]);return x>20&&x<W-20&&y>20&&y<H-20});if(inn.length<2)return;
+      for(var t=0;t<inn.length;t+=Math.max(1,Math.floor(inn.length/6))){var c=inn[t];if(put(X(c[0]),Y(c[1]),nm,'rl',10.5,[[5,-4],[-5,-4,'end'],[5,12]])){rl[nm]=1;break}}});
+    var n=0,lim=span<0.8?8:span<2?7:span<4?5:3;G.cities.slice().sort(function(a,b){return a[3]-b[3]}).forEach(function(c){if(n>=6||c[3]>lim)return;var x=X(c[1]),y=Y(c[2]);if(x<6||x>W-6||y<6||y>H-6)return;
+      if(!fits([x-3,y-3,x+3,y+3]))return;var ok=put(x,y,c[0],'cl',10.5,[[5,3.5],[-5,3.5,'end'],[0,-6,'middle'],[0,13,'middle']]);if(ok){occ.push([x-3,y-3,x+3,y+3]);n++;lbl+='<circle class="cd" cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="2.3"/>'}})}
+  if(main?span>=2.5:true)G.names.slice().sort(function(a,b){return a[3]-b[3]}).forEach(function(c){if(!main&&c[3]>3)return;var x=X(c[1]),y=Y(c[2]);if(x<0||x>W||y<0||y>H)return;put(x,y,c[0]==='United States of America'?'USA':c[0],'cn'+(main?'':' sm'),main?10:8.5,[[0,0,'middle'],[0,12,'middle'],[0,-10,'middle']])});
+  s+=lbl;
+  if(!main){var hh=(m._sp||m.span||1.4)*k,hw2=hh*400/290;s+='<rect class="box" x="'+(W/2-hw2).toFixed(1)+'" y="'+(H/2-hh).toFixed(1)+'" width="'+(2*hw2).toFixed(1)+'" height="'+(2*hh).toFixed(1)+'"/>'}
+  return s+'</svg>'}
+new MutationObserver(function(){var l=document.querySelectorAll('.wsvg[data-m]');for(var i=0;i<l.length;i++)wDraw(l[i])}).observe(document.documentElement,{childList:true,subtree:true});
 function pts(a,dot){return a&&a.length?'<ul class="pts"'+(dot?' style="--dot:'+dot+'"':'')+'>'+a.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul>':''}
 var SPKSVG='<svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk-b" d="M4 9.5h3.2L11.5 6v12l-4.3-3.5H4z"/><path class="spk-w1" d="M14.6 9.2a4 4 0 0 1 0 5.6"/><path class="spk-w2" d="M17.3 6.6a7.6 7.6 0 0 1 0 10.8"/></svg>';
 function SPK(t){t=String(t||'').replace(/\{([^|}]+)\|[^}]*\}/g,'$1');return t?'<button class="spk" type="button" data-say="'+esc(t)+'" aria-label="Hear it said">'+SPKSVG+'</button>':''}
@@ -819,12 +866,12 @@ function buildCards(){
   cards.push({id:'bottle',title:'Bottle of the day',sub:(bt.group||'')+(bt.price?', $'+esc(bt.price)+' on the chalk':''),color:'var(--plum)',tint:'#FDE6EA',min:3,
     body:'<div class="throw">'+TH(bt.title,bt.photo,'big')+'<div class="lead" style="margin-bottom:6px">'+esc(bt.producer)+(bt.wine?', '+esc(bt.wine):'')+'</div></div><div class="chips">'+[bt.grapes,bt.place,bt.vintage].filter(Boolean).map(function(x){return '<span>'+esc(x)+'</span>'}).join('')+'</div>'+
       (bt.hook?'<div class="hook">'+esc(bt.hook)+'</div>':'')+(bt.tasting&&bt.tasting.length?'<p style="margin-bottom:0"><b>In the glass</b></p>'+pts(bt.tasting,'var(--plum)'):'')+
-      (bt.story&&bt.story.length?'<div class="sect"><h3>Stories to tell</h3><p class="stats" style="margin:0 0 6px">Beyond the booklet page</p>'+pts(bt.story,'var(--plum)')+'</div>':'')+(bt.pitch?'<div class="pitch"><b>Your 30-second pitch</b>'+esc(bt.pitch)+'</div>':'')+
+      (bt.map?'<div class="sect"><h3>Where it grows</h3>'+WMAP(bt.map)+'</div>':'')+(bt.story&&bt.story.length?'<div class="sect"><h3>Stories to tell</h3><p class="stats" style="margin:0 0 6px">Beyond the booklet page</p>'+pts(bt.story,'var(--plum)')+'</div>':'')+(bt.pitch?'<div class="pitch"><b>Your 30-second pitch</b>'+esc(bt.pitch)+'</div>':'')+
       more('Why it tastes that way, and the producer',(bt.terroir?'<p>'+esc(bt.terroir)+'</p>':'')+(bt.producer_notes&&bt.producer_notes.length?pts(bt.producer_notes,'var(--plum)'):''))+quizHTML(withIds(bt,'bottle'),'Remember it')});
   /* 8 · WSET */
   var ws=b.wset||{};
   cards.push({id:'wset',title:ws.title||'WSET concept',sub:(ws.level||'WSET Level 2')+' · concept '+esc(ws.n||''),color:'var(--teal)',tint:'#E0F6F3',min:3,
-    body:(ws.lead?'<div class="lead">'+esc(ws.lead)+'</div>':'')+lesson(ws,'var(--teal)','Explain it fully')+(ws.tie_in?'<div class="hook">On our shelves: '+esc(ws.tie_in)+'</div>':'')+(ws.try_it?'<p><b>Try it tonight:</b> '+esc(ws.try_it)+'</p>':'')+quizHTML(withIds(ws,'wset'),'Competency check')});
+    body:(ws.lead?'<div class="lead">'+esc(ws.lead)+'</div>':'')+lesson(ws,'var(--teal)','Explain it fully')+(ws.map?'<div class="sect"><h3>On the map</h3>'+WMAP(ws.map)+'</div>':'')+(ws.tie_in?'<div class="hook">On our shelves: '+esc(ws.tie_in)+'</div>':'')+(ws.try_it?'<p><b>Try it tonight:</b> '+esc(ws.try_it)+'</p>':'')+quizHTML(withIds(ws,'wset'),'Competency check')});
   /* 9 · stocks + 10 · crypto */
   [['stocks','Stocks & bonds','var(--sky)','#E4F1FF'],['crypto','Crypto','var(--ochre)','#FFF3D6']].forEach(function(t){
     var s=b[t[0]]||{};
@@ -838,7 +885,7 @@ function buildCards(){
   /* 12 · bottle recs (Tue 6 PM / Sat 1:30 PM) */
   var rc=b.recs;
   if(rc)cards.push({id:'recs',title:rc.title,sub:(rc.posted||''),color:'var(--rose)',tint:'#FFE6F1',min:2,
-    body:'<p><b>Try these yourself</b></p><div class="list">'+(rc.try||[]).map(function(x){return '<div class="item">'+'<div class="throw">'+TH(x.name,x.photo)+'<div class="k">'+esc(x.name)+(x.price?' · $'+esc(x.price):'')+'</div></div><div class="m">'+esc(x.why)+'</div>'+(x.story?'<div class="m"><b>The story:</b> '+esc(x.story)+'</div>':'')+'</div>'}).join('')+'</div><p style="margin-top:14px"><b>Push these on shift</b></p><div class="list">'+(rc.push||[]).map(function(x){return '<div class="item">'+'<div class="throw">'+TH(x.name,x.photo)+'<div class="k">'+esc(x.name)+'</div></div><div class="m">'+esc(x.pitch)+'</div>'+(x.pair_with?'<div class="m">For the guest who likes: '+esc(x.pair_with)+'</div>':'')+(x.story?'<div class="m"><b>The story:</b> '+esc(x.story)+'</div>':'')+'</div>'}).join('')+'</div>'});
+    body:'<p><b>Try these yourself</b></p><div class="list">'+(rc.try||[]).map(function(x){return '<div class="item">'+'<div class="throw">'+TH(x.name,x.photo)+'<div class="k">'+esc(x.name)+(x.price?' · $'+esc(x.price):'')+'</div></div><div class="m">'+esc(x.why)+'</div>'+(x.story?'<div class="m"><b>The story:</b> '+esc(x.story)+'</div>':'')+(x.map?WMAP(x.map):'')+'</div>'}).join('')+'</div><p style="margin-top:14px"><b>Push these on shift</b></p><div class="list">'+(rc.push||[]).map(function(x){return '<div class="item">'+'<div class="throw">'+TH(x.name,x.photo)+'<div class="k">'+esc(x.name)+'</div></div><div class="m">'+esc(x.pitch)+'</div>'+(x.pair_with?'<div class="m">For the guest who likes: '+esc(x.pair_with)+'</div>':'')+(x.story?'<div class="m"><b>The story:</b> '+esc(x.story)+'</div>':'')+(x.map?WMAP(x.map):'')+'</div>'}).join('')+'</div>'});
   /* 13 · quizzes */
   if(wd===0){
     var sk=recallItems('sunday');
