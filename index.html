@@ -220,6 +220,7 @@ details.more>.in p:first-child{margin-top:0}
 .pbl{position:absolute;border-radius:8px;background:rgba(62,55,46,.82);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);transition:opacity .4s}
 .q .qimg img.pall{filter:blur(16px);transition:filter .4s}.pnote{position:absolute;left:0;right:0;bottom:8px;line-height:1.3;font-size:13px;font-weight:600;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.6)}
 .q[data-ans] .pbl,.q[data-ans] .pnote{opacity:0;pointer-events:none}.q[data-ans] .qimg img.pall{filter:none}
+.sunl{font-size:14px;color:var(--soft);margin-top:3px}.sunl::before{content:'☀︎ ';color:var(--ochre)}.jwx .days span .sund{display:block;font-style:normal;font-size:12.5px;color:var(--soft);margin-top:1px}
 .pitch b{display:block;color:var(--plum);font-size:14px;margin-bottom:4px}
 .money{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:6px 0 2px}
 .money .v{font:700 40px/1 var(--display);letter-spacing:-.03em}
@@ -318,7 +319,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261017162557';
+var APP_BUILD='20261018005119';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -645,6 +646,18 @@ function jwrap(root){if(!root||!root.querySelectorAll)return;
       else if(n.tagName==='RUBY')grp.push(n);else flush()});
     flush()})}
 var _furi0=furi;furi=function(r){_furi0(r);try{jwrap(r)}catch(e){}};
+/* Sunrise/sunset worked out on the phone (NOAA formula), shown in the city's own time. */
+var SUNC={'san francisco':[37.775,-122.419,'America/Los_Angeles'],'tokyo':[35.681,139.767,'Asia/Tokyo'],'osaka':[34.693,135.502,'Asia/Tokyo'],'kyoto':[35.011,135.768,'Asia/Tokyo'],'yokohama':[35.444,139.638,'Asia/Tokyo'],'nara':[34.685,135.805,'Asia/Tokyo']};
+function sunCity(name,o){o=o||{};if(o.lat!=null&&o.lng!=null)return [o.lat,o.lng,o.tz||undefined];var k=String(name||'').toLowerCase();for(var c in SUNC)if(k.indexOf(c)>-1)return SUNC[c];return null}
+function sunUTC(y,mo,d,lat,lng,rise){var R=Math.PI/180,N=Math.floor(275*mo/9)-Math.floor((mo+9)/12)*(1+Math.floor((y-4*Math.floor(y/4)+2)/3))+d-30,lh=lng/15,t=N+((rise?6:18)-lh)/24,M=0.9856*t-3.289,L=(M+1.916*Math.sin(M*R)+0.020*Math.sin(2*M*R)+282.634+720)%360,
+  RA=(Math.atan(0.91764*Math.tan(L*R))/R+360)%360;RA=(RA+Math.floor(L/90)*90-Math.floor(RA/90)*90)/15;var sd=0.39782*Math.sin(L*R),cd=Math.cos(Math.asin(sd)),ch=(Math.cos(90.833*R)-sd*Math.sin(lat*R))/(cd*Math.cos(lat*R));if(ch>1||ch<-1)return null;
+  var H=(rise?360-Math.acos(ch)/R:Math.acos(ch)/R)/15,T=H+RA-0.06571*t-6.622,UT=((T-lh)%24+24)%24;return new Date(Date.UTC(y,mo-1,d,0,0,0)+UT*3600000)}
+function sunLine(name,dt,o,short){var c=sunCity(name,o);if(!c||!dt)return '';var y=dt.getFullYear(),mo=dt.getMonth()+1,d=dt.getDate();
+  /* use the city's own calendar date */
+  var r=sunUTC(y,mo,d,c[0],c[1],true),st=sunUTC(y,mo,d,c[0],c[1],false);if(!r||!st)return '';
+  if(st<r)st=new Date(st.getTime()+864e5);var f=function(x){try{return x.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZone:c[2]})}catch(e){return x.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}};
+  return short?'Sunrise '+f(r).replace(' AM','').replace(' PM','')+', sunset '+f(st).replace(' PM','').replace(' AM',''):'Sunrise '+f(r)+', sunset '+f(st)}
+function dayDate(lbl,base){var m=/(\d{1,2})\s*$/.exec(String(lbl||''));if(!m)return null;var d=+m[1],b=new Date(base+'T12:00:00');if(isNaN(b))return null;var x=new Date(b.getFullYear(),b.getMonth(),d,12);if(d<b.getDate()-15)x=new Date(b.getFullYear(),b.getMonth()+1,d,12);return x}
 function pts(a,dot){return a&&a.length?'<ul class="pts"'+(dot?' style="--dot:'+dot+'"':'')+'>'+a.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul>':''}
 var SPKSVG='<svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk-b" d="M4 9.5h3.2L11.5 6v12l-4.3-3.5H4z"/><path class="spk-w1" d="M14.6 9.2a4 4 0 0 1 0 5.6"/><path class="spk-w2" d="M17.3 6.6a7.6 7.6 0 0 1 0 10.8"/></svg>';
 function SPK(t){t=String(t||'').replace(/\{([^|}]+)\|[^}]*\}/g,'$1');return t?'<button class="spk" type="button" data-say="'+esc(t)+'" aria-label="Hear it said">'+SPKSVG+'</button>':''}
@@ -687,14 +700,14 @@ function buildCards(){
   var TODAYL=(function(){try{var d=new Date((b.date||'')+'T12:00:00');return isNaN(d)?'Today':d.toLocaleDateString('en-US',{weekday:'short'})+' '+d.getDate()}catch(e){return 'Today'}})();
   if(w.hi!=null){
     var wear=w.wear||'',alerts=w.alerts||[],wearMain=alerts.length?wear:firstS(wear),wearRest=alerts.length?'':restS(wear);
-    gm+='<div class="wx2"><span class="temp">'+esc(w.now||w.hi+'°')+'</span><div><div class="sky">'+esc(w.sky||'')+'</div><div class="hl">'+esc((w.place||'San Francisco')+' today ('+TODAYL+'), high '+w.hi+'°, low '+w.lo+'°'+(w.rain?', rain '+w.rain:''))+'</div></div></div>'+
+    gm+='<div class="wx2"><span class="temp">'+esc(w.now||w.hi+'°')+'</span><div><div class="sky">'+esc(w.sky||'')+'</div><div class="hl">'+esc((w.place||'San Francisco')+' today ('+TODAYL+'), high '+w.hi+'°, low '+w.lo+'°'+(w.rain?', rain '+w.rain:''))+'</div>'+(function(){var sl=sunLine(w.place||'San Francisco',new Date((b.date||'')+'T12:00:00'),w.sun);return sl?'<div class="hl sunl">'+esc(sl)+'</div>':''})()+'</div></div>'+
       (wearMain?'<div class="wear"><b>Wear:</b> '+esc(wearMain)+'</div>':'')+alerts.map(function(a){return '<div class="alert"><b>'+esc(a.title||'')+'</b> '+esc(a.detail||'')+'</div>'}).join('')+(wearRest?more('Weather alerts and details','<p>'+esc(wearRest)+'</p>'):'');
   }
   if(jp&&jp.active){
     var dm=String(jp.day||'').match(/^(.*?)(\d+)\s*(day|days)\b(.*)$/i);
     gm+='<div class="jpbox"><div class="jphead">'+(jp.headline?'<span class="t">'+esc(jp.headline)+'</span>':'<span class="t">'+esc(jp.day||'Japan trip')+'</span>')+'<span class="clock"><span id="jst"></span> in Japan</span></div>';
     var jw=w.japan||[];
-    if(jw.length)gm+='<div class="jwx">'+jw.map(function(c){return '<div class="c"><div class="top"><b>'+esc(c.city)+'</b>'+(c.when?'<span>'+esc(c.when)+'</span>':'')+'</div><div class="now"><span class="dl">'+esc(TODAYL)+'</span><span class="t">'+esc(c.hi)+'°</span><span>/ '+esc(c.lo)+'°</span></div><div class="sky">'+esc(c.sky||'')+(c.rain?', '+esc(c.rain)+' chance of rain':'')+(c.humidity?'<br>Humidity '+esc(c.humidity):'')+'</div>'+(c.days&&c.days.length?'<div class="days">'+c.days.map(function(d){return '<span><b>'+esc(d.day)+'</b> '+esc(d.hi)+'°/'+esc(d.lo)+'° '+esc(d.sky||'')+(d.rain?', '+esc(d.rain)+' chance of rain':'')+(d.humidity?', humidity '+esc(d.humidity):'')+'</span>'}).join('')+'</div>':'')+(c.note?'<div class="nt">'+esc(c.note)+'</div>':'')+'</div>'}).join('')+'</div>';
+    if(jw.length)gm+='<div class="jwx">'+jw.map(function(c){return '<div class="c"><div class="top"><b>'+esc(c.city)+'</b>'+(c.when?'<span>'+esc(c.when)+'</span>':'')+'</div><div class="now"><span class="dl">'+esc(TODAYL)+'</span><span class="t">'+esc(c.hi)+'°</span><span>/ '+esc(c.lo)+'°</span></div><div class="sky">'+esc(c.sky||'')+(c.rain?', '+esc(c.rain)+' chance of rain':'')+(c.humidity?'<br>Humidity '+esc(c.humidity):'')+'</div>'+(function(){if((c.days||[]).some(function(d){return d.day===TODAYL}))return '';var sl=sunLine(c.city,new Date((b.date||'')+'T12:00:00'),c);return sl?'<div class="sunl">'+esc(sl)+' today</div>':''})()+(c.days&&c.days.length?'<div class="days">'+c.days.map(function(d){return '<span><b>'+esc(d.day)+'</b> '+esc(d.hi)+'°/'+esc(d.lo)+'° '+esc(d.sky||'')+(d.rain?', '+esc(d.rain)+' chance of rain':'')+(d.humidity?', humidity '+esc(d.humidity):'')+(function(){var sl=sunLine(c.city,dayDate(d.day,b.date),c,true);return sl?'<em class="sund">'+esc(sl)+'</em>':''})()+'</span>'}).join('')+'</div>':'')+(c.note?'<div class="nt">'+esc(c.note)+'</div>':'')+'</div>'}).join('')+'</div>';
     if(jp.facts&&jp.facts.length)gm+='<div class="facts">'+jp.facts.map(function(x){return '<div class="f"><span class="i">'+esc(x.icon||'•')+'</span><div><b>'+esc(x.label)+'</b><span>'+esc(x.value)+'</span></div></div>'}).join('')+'</div>';
     else if(jp.today)gm+='<p style="margin:10px 0 0">'+esc(firstS(jp.today))+'</p>'+more('Trip details','<p>'+esc(restS(jp.today))+'</p>');
     gm+='</div>';

@@ -78,3 +78,6 @@ Any time a wine card names a region, appellation, village or vineyard, add "map"
 
 ## Chalk prices in quiz photos (bottle.photo_blur, quiz[i].blur)
 Every bottle-track quiz question gets the label photo, and the photo shows the chalk price. Always fill bottle.photo_blur = [[x, y, w, h], ...]: boxes as fractions of the photo (0–1, from the top-left) covering EVERY chalk price written on any bottle in the photo — look at the photo to place them, pad each box generously. [] only when no price is visible. A quiz question can override with its own "blur". The app blurs those boxes on any question that asks a price and unblurs them once she answers; with no boxes known it blurs the whole photo. Never write a chalk-price question whose photo shows the answer unblurred.
+
+## Sunrise and sunset
+The app works these out itself for San Francisco, Tokyo, Osaka, Kyoto, Yokohama and Nara. For any other city, add "lat", "lng" and "tz" (IANA) to that weather.japan entry, or weather.sun = {lat, lng, tz} for the main weather place.
