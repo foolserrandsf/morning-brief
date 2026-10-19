@@ -319,7 +319,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261019195039';
+var APP_BUILD='20261019143028';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -658,6 +658,22 @@ function sunLine(name,dt,o,short){var c=sunCity(name,o);if(!c||!dt)return '';var
   if(st<r)st=new Date(st.getTime()+864e5);var f=function(x){try{return x.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZone:c[2]})}catch(e){return x.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}};
   return short?'Sunrise '+f(r).replace(' AM','').replace(' PM','')+', sunset '+f(st).replace(' PM','').replace(' AM',''):'Sunrise '+f(r)+', sunset '+f(st)}
 function dayDate(lbl,base){var m=/(\d{1,2})\s*$/.exec(String(lbl||''));if(!m)return null;var d=+m[1],b=new Date(base+'T12:00:00');if(isNaN(b))return null;var x=new Date(b.getFullYear(),b.getMonth(),d,12);if(d<b.getDate()-15)x=new Date(b.getFullYear(),b.getMonth()+1,d,12);return x}
+/* iOS sometimes leaves the bottom bar floating mid-screen (after the keyboard closes, or when the toolbar resizes).
+   Pin it to the real visible bottom using visualViewport, and nudge iOS to re-measure after typing. */
+(function(){var vv=window.visualViewport;
+  function pin(){var b=document.querySelector('.foot.navbar');if(!b)return;
+    var typing=document.activeElement&&/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+    b.style.visibility=typing?'hidden':'';
+    if(!vv){b.style.top='';b.style.bottom='';return}
+    var top=vv.offsetTop+vv.height-b.offsetHeight;b.style.bottom='auto';b.style.top=Math.max(0,Math.round(top))+'px'}
+  window._pinBar=pin;
+  if(vv){vv.addEventListener('resize',pin);vv.addEventListener('scroll',pin)}
+  window.addEventListener('scroll',pin,{passive:true});window.addEventListener('resize',pin);window.addEventListener('orientationchange',function(){setTimeout(pin,300)});
+  document.addEventListener('focusout',function(){setTimeout(function(){window.scrollTo(window.scrollX,window.scrollY);pin()},80);setTimeout(pin,400)});
+  document.addEventListener('focusin',function(){setTimeout(pin,50)});
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)setTimeout(pin,100)});
+  new MutationObserver(function(){if(document.querySelector('.foot.navbar'))requestAnimationFrame(pin)}).observe(document.documentElement,{childList:true,subtree:true});
+})();
 function pts(a,dot){return a&&a.length?'<ul class="pts"'+(dot?' style="--dot:'+dot+'"':'')+'>'+a.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul>':''}
 var SPKSVG='<svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk-b" d="M4 9.5h3.2L11.5 6v12l-4.3-3.5H4z"/><path class="spk-w1" d="M14.6 9.2a4 4 0 0 1 0 5.6"/><path class="spk-w2" d="M17.3 6.6a7.6 7.6 0 0 1 0 10.8"/></svg>';
 function SPK(t){t=String(t||'').replace(/\{([^|}]+)\|[^}]*\}/g,'$1');return t?'<button class="spk" type="button" data-say="'+esc(t)+'" aria-label="Hear it said">'+SPKSVG+'</button>':''}
