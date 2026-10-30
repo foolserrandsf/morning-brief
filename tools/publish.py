@@ -120,15 +120,41 @@ def load_lessons():
     return dec(LESSONS) if os.path.exists(LESSONS) else {}
 
 
+ANSWERED_CACHE = '/tmp/mb_answered.json'  # written by `progress`, read by `brief` in the same run
+
+
+def catch_up_plan(done):
+    today = datetime.date.today().isoformat()
+    bl = backlog(None, '9999', done)
+    if not bl:
+        return 'All caught up: write a new lesson for every track.'
+    return {'rule': ("Denise: bring back one missed lesson per track; don't introduce new ones until she's caught up. "
+                     "For these tracks DON'T write a new lesson or advance the counter; put a minimal placeholder "
+                     "section there and `publish.py brief` swaps in her oldest missed lesson automatically. "
+                     "Write new lessons only for tracks not listed."),
+            'tracks': {t: f'{len(v)} missed, oldest {v[0][0]}' for t, v in sorted(bl.items())}}
+
+
+def cached_answered():
+    try:
+        c = json.load(open(ANSWERED_CACHE))
+        if datetime.datetime.now().timestamp() - c['t'] < 8 * 3600:
+            return set(c['ids'])
+    except Exception:
+        pass
+    return None
+
+
 def answered_ids(sync_path):
     j = json.loads(open(sync_path).read().strip())
     prog = json.loads(AESGCM(key()).decrypt(base64.b64decode(j['n']), base64.b64decode(j['c']), None))
     return set(prog.get('P', {}))
 
 
-def backlog(sync_path, today):
+def backlog(sync_path, today, done=None):
     """track -> oldest-first list of (date, section) for past lessons with no quiz answer at all."""
-    st, done, lessons = load_state(), answered_ids(sync_path), load_lessons()
+    st, lessons = load_state(), load_lessons()
+    done = answered_ids(sync_path) if done is None else done
     dates = {}
     for iid, it in st['pool'].items():
         if it.get('track') in TRACKS and it.get('date', '9') < today:
@@ -155,9 +181,7 @@ def cmd_backlog(sync_path, today):
                       for t, v in sorted(b.items())}, ensure_ascii=False, indent=1))
 
 
-def cmd_catchup(brief_path, sync_path, only=None):
-    br = json.load(open(brief_path))
-    bl = backlog(sync_path, br['date'])
+def apply_catchup(br, bl, only=None):
     done = []
     for track, items in bl.items():
         if only and track not in only:
@@ -166,6 +190,12 @@ def cmd_catchup(brief_path, sync_path, only=None):
         sec = dict(sec, catch_up=d, catch_up_left=len(items) - 1)
         br[SEC.get(track, track)] = sec
         done.append(f'{track} <- {d} ({len(items) - 1} more after this)')
+    return done
+
+
+def cmd_catchup(brief_path, sync_path, only=None):
+    br = json.load(open(brief_path))
+    done = apply_catchup(br, backlog(sync_path, br['date']), only)
     json.dump(br, open(brief_path, 'w'), ensure_ascii=False)
     print('Catch-up lessons:\n  ' + ('\n  '.join(done) if done else 'none, all caught up'))
 
@@ -241,6 +271,12 @@ def shuffle_options(b):
 
 def cmd_brief(path):
     b = json.load(open(path))
+    ans = cached_answered()
+    if ans is not None and not os.environ.get('MB_NO_CATCHUP'):
+        cu = apply_catchup(b, backlog(None, b['date'], ans),
+                           [t for t in TRACKS if not (b.get(SEC.get(t, t)) or {}).get('catch_up')])
+        if cu:
+            print('Catch-up lessons (oldest missed, one per track):\n  ' + '\n  '.join(cu))
     shuffle_options(b)
     errs = validate(b)
     st = load_state()
@@ -340,7 +376,9 @@ def cmd_progress(path):
         'one_thing': {d: last_focus(v) for d, v in sorted((k, v) for k, v in prog.get('DONE', {}).items() if k[:1].isdigit())[-3:]},
         'phone_tz': phone_tz(prog),
         'shopping': shopping(prog),
+        'catch_up': catch_up_plan(set(P)),
     }, ensure_ascii=False, indent=1))
+    json.dump({'t': datetime.datetime.now().timestamp(), 'ids': sorted(P)}, open(ANSWERED_CACHE, 'w'))
 
 
 def shopping(prog):
