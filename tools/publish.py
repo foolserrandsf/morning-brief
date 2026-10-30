@@ -14,6 +14,10 @@ Commands
   progress FILE         decrypt the synced quiz progress (the joined column A of the "sync" tab
                         in the "Morning Brief Sync" sheet, saved to FILE) and list what she
                         struggles with, so the brief can revisit it
+  prompt                print the daily Morning Brief task's full instructions (kept encrypted in data/prompt.enc)
+  prompt-set FILE       replace those instructions
+  pings new ID...       print which Gmail message ids haven't been pinged to her phone yet
+  pings add ID...       remember ids as pinged (kept 21 days), so no email is pinged twice
   backlog SYNC DATE     per lesson track, the past lessons she never touched (no quiz answer), oldest first
   catchup BRIEF SYNC    in a brief JSON, swap each track's lesson for her oldest untouched one
                         (marked catch_up), so no new lesson is introduced until she has caught up
@@ -198,6 +202,33 @@ def cmd_catchup(brief_path, sync_path, only=None):
     done = apply_catchup(br, backlog(sync_path, br['date']), only)
     json.dump(br, open(brief_path, 'w'), ensure_ascii=False)
     print('Catch-up lessons:\n  ' + ('\n  '.join(done) if done else 'none, all caught up'))
+
+
+PROMPT = os.path.join(DATA, 'prompt.enc')
+
+
+def cmd_prompt(path=None):
+    if path:
+        enc({'text': open(path).read(), 'updated': datetime.datetime.now().isoformat(timespec='minutes')}, PROMPT)
+        print('Prompt saved')
+    else:
+        print(dec(PROMPT)['text'])
+
+
+PINGS = os.path.join(DATA, 'pings.enc')
+
+
+def cmd_pings(action, ids):
+    p = dec(PINGS) if os.path.exists(PINGS) else {}
+    if action == 'new':
+        print(json.dumps([i for i in ids if i not in p]))
+        return
+    now = datetime.date.today().isoformat()
+    for i in ids:
+        p.setdefault(i, now)
+    cutoff = (datetime.date.today() - datetime.timedelta(days=21)).isoformat()
+    enc({k: v for k, v in p.items() if v >= cutoff}, PINGS)
+    print(f'{len(ids)} marked pinged')
 
 
 def save_state(st):
@@ -525,4 +556,6 @@ if __name__ == '__main__':
     {'state': lambda: cmd_state(), 'check': lambda: cmd_check(),
      'brief': lambda: cmd_brief(a[1]), 'recs': lambda: cmd_recs(a[1]),
      'progress': lambda: cmd_progress(a[1]), 'asks': lambda: cmd_asks(a[1]), 'reply': lambda: cmd_reply(a[1]), 'birthdays': lambda: cmd_birthdays(a[1]), 'phrasebook': lambda: cmd_phrasebook_backfill(),
+     'prompt': lambda: cmd_prompt(), 'prompt-set': lambda: cmd_prompt(a[1]),
+     'pings': lambda: cmd_pings(a[1], a[2:]),
      'backlog': lambda: cmd_backlog(a[1], a[2]), 'catchup': lambda: cmd_catchup(a[1], a[2], a[3].split(',') if len(a) > 3 else None)}[a[0]]()
