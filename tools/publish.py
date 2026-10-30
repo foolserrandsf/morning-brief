@@ -14,6 +14,9 @@ Commands
   progress FILE         decrypt the synced quiz progress (the joined column A of the "sync" tab
                         in the "Morning Brief Sync" sheet, saved to FILE) and list what she
                         struggles with, so the brief can revisit it
+  backlog SYNC DATE     per lesson track, the past lessons she never touched (no quiz answer), oldest first
+  catchup BRIEF SYNC    in a brief JSON, swap each track's lesson for her oldest untouched one
+                        (marked catch_up), so no new lesson is introduced until she has caught up
 """
 import base64, json, os, sys, hashlib, datetime, re
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
@@ -108,6 +111,65 @@ def load_state():
     return st
 
 
+LESSONS = os.path.join(DATA, 'lessons.enc')
+SEC = {'football': 'football_101'}
+
+
+def load_lessons():
+    """Every new lesson as first published: track -> date -> section (so catch-ups can re-serve it)."""
+    return dec(LESSONS) if os.path.exists(LESSONS) else {}
+
+
+def answered_ids(sync_path):
+    j = json.loads(open(sync_path).read().strip())
+    prog = json.loads(AESGCM(key()).decrypt(base64.b64decode(j['n']), base64.b64decode(j['c']), None))
+    return set(prog.get('P', {}))
+
+
+def backlog(sync_path, today):
+    """track -> oldest-first list of (date, section) for past lessons with no quiz answer at all."""
+    st, done, lessons = load_state(), answered_ids(sync_path), load_lessons()
+    dates = {}
+    for iid, it in st['pool'].items():
+        if it.get('track') in TRACKS and it.get('date', '9') < today:
+            t = dates.setdefault(it['track'], {}).setdefault(it['date'], [0, 0])
+            t[0] += 1
+            t[1] += iid in done
+    out = {}
+    for track, ds in dates.items():
+        for d in sorted(x for x, (n, a) in ds.items() if a == 0):
+            sec = lessons.get(track, {}).get(d)
+            if sec is None:
+                f = os.path.join(DATA, 'briefs', d + '.enc')
+                sec = (dec(f).get(SEC.get(track, track)) if os.path.exists(f) else None) or None
+                if sec and sec.get('catch_up'):
+                    sec = None
+            if sec and sec.get('quiz'):
+                out.setdefault(track, []).append((d, sec))
+    return out
+
+
+def cmd_backlog(sync_path, today):
+    b = backlog(sync_path, today)
+    print(json.dumps({t: {'left': len(v), 'oldest': v[0][0], 'title': v[0][1].get('title', ''), 'dates': [d for d, _ in v]}
+                      for t, v in sorted(b.items())}, ensure_ascii=False, indent=1))
+
+
+def cmd_catchup(brief_path, sync_path, only=None):
+    br = json.load(open(brief_path))
+    bl = backlog(sync_path, br['date'])
+    done = []
+    for track, items in bl.items():
+        if only and track not in only:
+            continue
+        d, sec = items[0]
+        sec = dict(sec, catch_up=d, catch_up_left=len(items) - 1)
+        br[SEC.get(track, track)] = sec
+        done.append(f'{track} <- {d} ({len(items) - 1} more after this)')
+    json.dump(br, open(brief_path, 'w'), ensure_ascii=False)
+    print('Catch-up lessons:\n  ' + ('\n  '.join(done) if done else 'none, all caught up'))
+
+
 def save_state(st):
     enc(st, os.path.join(DATA, 'state.enc'))
 
@@ -189,14 +251,16 @@ def cmd_brief(path):
     if errs:
         sys.exit('Brief not published:\n  ' + '\n  '.join(errs))
     added = 0
+    lessons = load_lessons()
     for track in ('kanji', 'bottle', 'wset', 'stocks', 'crypto', 'filipino', 'football'):
         sec = b.get('football_101') if track == 'football' else b[track]
         if not sec:
             continue
         ref = sec.get('ref') or sec.get('title') or track
+        cu = sec.get('catch_up')
         for i, q in enumerate(sec['quiz']):
             iid = hashlib.sha1(f'{track}|{ref}|{plain(q["q"])}'.encode()).hexdigest()[:12]
-            item = dict(q, id=iid, track=track, date=d, ref=ref, title=sec.get('title', ''))
+            item = dict(q, id=iid, track=track, date=(cu or d), ref=ref, title=sec.get('title', ''))
             if track == 'bottle' and sec.get('photo'):
                 item.setdefault('img', sec['photo'])
                 if sec.get('photo_blur') is not None:
@@ -204,6 +268,9 @@ def cmd_brief(path):
             if iid not in st['pool']:
                 added += 1
             st['pool'][iid] = item
+        if cu:
+            continue  # a re-served lesson: not new, keeps its original date
+        lessons.setdefault(track, {})[d] = sec
         log = st['taught'].setdefault(track, [])
         if not any(x['date'] == d for x in log):
             log.append({'date': d, 'ref': ref, 'title': sec.get('title', '')})
@@ -221,6 +288,7 @@ def cmd_brief(path):
     os.makedirs(os.path.join(DATA, 'briefs'), exist_ok=True)
     enc(b, os.path.join(DATA, 'briefs', d + '.enc'))
     save_state(st)
+    enc(lessons, LESSONS)
     save_phrasebook(d, b.get('japan'))
     bump_version(d)
     print(f'Published {d}: {added} new quiz items, pool now {len(st["pool"])}')
@@ -418,4 +486,5 @@ if __name__ == '__main__':
         sys.exit(__doc__)
     {'state': lambda: cmd_state(), 'check': lambda: cmd_check(),
      'brief': lambda: cmd_brief(a[1]), 'recs': lambda: cmd_recs(a[1]),
-     'progress': lambda: cmd_progress(a[1]), 'asks': lambda: cmd_asks(a[1]), 'reply': lambda: cmd_reply(a[1]), 'birthdays': lambda: cmd_birthdays(a[1]), 'phrasebook': lambda: cmd_phrasebook_backfill()}[a[0]]()
+     'progress': lambda: cmd_progress(a[1]), 'asks': lambda: cmd_asks(a[1]), 'reply': lambda: cmd_reply(a[1]), 'birthdays': lambda: cmd_birthdays(a[1]), 'phrasebook': lambda: cmd_phrasebook_backfill(),
+     'backlog': lambda: cmd_backlog(a[1], a[2]), 'catchup': lambda: cmd_catchup(a[1], a[2], a[3].split(',') if len(a) > 3 else None)}[a[0]]()

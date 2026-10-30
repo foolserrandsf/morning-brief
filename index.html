@@ -311,6 +311,7 @@ rt{font:500 .52em/1.1 var(--sans);color:var(--soft);letter-spacing:.02em}
 details.past{margin-top:10px}
 details.past summary{font-weight:600;cursor:pointer}
 @media (prefers-reduced-motion:reduce){.card{animation:none}}
+.cutag{display:flex;flex-direction:column;gap:2px;margin:0 0 12px;padding:9px 12px;border-radius:10px;background:#FFF4D6;color:#6B4B00;font-size:14.5px;line-height:1.35}.cutag b{font-size:15px}
 </style>
 </head>
 <body>
@@ -319,7 +320,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261029201824';
+var APP_BUILD='20261029180203';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -554,7 +555,7 @@ function withIds(sec,track){
   // lesson quiz items carry the same ids the publisher stored, so answers feed the recall pool
   var pool=(S.state&&S.state.pool)||{};
   return (sec.quiz||[]).map(function(q){
-    for(var k in pool){var p=pool[k];if(p.track===track&&p.q===q.q&&p.date===S.brief.date)return Object.assign({},q,{id:p.id})}
+    var dd=sec.catch_up||S.brief.date;for(var k in pool){var p=pool[k];if(p.track===track&&p.q===q.q&&p.date===dd)return Object.assign({},q,{id:p.id})}
     return q;
   });
 }
@@ -580,8 +581,13 @@ function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(M
 var TRACK_NAME={kanji:'Kanji',bottle:'Bottles',wset:'WSET',stocks:'Stocks & bonds',crypto:'Crypto',filipino:'Filipino',football:'Football'};
 var ICON={gm:'☀️',fe:'🍻',cal:'📅',inbox:'📬',fb:'🏈',news:'📰',kanji:'漢',bottle:'🍷',wset:'🎓',stocks:'📈',crypto:'🪙',fil:'🇵🇭',recs:'🥂',sun:'🏆',recall:'🔁',second:'🎯'};
 function tint(col){return 'color-mix(in srgb, '+col+' 14%, white)'}
+/* catch-up: a lesson she skipped, re-served before any new one (sec.catch_up = its original date) */
+var CUSEC={kanji:'kanji',bottle:'bottle',wset:'wset',stocks:'stocks',crypto:'crypto',fil:'filipino'};
+function cuTag(sec){if(!sec||!sec.catch_up)return '';var d=new Date(sec.catch_up+'T12:00:00'),l=sec.catch_up_left;
+  return '<div class="cutag"><b>Catching up</b><span>From '+d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})+'.</span><span>'+(l>0?l+' more to go, then new lessons start again.':'Last one. New lessons start tomorrow.')+'</span></div>'}
 function card(c){
-  return '<div class="card"><div class="band" style="background:'+c.color+'"></div><div class="hd"><div class="ic'+(c.id==='kanji'?' k':'')+'" style="background:'+tint(c.color)+';color:'+c.color+'">'+(ICON[c.id]||'•')+'</div><div><h2>'+esc(c.title)+'</h2><div class="sub">'+esc(c.sub||'')+(c.min?(c.sub?', ':'')+'about '+c.min+' min':'')+'</div></div></div>'+c.body+'</div>';
+  var cu=CUSEC[c.id]&&S.brief?cuTag(S.brief[CUSEC[c.id]]):'';
+  return '<div class="card"><div class="band" style="background:'+c.color+'"></div><div class="hd"><div class="ic'+(c.id==='kanji'?' k':'')+'" style="background:'+tint(c.color)+';color:'+c.color+'">'+(ICON[c.id]||'•')+'</div><div><h2>'+esc(c.title)+'</h2><div class="sub">'+esc(c.sub||'')+(c.min?(c.sub?', ':'')+'about '+c.min+' min':'')+'</div></div></div>'+cu+c.body+'</div>';
 }
 function sents(t){return String(t||'').match(/[^.!?]+(?:[.!?]+["'”’)\]]*|$)\s*/g)||[]}
 function firstS(t){var x=sents(t);return x.length?x[0].trim():''}
@@ -879,7 +885,7 @@ function buildCards(){
   if(fbg.length||fbz.length||f1)cards.push({id:'fb',title:fbg.length?'Game day':'Football',sub:(fbg.length?fbg.length+' game'+(fbg.length>1?'s':'')+' to know':'What people are talking about')+(f1&&f1.n?' · 101 lesson '+esc(f1.n):''),color:'var(--leaf)',tint:'#E4F7E8',min:f1?4:1,must:1,
     body:(fbz.length?'<h3 style="font-size:16.5px;margin:0 0 8px">What people are talking about</h3>'+pts(fbz.map(function(z){return z.title+(z.line?': '+z.line:'')}),'var(--leaf)'):'')+
       more('Games to know'+(fbg.length?' ('+fbg.length+')':''),fbg.length?'<div class="list">'+fbg.map(function(g){return '<div class="fb"><span class="tag">'+esc(g.league)+'</span><div class="mu">'+esc(g.matchup)+'</div><div class="row"><span class="chip">'+esc(localKick(g))+'</span>'+(g.tv?'<span class="chip">'+esc(g.tv)+'</span>':'')+(g.spread?'<span class="chip">'+esc(g.spread)+'</span>':'')+'</div>'+(g.note?'<div style="margin-top:6px">'+esc(g.note)+'</div>':'')+(g.pick?'<div class="pick">Brief pick: '+esc(g.pick)+'</div>':'')+(g.your_bet?'<div class="bet">Your bet: '+esc(g.your_bet)+'</div>':'')+'</div>'}).join('')+'</div>':'')+
-      (f1?'<div class="sect"><h3>Football 101'+(f1.n?' · lesson '+esc(f1.n):'')+': '+esc(f1.title||'')+'</h3>'+(f1.hook?'<div class="hook">'+esc(f1.hook)+'</div>':'')+(f1.diagrams||[]).map(playSVG).join('')+lesson(f1,'var(--leaf)','Break it down')+more('Watch for it (film room)',(f1.film?'<p>'+esc(f1.film)+'</p>':'')+(f1.history?'<p><b>From the history books:</b> '+esc(f1.history)+'</p>':''))+(f1.key_terms&&f1.key_terms.length?more('Key terms','<div class="terms">'+f1.key_terms.map(function(x){return '<div><b>'+esc(x.term)+'</b> — '+esc(x.def)+'</div>'}).join('')+'</div>'):'')+quizHTML(withIds(f1,'football'),'Football check')+'</div>':'')+
+      (f1?'<div class="sect"><h3>Football 101'+(f1.n?' · lesson '+esc(f1.n):'')+': '+esc(f1.title||'')+'</h3>'+cuTag(f1)+(f1.hook?'<div class="hook">'+esc(f1.hook)+'</div>':'')+(f1.diagrams||[]).map(playSVG).join('')+lesson(f1,'var(--leaf)','Break it down')+more('Watch for it (film room)',(f1.film?'<p>'+esc(f1.film)+'</p>':'')+(f1.history?'<p><b>From the history books:</b> '+esc(f1.history)+'</p>':''))+(f1.key_terms&&f1.key_terms.length?more('Key terms','<div class="terms">'+f1.key_terms.map(function(x){return '<div><b>'+esc(x.term)+'</b> — '+esc(x.def)+'</div>'}).join('')+'</div>'):'')+quizHTML(withIds(f1,'football'),'Football check')+'</div>':'')+
       (fb.link?'<p>'+linkify(fb.link,'Full Football Brief →')+'</p>':'')});
   /* 5 · news */
   var nw=(b.news||[]).filter(function(n){return !/upserve/i.test(n.source||'')||!b.upserve});

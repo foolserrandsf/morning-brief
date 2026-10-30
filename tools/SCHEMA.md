@@ -81,3 +81,9 @@ Every bottle-track quiz question gets the label photo, and the photo shows the c
 
 ## Sunrise and sunset
 The app works these out itself for San Francisco, Tokyo, Osaka, Kyoto, Yokohama and Nara. For any other city, add "lat", "lng" and "tz" (IANA) to that weather.japan entry, or weather.sun = {lat, lng, tz} for the main weather place.
+
+CATCH-UP LESSONS (Denise, 2026-10-29: "Each brief should bring back one missed lesson per track. Don't introduce new ones until I've caught up"):
+- A lesson counts as missed when none of its quiz questions has an answer in her synced progress.
+- `python3 tools/publish.py backlog <sync file> <today>` lists, per track (kanji, bottle, wset, stocks, crypto, filipino, football), the missed lesson dates, oldest first.
+- `python3 tools/publish.py catchup <brief.json> <sync file>` swaps each track that has a backlog to its OLDEST missed lesson, copied verbatim from data/lessons.enc (every new lesson as first published) and marked `"catch_up": "<original date>"`, `"catch_up_left": <how many more after it>`. The app shows a "Catching up" note on that card and matches quiz answers to the original ids.
+- publish.py keeps a catch-up's quiz items on their original date, doesn't log it as newly taught and doesn't move the counters. Only tracks with no backlog get a new lesson.
