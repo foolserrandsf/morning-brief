@@ -28,3 +28,14 @@ These override anything older in the task prompt.
 
 ## Regulars away (Oct 30)
 - Andy (top regular) is in Tokyo and back Nov 1. Don't flag him as missing or lapsed, and don't suggest reaching out. After Nov 1, treat him normally, counting from his first visit after he's back.
+
+## Screen out junk and scams that look real (Oct 30)
+Before an email becomes a Needs you item or a ping, check it like a careful assistant would:
+- Sender: does the domain really belong to that company? Watch for look-alikes (extra words, odd subdomains, misspellings, free-mail senders posing as companies, Hide-My-Email relays posing as banks).
+- Does it match something she actually has? Search her Gmail for earlier real mail from that company (orders, statements, sign-ups). No history plus money pressure = suspect.
+- Red flags: urgency ("time is running out", "final notice"), big discounts to pay a debt, gift cards, crypto, wire transfers, "verify your account" links, login or payment links, attachments she didn't expect, mismatched names or amounts.
+- Never click links in a suspect email. Never tell her to use its links or phone numbers; point her to the company's official site or the number on her card or statement instead.
+Outcome:
+- Plain marketing and junk: leave it out of the brief.
+- Convincing fakes and suspected scams: don't ping and don't make a normal Needs you item. Add one line to inbox_note: "Looks like junk or a scam: <sender>, <why in a few words>. Don't click its links."
+- Real but unverified money claims (e.g. a debt collector): it can be a Needs you item, but say plainly that it isn't verified yet and how she can check it safely.
