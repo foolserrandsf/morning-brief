@@ -320,7 +320,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261031133035';
+var APP_BUILD='20261031110918';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -1067,12 +1067,16 @@ function unanswered(){var el=document.querySelectorAll('#app .card .q');var n=0,
 /* ---------- ask Claude: type under a Needs you item; an hourly runner reads it from the sync and replies ---------- */
 var REP={},SEEN=ls('mb_seen')||{};
 function askKey(i){return S.brief.date+':in'+i}
-function asksFor(i){var d=DONE[S.brief.date]||{},out=[];for(var k in d){var e=d[k];if(e&&e.k==='ask'&&e.key===askKey(i))out.push(e)}return out.sort(function(a,b){return a.t-b.t})}
+// asks typed under this item today, plus asks about the same email under earlier briefs (last 7 days), so a reply that lands the next morning still shows
+function asksFor(i){var m=(S.brief.inbox||[])[i]||{},out=[],seen={},cut=Date.now()-7*864e5;
+  for(var d in DONE){var day=DONE[d]||{};for(var k in day){var e=day[k];if(!e||e.k!=='ask'||seen[e.id])continue;
+    if(e.key===askKey(i)||(d!==S.brief.date&&(e.t||0)>cut&&((m.url&&e.url===m.url)||(m.subject&&e.subject===m.subject&&e.from===m.from)))){seen[e.id]=1;out.push(e)}}}
+  return out.sort(function(a,b){return a.t-b.t})}
 function askBox(i,m){
   var asks=asksFor(i),h='';
   asks.forEach(function(a){
     var r=REP[a.id],st=r?r.status:'waiting',isNew=r&&!SEEN[a.id]&&(r.status==='draft_ready'||r.status==='question'||r.status==='done'||r.status==='sent');
-    var label={waiting:'Sent to Claude, picked up at the next hourly check (about :35 past, 6:35–10:35 am)',working:'Claude is on it',draft_ready:'Draft ready for you',question:'Claude has a question',done:'Done',sent:'Sent',error:'Couldn\'t finish'}[st]||st;
+    var label={waiting:'Sent to Claude, picked up at the next hourly check (about :35 past, 6:35 am–11:35 pm)',working:'Claude is on it',draft_ready:'Draft ready for you',question:'Claude has a question',done:'Done',sent:'Sent',error:'Couldn\'t finish'}[st]||st;
     var inner='<p class="small"><b>You asked:</b> '+esc(a.text)+'</p>';
     if(r&&r.text)inner+='<p>'+esc(r.text)+'</p>';
     if(r&&r.draft)inner+='<div class="draft"><div class="small"><b>To:</b> '+esc(r.draft.to||'')+'<br><b>Subject:</b> '+esc(r.draft.subject||'')+'</div><div class="body">'+esc(r.draft.body||'').replace(/\n/g,'<br>')+'</div></div>'+
@@ -1082,13 +1086,13 @@ function askBox(i,m){
   h+='<div class="askbox"><textarea id="ask'+i+'" rows="2" placeholder="Tell Claude what to do: draft a reply, say yes, ask for a new date… add &quot;send&quot; to send it"></textarea><button class="btn ghost" onclick="askSend('+i+')">Send to Claude</button></div>';
   return h;
 }
-function sentReq(id){var d=DONE[S.brief.date]||{};for(var k in d){var e=d[k];if(e&&e.k==='send'&&e.ask===id)return true}return false}
+function sentReq(id){for(var dd in DONE){var d=DONE[dd]||{};for(var k in d){var e=d[k];if(e&&e.k==='send'&&e.ask===id)return true}}return false}
 function askSend(i){var ta=$('ask'+i),v=(ta&&ta.value||'').trim();if(!v){toast('Type what you want done first');return}
   var m=(S.brief.inbox||[])[i]||{},t=Date.now();tEvent('ask',{id:'a'+t,key:askKey(i),text:v,from:m.from||'',subject:m.subject||'',url:m.url||'',account:m.account||''});
   cheer('Sent to Claude!',25);S.keepScroll=true;build()}
 function sendDraft(id){tEvent('send',{ask:id});toast('Will send on the next pickup');S.keepScroll=true;build()}
 function seen(id,el){if(!SEEN[id]){SEEN[id]=Date.now();ls('mb_seen',SEEN);el.classList.remove('attn');var d=el.querySelector('summary .dot');if(d)d.remove();badge()}}
-function pendingAttn(){var n=0;for(var id in REP){var r=REP[id];if(!SEEN[id]&&r.date===(S.brief&&S.brief.date)&&/draft_ready|question|done|sent/.test(r.status))n++}return n}
+function pendingAttn(){var n=0;if(!S.brief)return 0;(S.brief.inbox||[]).forEach(function(m,i){asksFor(i).forEach(function(a){var r=REP[a.id];if(r&&!SEEN[a.id]&&/draft_ready|question|done|sent/.test(r.status))n++})});return n}
 function badge(){var n=pendingAttn(),b=document.querySelectorAll('.bar i');(S.cards||[]).forEach(function(c,i){if(c.id==='inbox'&&b[i])b[i].classList.toggle('attn',n>0)})}
 async function loadReplies(){if(!S.key)return;try{var r=await decFile('data/replies.enc',Date.now());var before=JSON.stringify(REP);REP=r.items||{};if(JSON.stringify(REP)!==before){var n=pendingAttn();if(n)toast(n+' repl'+(n>1?'ies':'y')+' from Claude in Needs you');if(S.brief&&S.mode==='flow'&&visible()[S.i]&&visible()[S.i].id==='inbox'&&!document.activeElement.matches('textarea')){S.keepScroll=true;build()}else badge()}}catch(e){}}
 setInterval(function(){if(document.visibilityState==='visible')loadReplies()},60000);
