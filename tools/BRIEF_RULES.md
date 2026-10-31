@@ -39,3 +39,6 @@ Outcome:
 - Plain marketing and junk: leave it out of the brief.
 - Convincing fakes and suspected scams: don't ping and don't make a normal Needs you item. Add one line to inbox_note: "Looks like junk or a scam: <sender>, <why in a few words>. Don't click its links."
 - Real but unverified money claims (e.g. a debt collector): it can be a Needs you item, but say plainly that it isn't verified yet and how she can check it safely.
+
+## Done items (Oct 31)
+- Photo Translator ($5.99/week Apple subscription, order MSSX8FKDLW): Denise cancelled it Oct 31. Don't list it in Needs you again unless a new charge appears.
