@@ -323,7 +323,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261104155913';
+var APP_BUILD='20261104155950';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -583,7 +583,7 @@ function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(M
 /* ---------- cards ---------- */
 var PAUSED_TRACKS=['stocks','crypto'];
 var TRACK_NAME={japanese:'Japanese',kanji:'Kanji',bottle:'Bottles',wset:'WSET',stocks:'Stocks & bonds',crypto:'Crypto',filipino:'Filipino',football:'Football'};
-var ICON={gm:'☀️',fe:'🍻',cal:'📅',inbox:'📬',fb:'🏈',news:'📰',kanji:'漢',bottle:'🍷',wset:'🎓',stocks:'📈',crypto:'🪙',fil:'🇵🇭',recs:'🥂',sun:'🏆',recall:'🔁',second:'🎯'};
+var ICON={jpx:'あ',gm:'☀️',fe:'🍻',cal:'📅',inbox:'📬',fb:'🏈',news:'📰',kanji:'漢',bottle:'🍷',wset:'🎓',stocks:'📈',crypto:'🪙',fil:'🇵🇭',recs:'🥂',sun:'🏆',recall:'🔁',second:'🎯'};
 function tint(col){return 'color-mix(in srgb, '+col+' 14%, white)'}
 /* catch-up: a lesson she skipped, re-served before any new one (sec.catch_up = its original date) */
 var CUSEC={jpx:'japanese_lesson',kanji:'kanji',bottle:'bottle',wset:'wset',stocks:'stocks',crypto:'crypto',fil:'filipino'};
@@ -933,7 +933,7 @@ function buildCards(){
         ((JLs.tips||[]).length?more('Good to know','<ul>'+JLs.tips.map(function(t){return '<li>'+esc(t)+'</li>'}).join('')+'</ul>'):'')+
         quizHTML(withIds(JLs,'japanese'),'Try it')+
         ((tripBody&&(JS.length||JP||PBD.length))?'<details class="more"><summary>Japan trip phrasebook (Oct 13–28)</summary><div class="in">'+tripBody+'</div></details>':'');
-      cards.push({id:'jpx',title:JLs.title||'Japanese daily',sub:'Japanese · lesson '+esc(JLs.n||'')+(JLs.where?' · '+esc(JLs.where):''),color:'#3070D0',tint:'#E4F1FF',min:4,body:lessonBody});
+      cards.push({id:'jpx',title:JLs.title||'Japanese daily',sub:'Japanese · lesson '+(JLs.n||'')+(JLs.where?' · '+JLs.where:''),color:'#3070D0',tint:'#E4F1FF',min:4,body:lessonBody});
     }else cards.push({id:'jpx',title:'Japanese for the trip',sub:(JP?'Say it today':'')+(JP&&JS.length?' · ':'')+(JS.length?JS.length+' situations, line by line':'')+(PBD.length?((JP||JS.length)?' · ':'')+'phrasebook':''),color:'#3070D0',tint:'#E4F1FF',min:2,body:tripBody});
   }
   /* 6 · kanji */
