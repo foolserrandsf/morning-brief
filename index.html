@@ -313,6 +313,7 @@ details.past summary{font-weight:600;cursor:pointer}
 @media (prefers-reduced-motion:reduce){.card{animation:none}}
 .cutag{display:flex;flex-direction:column;gap:2px;margin:0 0 12px;padding:9px 12px;border-radius:10px;background:#FFF4D6;color:#6B4B00;font-size:14.5px;line-height:1.35}.cutag b{font-size:15px}
 .inote{margin:6px 0 2px}.inote summary{font-size:14.5px}.inote .in{padding-left:0;padding-right:0}.inote ul.inl{list-style:none;margin:0 0 6px;padding:0}.inote ul.inl li{margin:0 0 6px;padding:0}.inote ul.inl li::before,.inote ul.inl li::marker{content:none;display:none}
+.plegend i.lo,.plegend i.ld{width:10px;height:10px}.plegend i.lo{border-radius:50%}.plegend i.ld{border-radius:2px}.plegend i.lh{width:10px;height:10px;border-radius:50%;background:none;border:2.5px solid #F2A900;box-sizing:border-box}.play svg .halo{paint-order:stroke;stroke:#fff;stroke-width:3px}
 </style>
 </head>
 <body>
@@ -321,7 +322,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261104143251';
+var APP_BUILD='20261104152936';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -1110,21 +1111,46 @@ function localKick(g){if(!g.kickoff_iso)return g.kickoff;try{return new Date(g.k
 /* ---------- football play diagrams: offense (O, circles) at the bottom, defense (D, X's) at the top; LOS at y=0, y = yards downfield ---------- */
 function playSVG(d){
   if(!d||!(d.players||[]).length)return '';
-  var W=340,H=230,ymin=d.ymin!=null?d.ymin:-8,ymax=d.ymax!=null?d.ymax:14;
-  var X=function(x){return 12+x/100*(W-24)},Y=function(y){return H-14-(y-ymin)/(ymax-ymin)*(H-28)};
+  // Clear diagrams: offense = blue circles below the line, defense = red tags above it, the yellow line = first down.
+  var W=360,H=320,ymin=d.ymin!=null?d.ymin:-8,ymax=d.ymax!=null?d.ymax:14;
+  var mk1=d.marker!=null?d.marker:(function(){var m=/(\d+)(?:st|nd|rd|th)[- ]and[- ](\d+|goal)/i.exec(d.caption||'');return m&&m[2]!=='goal'?+m[2]:null})();
+  if(mk1!=null&&mk1+2>ymax)ymax=mk1+2;
+  var L=34,R=W-10,T=26,B=H-14;
+  var X=function(x){return L+x/100*(R-L)},Y=function(y){return B-(y-ymin)/(ymax-ymin)*(B-T)};
+  var pyd=(B-T)/(ymax-ymin);
+  // display positions: keep each side clearly on its own side of the line, then push apart anything that overlaps
+  var P=d.players.map(function(p){var big=p.label&&p.label.length>2,r=p.side==='D'?11:(p.label?11:9);
+    var y=p.y;if(p.side==='D'){if(y<2)y=Math.max(y,0)+1.1}else if(y>-1.5)y=Math.min(y,0)-0.75;
+    return {p:p,x:X(p.x),y:Y(y),r:r}});
+  for(var pass=0;pass<6;pass++)for(var a=0;a<P.length;a++)for(var b=a+1;b<P.length;b++){
+    var A=P[a],Bp=P[b],dx=Bp.x-A.x,dy=Bp.y-A.y,dist=Math.sqrt(dx*dx+dy*dy),need=A.r+Bp.r+3;
+    if(dist<need){var push=(need-dist)/2+.5;
+      if(A.p.side===Bp.p.side&&Math.abs(dy)<6){var sx=dx>=0?1:-1;A.x-=sx*push;Bp.x+=sx*push}
+      else{var away=function(o,s){o.y+=(o.p.side==='D'?-1:1)*s};var far=Math.abs(A.p.y)>=Math.abs(Bp.p.y)?A:Bp;away(far,push*2)}}}
+  var pos=function(i,pt,isStart){if(isStart)return [P[i].x,P[i].y];return [X(pt[0]),Y(pt[1])]};
   var g='';
-  for(var yd=Math.ceil(ymin/5)*5;yd<=ymax;yd+=5)if(yd!==0)g+='<line x1="8" x2="'+(W-8)+'" y1="'+Y(yd)+'" y2="'+Y(yd)+'" stroke="currentColor" stroke-opacity=".12"/>';
-  g+='<line x1="8" x2="'+(W-8)+'" y1="'+Y(0)+'" y2="'+Y(0)+'" stroke="#2E6FD6" stroke-width="2" stroke-dasharray="6 4"/>';
+  // field: yard lines every 5 with numbers, line of scrimmage, first-down line
+  for(var yd=Math.ceil(ymin/5)*5;yd<=ymax;yd+=5){if(yd===0)continue;
+    g+='<line x1="'+L+'" x2="'+R+'" y1="'+Y(yd)+'" y2="'+Y(yd)+'" stroke="currentColor" stroke-opacity=".13"/>';
+    if(yd>0)g+='<text x="'+(L-6)+'" y="'+(Y(yd)+3.5)+'" text-anchor="end" font-size="10" fill="currentColor" fill-opacity=".55">'+yd+' yd</text>'}
+  if(mk1!=null){var my=Y(mk1);g+='<line x1="'+L+'" x2="'+R+'" y1="'+my+'" y2="'+my+'" stroke="#F2C230" stroke-width="3.5"/><text x="'+(L+3)+'" y="'+(my-5)+'" text-anchor="start" font-size="10.5" font-weight="700" fill="#8A6800" class="halo">1st down</text>'}
+  g+='<line x1="'+L+'" x2="'+R+'" y1="'+Y(0)+'" y2="'+Y(0)+'" stroke="#2E6FD6" stroke-width="2" stroke-dasharray="6 4"/><text x="'+(L-6)+'" y="'+(Y(0)+3.5)+'" text-anchor="end" font-size="9.5" font-weight="700" fill="#2E6FD6">LOS</text>';
+  g+='<text x="'+R+'" y="14" text-anchor="end" font-size="10.5" fill="currentColor" fill-opacity=".6">Offense moves this way ↑</text>';
   var col={pass:'#E0592A',run:'#2F9460',block:'#8A93A6',motion:'#6A57D6',coverage:'#B3366A'};
-  (d.routes||[]).forEach(function(r){var p=d.players[r.from];if(!p)return;var pts=[[p.x,p.y]].concat(r.points||[]);
-    var path=pts.map(function(q,i){return (i?'L':'M')+X(q[0]).toFixed(1)+' '+Y(q[1]).toFixed(1)}).join(' '),c=col[r.style]||col.pass;
-    g+='<path d="'+path+'" fill="none" stroke="'+c+'" stroke-width="2.4" '+(r.style==='motion'||r.style==='coverage'?'stroke-dasharray="5 4" ':'')+'marker-end="url(#ah-'+(r.style||'pass')+')"/>';});
-  d.players.forEach(function(p){var x=X(p.x),y=Y(p.y);
-    if(p.side==='D')g+='<g stroke="#1D2740" stroke-width="2.4"><line x1="'+(x-6)+'" y1="'+(y-6)+'" x2="'+(x+6)+'" y2="'+(y+6)+'"/><line x1="'+(x+6)+'" y1="'+(y-6)+'" x2="'+(x-6)+'" y2="'+(y+6)+'"/></g>'+(p.label?'<text x="'+x+'" y="'+(y-10)+'" text-anchor="middle" font-size="10" fill="currentColor">'+esc(p.label)+'</text>':'');
-    else g+='<circle cx="'+x+'" cy="'+y+'" r="'+(p.label&&p.label.length>2?11:9)+'" fill="'+(p.hi?'#FFE3B3':'#fff')+'" stroke="#1D2740" stroke-width="2"/>'+(p.label?'<text x="'+x+'" y="'+(y+3.5)+'" text-anchor="middle" font-size="'+(p.label.length>2?8:9.5)+'" font-weight="700" fill="#1D2740">'+esc(p.label)+'</text>':'');});
+  (d.routes||[]).forEach(function(r){if(!d.players[r.from])return;var pts=(r.points||[]).slice();
+    if(pts.length&&Math.abs(pts[0][0]-d.players[r.from].x)<.01&&Math.abs(pts[0][1]-d.players[r.from].y)<.01)pts.shift();
+    var xy=[[P[r.from].x,P[r.from].y]].concat(pts.map(function(q){var yy=q[1];return [X(q[0]),Y(yy)]}));
+    var path=xy.map(function(q,i){return (i?'L':'M')+q[0].toFixed(1)+' '+q[1].toFixed(1)}).join(' '),c=col[r.style]||col.pass;
+    g+='<path d="'+path+'" fill="none" stroke="'+c+'" stroke-width="'+(r.style==='block'?2:2.6)+'" stroke-linejoin="round" '+(r.style==='motion'||r.style==='coverage'?'stroke-dasharray="5 4" ':'')+'marker-end="url(#ah-'+(r.style||'pass')+')"/>';});
+  P.forEach(function(o){var p=o.p,x=o.x,y=o.y,lab=esc(p.label||'');
+    if(p.hi)g+='<circle cx="'+x+'" cy="'+y+'" r="'+(o.r+4.5)+'" fill="none" stroke="#F2A900" stroke-width="3"/>';
+    if(p.side==='D')g+='<rect x="'+(x-o.r)+'" y="'+(y-o.r+2)+'" width="'+(2*o.r)+'" height="'+(2*o.r-4)+'" rx="4" fill="#C8433A"/>'+(lab?'<text x="'+x+'" y="'+(y+3.6)+'" text-anchor="middle" font-size="'+(lab.length>2?8:9.5)+'" font-weight="700" fill="#fff">'+lab+'</text>':'');
+    else g+='<circle cx="'+x+'" cy="'+y+'" r="'+o.r+'" fill="#2E6FD6" stroke="#fff" stroke-width="1.5"/>'+(lab?'<text x="'+x+'" y="'+(y+3.5)+'" text-anchor="middle" font-size="'+(lab.length>2?8:9.5)+'" font-weight="700" fill="#fff">'+lab+'</text>':'');});
   var mk=Object.keys(col).map(function(k){return '<marker id="ah-'+k+'" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="'+col[k]+'"/></marker>'}).join('');
-  var legend=(d.routes||[]).map(function(r){return r.style||'pass'}).filter(function(v,i,a){return a.indexOf(v)===i}).map(function(k){return '<span><i style="background:'+(col[k]||col.pass)+'"></i>'+({pass:'pass route',run:'run',block:'block',motion:'motion',coverage:'coverage'}[k]||k)+'</span>'}).join('');
-  return '<figure class="play"><svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(d.caption||'Play diagram')+'"><defs>'+mk+'</defs>'+g+'</svg>'+(legend?'<div class="plegend"><span><b style="color:#2E6FD6">- - -</b> line of scrimmage</span>'+legend+'</div>':'')+(d.caption?'<figcaption>'+esc(d.caption)+'</figcaption>':'')+'</figure>';
+  var used=(d.routes||[]).map(function(r){return r.style||'pass'}).filter(function(v,i,a){return a.indexOf(v)===i});
+  var legend='<span><i class="lo" style="background:#2E6FD6"></i>offense</span><span><i class="ld" style="background:#C8433A"></i>defense</span>'+(d.players.some(function(p){return p.hi})?'<span><i class="lh"></i>watch these</span>':'')+(mk1!=null?'<span><i style="background:#F2C230"></i>first down</span>':'')+
+    used.map(function(k){return '<span><i style="background:'+(col[k]||col.pass)+'"></i>'+({pass:'pass route',run:'run path',block:'block',motion:'motion',coverage:'defender drops'}[k]||k)+'</span>'}).join('');
+  return '<figure class="play"><svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(d.caption||'Play diagram')+'"><defs>'+mk+'</defs>'+g+'</svg><div class="plegend">'+legend+'</div>'+(d.caption?'<figcaption>'+esc(d.caption)+'</figcaption>':'')+'</figure>';
 }
 function setMode(m,q){S.mode=m;S.quick=q;S.i=0;var done=DONE[S.brief.date]||{},cs=visible();for(var i=0;i<cs.length;i++){if(!done[cs[i].id]){S.i=i;break}}render()}
 function jump(i){S.touched=1;S.mode='flow';S.quick=false;S.i=i;render()}

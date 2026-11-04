@@ -51,3 +51,10 @@ Outcome:
 
 ## Keep inventory out of Needs you (Nov 4)
 - Never put keg counts, taps running out, by-the-glass or bottle counts, restocks, reorders or backup-keg status in "Needs you" (inbox). They live only on the Fool's Errand card (pours, kegs and their alerts).
+
+## Football diagrams must be easy to read (Nov 4)
+- Denise found the diagrams confusing. Keep each one to the single idea in its caption.
+- At most 4 arrows. Only draw routes, runs or blocks that the caption talks about; leave other players standing.
+- Mark with "hi": true only the 1–3 players the caption is about.
+- On any down-and-distance play, set "marker" to the yards to gain (the app draws the yellow first-down line).
+- The caption says, in order: the situation (e.g. 3rd-and-8), what to look at first, and why it matters. Short, plain words; explain any jargon in brackets.
