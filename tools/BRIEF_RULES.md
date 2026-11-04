@@ -48,3 +48,6 @@ Outcome:
 - Write that idea as an object: {"text": "the idea, one or two short sentences", "notes_title": "e.g. The Le Mur story", "notes": [{"label": "The hook", "lines": ["…"]}, {"label": "Say it to a guest", "lines": ["…", "…"]}, {"label": "Quick facts", "lines": ["Grapes: …", "Where: …", "Vintage: …", "$ a glass, $ a bottle."]}, {"label": "Trade up", "lines": ["optional: a related bottle"]}]}. The app shows the notes in a tap-to-open drawer under the idea.
 - Take the facts from that bottle's Bottle Master row (REMEMBER IT BY, TASTING, TERROIR, PRODUCER & WINEMAKING, Grapes, Place, Vintage, price). Short, clean lines. Never add a fact the row doesn't support (e.g. don't call a blend "X-led" unless the row gives proportions).
 - Plain ideas with nothing to explain stay as plain strings.
+
+## Keep inventory out of Needs you (Nov 4)
+- Never put keg counts, taps running out, by-the-glass or bottle counts, restocks, reorders or backup-keg status in "Needs you" (inbox). They live only on the Fool's Errand card (pours, kegs and their alerts).
