@@ -314,6 +314,7 @@ details.past summary{font-weight:600;cursor:pointer}
 .cutag{display:flex;flex-direction:column;gap:2px;margin:0 0 12px;padding:9px 12px;border-radius:10px;background:#FFF4D6;color:#6B4B00;font-size:14.5px;line-height:1.35}.cutag b{font-size:15px}
 .inote{margin:6px 0 2px}.inote summary{font-size:14.5px}.inote .in{padding-left:0;padding-right:0}.inote ul.inl{list-style:none;margin:0 0 6px;padding:0}.inote ul.inl li{margin:0 0 6px;padding:0}.inote ul.inl li::before,.inote ul.inl li::marker{content:none;display:none}
 .plegend i.lo,.plegend i.ld{width:10px;height:10px}.plegend i.lo{border-radius:50%}.plegend i.ld{border-radius:2px}.plegend i.lh{width:10px;height:10px;border-radius:50%;background:none;border:2.5px solid #F2A900;box-sizing:border-box}.play svg .halo{paint-order:stroke;stroke:#fff;stroke-width:3px}
+.jline{margin:10px 0 14px}.jwho{font-size:12.5px;font-weight:700;color:var(--soft);margin-bottom:2px}.jwho.me{color:#3070D0}.jnote{margin:4px 0 0}.jnat{margin:6px 0 14px}
 </style>
 </head>
 <body>
@@ -322,7 +323,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261104152936';
+var APP_BUILD='20261104155913';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -562,7 +563,7 @@ function withIds(sec,track){
   });
 }
 function recallItems(kind){
-  var pool=Object.values((S.state&&S.state.pool)||{}),d=S.brief.date;
+  var pool=Object.values((S.state&&S.state.pool)||{}).filter(function(p){return PAUSED_TRACKS.indexOf(p.track)<0}),d=S.brief.date;
   if(kind==='sunday'){
     var wk=Date.parse(d)-7*864e5;
     return shuffle(pool.filter(function(p){return p.track==='kanji'&&Date.parse(p.date)>wk&&p.date<=d})).slice(0,14);
@@ -580,11 +581,12 @@ function recallItems(kind){
 function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
 
 /* ---------- cards ---------- */
-var TRACK_NAME={kanji:'Kanji',bottle:'Bottles',wset:'WSET',stocks:'Stocks & bonds',crypto:'Crypto',filipino:'Filipino',football:'Football'};
+var PAUSED_TRACKS=['stocks','crypto'];
+var TRACK_NAME={japanese:'Japanese',kanji:'Kanji',bottle:'Bottles',wset:'WSET',stocks:'Stocks & bonds',crypto:'Crypto',filipino:'Filipino',football:'Football'};
 var ICON={gm:'☀️',fe:'🍻',cal:'📅',inbox:'📬',fb:'🏈',news:'📰',kanji:'漢',bottle:'🍷',wset:'🎓',stocks:'📈',crypto:'🪙',fil:'🇵🇭',recs:'🥂',sun:'🏆',recall:'🔁',second:'🎯'};
 function tint(col){return 'color-mix(in srgb, '+col+' 14%, white)'}
 /* catch-up: a lesson she skipped, re-served before any new one (sec.catch_up = its original date) */
-var CUSEC={kanji:'kanji',bottle:'bottle',wset:'wset',stocks:'stocks',crypto:'crypto',fil:'filipino'};
+var CUSEC={jpx:'japanese_lesson',kanji:'kanji',bottle:'bottle',wset:'wset',stocks:'stocks',crypto:'crypto',fil:'filipino'};
 function cuTag(sec){if(!sec||!sec.catch_up)return '';var d=new Date(sec.catch_up+'T12:00:00'),l=sec.catch_up_left;
   return '<div class="cutag"><b>Catching up</b><span>From '+d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})+'.</span><span>'+(l>0?l+' more to go, then new lessons start again.':'Last one. New lessons start tomorrow.')+'</span></div>'}
 /* an idea can carry its talking points: {text, notes_title, notes:[{label, lines:[]}]} */
@@ -903,7 +905,7 @@ function buildCards(){
   /* Japanese for the trip: practice situations, each line broken into parts like "Say it today" */
   var JS=(b.japan&&(b.japan.scenarios||(b.japan.scenario?[b.japan.scenario]:[])))||[],JP=(b.japan&&b.japan.active&&b.japan.phrase)?b.japan:null;
   var PBD=((S.pb&&S.pb.days)?Object.keys(S.pb.days).sort().reverse().filter(function(d){return d!==b.date}):[]);
-  if(JS.length||JP||PBD.length){var jcols=['#3070D0','#EC6A3A','#2F9460','#B3366A','#6A57D6'];
+  if(JS.length||JP||PBD.length||(b.japanese_lesson&&b.japanese_lesson.dialogue)){var jcols=['#3070D0','#EC6A3A','#2F9460','#B3366A','#6A57D6'];
     var sayIt=function(ph,lbl){return '<div class="phrase"><div class="lbl">'+esc(lbl)+'</div><div class="jrow"><div class="say jp">'+esc(ph.jp)+'</div>'+SPK(ph.jp)+'</div><div class="ro">'+esc(ph.romaji||'')+'</div><div class="en">'+esc(ph.en||'')+'</div>'+((ph.notes||[]).length?'<div class="chunks">'+ph.notes.map(function(n,i){return '<div class="c" data-say="'+esc(n.bit)+'" style="--cc:'+jcols[i%jcols.length]+'"><b class="jp">'+esc(n.bit)+'</b><span>'+esc(n.means)+'</span></div>'}).join('')+'</div>':'')+'</div>'};
     var scDrawer=null,pbHTML=null;
     var jl=function(x){return '<div class="sl"><div class="jrow"><div class="jp">'+esc(x.jp)+'</div>'+SPK(x.jp)+'</div><div class="ro">'+esc(x.romaji||'')+'</div><div class="en">'+esc(x.en||'')+'</div>'+((x.notes||[]).length?'<div class="chunks">'+x.notes.map(function(n,i){return '<div class="c" data-say="'+esc(n.bit)+'" style="--cc:'+jcols[i%jcols.length]+'"><b class="jp">'+esc(n.bit)+'</b><span>'+esc(n.means)+'</span></div>'}).join('')+'</div>':'')+'</div>'};
@@ -915,12 +917,24 @@ function buildCards(){
       return '<h3 class="comehead">Your phrasebook</h3><p class="small" style="margin-top:0">Everything from earlier briefs stays here.</p>'+
         PBD.filter(function(d){return S.pb.days[d].phrase}).map(function(d){var x=S.pb.days[d];return more(fd(d)+': '+(x.phrase.en||'Say it today'),sayIt(x.phrase,'Say it ('+fd(d)+')')+(x.tip?'<p>'+esc(x.tip)+'</p>':'')+((x.hear||[]).length?'<h4 class="sch">What you\'ll likely hear back</h4>'+x.hear.map(jl).join(''):''))}).join('')+
         old.map(scDrawer).join('')};
-    cards.push({id:'jpx',title:'Japanese for the trip',sub:(JP?'Say it today':'')+(JP&&JS.length?' · ':'')+(JS.length?JS.length+' situations, line by line':'')+(PBD.length?((JP||JS.length)?' · ':'')+'phrasebook':''),color:'#3070D0',tint:'#E4F1FF',min:2,
-      body:(JP?(function(){var jp=JP;var h=sayIt(jp.phrase,'Say it today');
+    var tripBody=(JP?(function(){var jp=JP;var h=sayIt(jp.phrase,'Say it today');
           if((jp.hear||[]).length)h+=more('What you\'ll likely hear back',(jp.tip?'<p>'+esc(jp.tip)+'</p>':'')+jp.hear.map(jl).join(''));else if(jp.tip)h+=more('What you\'ll likely hear back','<p>'+esc(jp.tip)+'</p>');
           return h})():'')+(function(){var G=[],add=function(gs){(gs||[]).forEach(function(g){var c=G.filter(function(x){return x.title===g.title})[0];if(!c){c={title:g.title,items:[]};G.push(c)}var hv={};c.items.forEach(function(i){hv[i.jp]=1});(g.items||[]).forEach(function(i){if(!hv[i.jp]){hv[i.jp]=1;c.items.push(i)}})})};add(S.pb&&S.pb.vocab);add(b.japan&&b.japan.vocab);
             if(!G.length)return '';var n=G.reduce(function(a,g){return a+g.items.length},0);
-            return '<details class="more voc"><summary>Useful words and phrases <small>'+n+'</small></summary><div class="in">'+G.map(function(g){return more(g.title,g.items.map(jl).join(''))}).join('')+'</div></details>'})()+(JS.length?'<h3 class="comehead">Practice by situation</h3><p class="small" style="margin-top:0">Open one at a time. Each line is broken into its parts.</p>':'')+JS.map(scDrawer).join('')+pbHTML()});
+            return '<details class="more voc"><summary>Useful words and phrases <small>'+n+'</small></summary><div class="in">'+G.map(function(g){return more(g.title,g.items.map(jl).join(''))}).join('')+'</div></details>'})()+(JS.length?'<h3 class="comehead">Practice by situation</h3><p class="small" style="margin-top:0">Open one at a time. Each line is broken into its parts.</p>':'')+JS.map(scDrawer).join('')+pbHTML();
+    var JLs=b.japanese_lesson;
+    if(JLs&&(JLs.dialogue||[]).length){
+      var who=function(x){return '<div class="jwho'+(/^you$/i.test(x.who||'')?' me':'')+'">'+esc(x.who||'')+'</div>'};
+      var lessonBody=(JLs.hook?'<div class="hook">'+esc(JLs.hook)+'</div>':'')+(JLs.situation?'<p>'+esc(JLs.situation)+'</p>':'')+
+        '<h3 class="comehead">The conversation</h3><p class="small" style="margin-top:0">Tap any Japanese to hear it. Each line is broken into its parts.</p>'+
+        JLs.dialogue.map(function(x){return '<div class="jline">'+who(x)+jl(x)+(x.note?'<p class="small jnote">'+esc(x.note)+'</p>':'')+'</div>'}).join('')+
+        ((JLs.native||[]).length?more('Why this sounds like a local',JLs.native.map(function(n){return '<div class="jnat"><div class="small">Textbook</div>'+jl(n.textbook)+'<div class="small">What people actually say</div>'+jl(n.native)+(n.why?'<p class="small">'+esc(n.why)+'</p>':'')+'</div>'}).join('')):'')+
+        ((JLs.swap||[]).length?more('Swap it: say it other ways',JLs.swap.map(jl).join('')):'')+
+        ((JLs.tips||[]).length?more('Good to know','<ul>'+JLs.tips.map(function(t){return '<li>'+esc(t)+'</li>'}).join('')+'</ul>'):'')+
+        quizHTML(withIds(JLs,'japanese'),'Try it')+
+        ((tripBody&&(JS.length||JP||PBD.length))?'<details class="more"><summary>Japan trip phrasebook (Oct 13–28)</summary><div class="in">'+tripBody+'</div></details>':'');
+      cards.push({id:'jpx',title:JLs.title||'Japanese daily',sub:'Japanese · lesson '+esc(JLs.n||'')+(JLs.where?' · '+esc(JLs.where):''),color:'#3070D0',tint:'#E4F1FF',min:4,body:lessonBody});
+    }else cards.push({id:'jpx',title:'Japanese for the trip',sub:(JP?'Say it today':'')+(JP&&JS.length?' · ':'')+(JS.length?JS.length+' situations, line by line':'')+(PBD.length?((JP||JS.length)?' · ':'')+'phrasebook':''),color:'#3070D0',tint:'#E4F1FF',min:2,body:tripBody});
   }
   /* 6 · kanji */
   var k=b.kanji||{};
@@ -950,6 +964,7 @@ function buildCards(){
     body:(ws.lead?'<div class="lead">'+esc(ws.lead)+'</div>':'')+lesson(ws,'var(--teal)','Explain it fully')+(ws.map?'<div class="sect"><h3>On the map</h3>'+WMAP(ws.map)+'</div>':'')+(ws.tie_in?'<div class="hook">On our shelves: '+esc(ws.tie_in)+'</div>':'')+(ws.try_it?'<p><b>Try it tonight:</b> '+esc(ws.try_it)+'</p>':'')+quizHTML(withIds(ws,'wset'),'Competency check')});
   /* 9 · stocks + 10 · crypto */
   [['stocks','Stocks & bonds','var(--sky)','#E4F1FF'],['crypto','Crypto','var(--ochre)','#FFF3D6']].forEach(function(t){
+    if(!b[t[0]])return; // paused lessons (Nov 4) are simply left out
     var s=b[t[0]]||{};
     cards.push({id:t[0],emoji:t[1],title:s.title||t[2],sub:t[2]+' 101 · lesson '+esc(s.n||''),color:t[3],tint:t[4],min:4,
       body:(s.hook?'<div class="hook">'+esc(s.hook)+'</div>':'')+lesson(s,t[2],'Explain it fully')+(s.key_terms&&s.key_terms.length?'<div class="terms">'+s.key_terms.map(function(x){return '<div><b>'+esc(x.term)+'</b> — '+esc(x.def)+'</div>'}).join('')+'</div>':'')+quizHTML(withIds(s,t[0]),'Competency check')});
@@ -1045,7 +1060,7 @@ function render(){
 function extras(){
   var st=S.state||{},pool=Object.values(st.pool||{});
   var tot={a:0,r:0,m:0};
-  var rows=Object.keys(TRACK_NAME).map(function(t){
+  var rows=Object.keys(TRACK_NAME).filter(function(t){return PAUSED_TRACKS.indexOf(t)<0}).map(function(t){
     var all=pool.filter(function(p){return p.track===t}),seen=all.filter(function(p){return P[p.id]}),r=seen.filter(function(p){return P[p.id].box>=1}).length,m=all.filter(function(p){return mastered(p.id)}).length;
     tot.a+=seen.length;tot.r+=r;tot.m+=m;var w=function(x){return all.length?Math.round(x/all.length*100):0};
     return '<div class="row"><span style="width:112px">'+TRACK_NAME[t]+'</span><span class="track"><i class="lrn" style="width:'+w(r)+'%"></i><i style="width:'+w(m)+'%"></i></span><span class="n">'+r+' right · '+m+' ✓</span></div>'}).join('');

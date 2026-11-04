@@ -58,3 +58,13 @@ Outcome:
 - Mark with "hi": true only the 1–3 players the caption is about.
 - On any down-and-distance play, set "marker" to the yards to gain (the app draws the yellow first-down line).
 - The caption says, in order: the situation (e.g. 3rd-and-8), what to look at first, and why it matters. Short, plain words; explain any jargon in brackets.
+
+## Stocks and crypto lessons are paused (Nov 4)
+- Leave out the "stocks" and "crypto" sections entirely (no lesson, no quiz). publish.py no longer requires them and catch-up skips them. Don't bring them back until Denise asks.
+
+## Japanese daily lesson (Nov 4) — replaces the "Japanese for the trip" card
+- Every brief adds "japanese_lesson" (the daily kanji card stays as it is). One real-life interaction per lesson, building on earlier ones (taught.japanese in `publish.py state`), counter counters.japanese + 1.
+- Situations from her life in SF first: Japanese guests and tourists at Fool's Errand, Japanese restaurants, izakaya and shops in SF Japantown, sake talk (her friend Paul imports sake), phone calls and reservations, small talk and compliments, then travel situations for a future Japan trip.
+- Fields: {n, ref, title, where, hook (one sentence), situation (one or two short sentences on register), dialogue: [{who: "You" or the other person, jp, romaji, en, notes: [{bit, means}], note?}] (4–8 lines, natural back-and-forth), native: [{textbook: {jp, romaji, en}, native: {jp, romaji, en}, why}] (1–2), swap: [{jp, romaji, en}] (2–4 variations), tips: [short strings, each Japanese bit followed by its romaji], quiz: [3 questions in the usual {q, o, a, w} form that make her apply it; every Japanese option followed by its romaji in brackets]}.
+- Every line must be what a native speaker would actually say in that setting: casual-polite (です/ます) for service, never stiff textbook keigo unless people really use it there. Kana/furigana {漢字|かな} AND romaji on every Japanese string, numbers as digits.
+- Vetting is required before publishing: do your own native-usage pass, then spawn a fresh subagent reviewer (a native Tokyo speaker persona) to check naturalness, romaji, glosses, breakdowns and quiz answers; apply its fixes.

@@ -30,7 +30,7 @@ from cryptography.hazmat.primitives import hashes
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, 'data')
 ITER = 1000000
-TRACKS = {'kanji', 'bottle', 'wset', 'stocks', 'crypto', 'filipino', 'football'}
+TRACKS = {'kanji', 'bottle', 'wset', 'stocks', 'crypto', 'filipino', 'football', 'japanese'}
 
 # Furigana markup: {漢字|かんじ} shows kana under the kanji; {漢字|-} keeps it bare on purpose
 # (used when a quiz is testing that very reading). Kanji she has learned never need it.
@@ -116,7 +116,8 @@ def load_state():
 
 
 LESSONS = os.path.join(DATA, 'lessons.enc')
-SEC = {'football': 'football_101'}
+PAUSED = {'stocks', 'crypto'}  # Denise, Nov 4: leave these lessons out for now
+SEC = {'football': 'football_101', 'japanese': 'japanese_lesson'}
 
 
 def load_lessons():
@@ -167,6 +168,8 @@ def backlog(sync_path, today, done=None):
             t[1] += iid in done
     out = {}
     for track, ds in dates.items():
+        if track in PAUSED:
+            continue
         for d in sorted(x for x, (n, a) in ds.items() if a == 0):
             sec = lessons.get(track, {}).get(d)
             if sec is None:
@@ -264,14 +267,20 @@ def validate(b):
     errs = []
     if not re.match(r'^\d{4}-\d{2}-\d{2}$', b.get('date', '')):
         errs.append('date must be YYYY-MM-DD')
-    for k in ('focus', 'calendar', 'inbox', 'news', 'kanji', 'bottle', 'wset', 'stocks', 'crypto', 'filipino'):
+    for k in ('focus', 'calendar', 'inbox', 'news', 'kanji', 'bottle', 'wset', 'filipino'):
         if k not in b:
             errs.append(f'missing section "{k}"')
     for k in ('kanji', 'bottle', 'wset', 'stocks', 'crypto', 'filipino'):
+        if k in PAUSED and not b.get(k):
+            continue
         sec = b.get(k) or {}
         if not sec.get('quiz'):
             errs.append(f'{k}.quiz is empty (every lesson ends in a check)')
         check_quiz(sec.get('quiz'), k + '.quiz', errs)
+    if b.get('japanese_lesson'):
+        if not b['japanese_lesson'].get('quiz'):
+            errs.append('japanese_lesson.quiz is empty (every lesson ends in a check)')
+        check_quiz(b['japanese_lesson'].get('quiz'), 'japanese_lesson.quiz', errs)
     if b.get('football_101'):
         if not b['football_101'].get('quiz'):
             errs.append('football_101.quiz is empty (every lesson ends in a check)')
@@ -288,7 +297,7 @@ def validate(b):
 def shuffle_options(b):
     """Put each quiz's right answer in a varied position (stable per question), so it's never always A."""
     import random
-    for k in ('kanji', 'bottle', 'wset', 'stocks', 'crypto', 'filipino', 'football_101'):
+    for k in ('kanji', 'bottle', 'wset', 'stocks', 'crypto', 'filipino', 'football_101', 'japanese_lesson'):
         for q in (b.get(k) or {}).get('quiz') or []:
             o, a = q.get('o'), q.get('a')
             if not isinstance(o, list) or not isinstance(a, int) or not 0 <= a < len(o):
@@ -319,9 +328,9 @@ def cmd_brief(path):
         sys.exit('Brief not published:\n  ' + '\n  '.join(errs))
     added = 0
     lessons = load_lessons()
-    for track in ('kanji', 'bottle', 'wset', 'stocks', 'crypto', 'filipino', 'football'):
-        sec = b.get('football_101') if track == 'football' else b[track]
-        if not sec:
+    for track in ('kanji', 'bottle', 'wset', 'stocks', 'crypto', 'filipino', 'football', 'japanese'):
+        sec = b.get(SEC.get(track, track))
+        if not sec or not sec.get('quiz'):
             continue
         ref = sec.get('ref') or sec.get('title') or track
         cu = sec.get('catch_up')
@@ -344,8 +353,8 @@ def cmd_brief(path):
     k = b['kanji']
     if isinstance(k.get('n'), int):
         st['counters']['kanji_next'] = max(st['counters'].get('kanji_next', 1), k['n'] + 1)
-    for t in ('wset', 'stocks', 'crypto', 'filipino', 'football'):
-        n = ((b.get('football_101') if t == 'football' else b[t]) or {}).get('n')
+    for t in ('wset', 'stocks', 'crypto', 'filipino', 'football', 'japanese'):
+        n = (b.get(SEC.get(t, t)) or {}).get('n')
         if isinstance(n, int):
             st['counters'][t] = max(st['counters'].get(t, 0), n)
     if d not in st['dates']:
