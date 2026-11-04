@@ -42,3 +42,9 @@ Outcome:
 
 ## Done items (Oct 31)
 - Photo Translator ($5.99/week Apple subscription, order MSSX8FKDLW): Denise cancelled it Oct 31. Don't list it in Needs you again unless a new charge appears.
+
+## Ideas come with their talking points (Nov 3)
+- Any idea that says to tell a story, feature a wine or beer, or talk something up must carry the actual notes, so she never has to look them up.
+- Write that idea as an object: {"text": "the idea, one or two short sentences", "notes_title": "e.g. The Le Mur story", "notes": [{"label": "The hook", "lines": ["…"]}, {"label": "Say it to a guest", "lines": ["…", "…"]}, {"label": "Quick facts", "lines": ["Grapes: …", "Where: …", "Vintage: …", "$ a glass, $ a bottle."]}, {"label": "Trade up", "lines": ["optional: a related bottle"]}]}. The app shows the notes in a tap-to-open drawer under the idea.
+- Take the facts from that bottle's Bottle Master row (REMEMBER IT BY, TASTING, TERROIR, PRODUCER & WINEMAKING, Grapes, Place, Vintage, price). Short, clean lines. Never add a fact the row doesn't support (e.g. don't call a blend "X-led" unless the row gives proportions).
+- Plain ideas with nothing to explain stay as plain strings.

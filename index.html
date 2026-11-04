@@ -312,6 +312,7 @@ details.past{margin-top:10px}
 details.past summary{font-weight:600;cursor:pointer}
 @media (prefers-reduced-motion:reduce){.card{animation:none}}
 .cutag{display:flex;flex-direction:column;gap:2px;margin:0 0 12px;padding:9px 12px;border-radius:10px;background:#FFF4D6;color:#6B4B00;font-size:14.5px;line-height:1.35}.cutag b{font-size:15px}
+.inote{margin:6px 0 2px}.inote summary{font-size:14.5px}.inote .in{padding-left:0;padding-right:0}.inote ul.inl{list-style:none;margin:0 0 6px;padding:0}.inote ul.inl li{margin:0 0 6px;padding:0}.inote ul.inl li::before,.inote ul.inl li::marker{content:none;display:none}
 </style>
 </head>
 <body>
@@ -320,7 +321,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261103143312';
+var APP_BUILD='20261103175219';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -585,6 +586,9 @@ function tint(col){return 'color-mix(in srgb, '+col+' 14%, white)'}
 var CUSEC={kanji:'kanji',bottle:'bottle',wset:'wset',stocks:'stocks',crypto:'crypto',fil:'filipino'};
 function cuTag(sec){if(!sec||!sec.catch_up)return '';var d=new Date(sec.catch_up+'T12:00:00'),l=sec.catch_up_left;
   return '<div class="cutag"><b>Catching up</b><span>From '+d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})+'.</span><span>'+(l>0?l+' more to go, then new lessons start again.':'Last one. New lessons start tomorrow.')+'</span></div>'}
+/* an idea can carry its talking points: {text, notes_title, notes:[{label, lines:[]}]} */
+function ideaNotes(o){if(!o.notes||!o.notes.length)return '';
+  return '<details class="more inote"><summary>'+esc(o.notes_title||'What to say')+'</summary><div class="in">'+o.notes.map(function(n){return (n.label?'<p class="fel" style="margin:8px 0 2px">'+esc(n.label)+'</p>':'')+'<ul class="inl">'+(n.lines||[]).map(function(t){return '<li>'+esc(t)+'</li>'}).join('')+'</ul>'}).join('')+'</div></details>'}
 function card(c){
   var cu=CUSEC[c.id]&&S.brief?cuTag(S.brief[CUSEC[c.id]]):'';
   return '<div class="card"><div class="band" style="background:'+c.color+'"></div><div class="hd"><div class="ic'+(c.id==='kanji'?' k':'')+'" style="background:'+tint(c.color)+';color:'+c.color+'">'+(ICON[c.id]||'•')+'</div><div><h2>'+esc(c.title)+'</h2><div class="sub">'+esc(c.sub||'')+(c.min?(c.sub?', ':'')+'about '+c.min+' min':'')+'</div></div></div>'+cu+c.body+'</div>';
@@ -876,7 +880,7 @@ function buildCards(){
         ((sp.due_soon||[]).length?'<div class="alert"><b>Due soon:</b> '+sp.due_soon.map(function(x){return esc(x.vendor)+' '+money(x.amount)+' ('+esc(x.due)+')'}).join(', ')+'</div>':'')+(sp.note?'<p class="stats">'+esc(sp.note)+'</p>':''));
       h+='</div>';
     }
-    if(IDEAS.length)h+='<div class="fes fedr">'+DRW('Ideas for this week',IDEAS.length+' idea'+(IDEAS.length>1?'s':''),'<div class="insight" style="margin-top:0">'+'<ul class="pts" style="--dot:var(--teal)">'+IDEAS.map(function(x){var ls=labelsIn(x);return '<li>'+(ls.length?'<span class="thstrip">'+ls.map(function(l){return '<button type="button" class="th sm" data-full="'+esc(l.f)+'"><img src="'+esc(l.t)+'" alt="" loading="lazy" onerror="this.parentNode.remove()"></button>'}).join('')+'</span>':'')+esc(x)+'</li>'}).join('')+'</ul>'+'</div>')+'</div>';
+    if(IDEAS.length)h+='<div class="fes fedr">'+DRW('Ideas for this week',IDEAS.length+' idea'+(IDEAS.length>1?'s':''),'<div class="insight" style="margin-top:0">'+'<ul class="pts" style="--dot:var(--teal)">'+IDEAS.map(function(x){var o=typeof x==='string'?{text:x}:(x||{}),ls=labelsIn(o.text||'');return '<li>'+(ls.length?'<span class="thstrip">'+ls.map(function(l){return '<button type="button" class="th sm" data-full="'+esc(l.f)+'"><img src="'+esc(l.t)+'" alt="" loading="lazy" onerror="this.parentNode.remove()"></button>'}).join('')+'</span>':'')+esc(o.text||'')+ideaNotes(o)+'</li>'}).join('')+'</ul>'+'</div>')+'</div>';
     cards.push({id:'fe',title:'Fool\'s Errand yesterday',sub:wdn+' '+shortDate(ydate).replace(/^\w+,\s*/,''),color:'var(--teal)',tint:'#E0F6F3',min:1,must:1,body:h});
   }
   /* 4 · football */
