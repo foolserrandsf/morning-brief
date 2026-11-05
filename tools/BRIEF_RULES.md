@@ -69,3 +69,6 @@ Outcome:
 - Fields: {n, ref, title, where, hook (one sentence), situation (one or two short sentences on register), dialogue: [{who: "You" or the other person, jp, romaji, en, notes: [{bit, means}], note?}] (4–8 lines, natural back-and-forth), native: [{textbook: {jp, romaji, en}, native: {jp, romaji, en}, why}] (1–2), swap: [{jp, romaji, en}] (2–4 variations), tips: [short strings, each Japanese bit followed by its romaji], quiz: [3 questions in the usual {q, o, a, w} form that make her apply it; every Japanese option followed by its romaji in brackets]}.
 - Every line must be what a native speaker would actually say in that setting: casual-polite (です/ます) for service, never stiff textbook keigo unless people really use it there. Kana/furigana {漢字|かな} AND romaji on every Japanese string, numbers as digits.
 - Vetting is required before publishing: do your own native-usage pass, then spawn a fresh subagent reviewer (a native Tokyo speaker persona) to check naturalness, romaji, glosses, breakdowns and quiz answers; apply its fixes.
+
+## Late Fool's Errand numbers (Nov 5)
+- Upserve's emails land around 5:30–6:00 AM and the Sales sheet's Daily row can appear after the 6:02 brief. Before writing fe_yesterday as "not_yet", check the Daily tab again every 5 minutes for up to 30 minutes (until about 6:35 AM); only then publish it as not yet posted.
