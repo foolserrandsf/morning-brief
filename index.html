@@ -323,7 +323,7 @@ details.past summary{font-weight:600;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
 <script>
-var APP_BUILD='20261104155950';
+var APP_BUILD='20261104160215';
 var START='2026-10-09';            // day 0 — recall quizzes run every other day from here
 var S={brief:null,state:null,key:null,i:0,mode:'flow',cards:[],quick:false};
 var $=function(id){return document.getElementById(id)};
@@ -928,6 +928,7 @@ function buildCards(){
       var lessonBody=(JLs.hook?'<div class="hook">'+esc(JLs.hook)+'</div>':'')+(JLs.situation?'<p>'+esc(JLs.situation)+'</p>':'')+
         '<h3 class="comehead">The conversation</h3><p class="small" style="margin-top:0">Tap any Japanese to hear it. Each line is broken into its parts.</p>'+
         JLs.dialogue.map(function(x){return '<div class="jline">'+who(x)+jl(x)+(x.note?'<p class="small jnote">'+esc(x.note)+'</p>':'')+'</div>'}).join('')+
+        (JLs.smalltalk&&(JLs.smalltalk.dialogue||[]).length?'<h3 class="comehead">'+esc(JLs.smalltalk.title||'Small talk with friends')+'</h3>'+(JLs.smalltalk.setup?'<p class="small" style="margin-top:0">'+esc(JLs.smalltalk.setup)+'</p>':'')+JLs.smalltalk.dialogue.map(function(x){return '<div class="jline">'+who(x)+jl(x)+(x.note?'<p class="small jnote">'+esc(x.note)+'</p>':'')+'</div>'}).join('')+((JLs.smalltalk.tips||[]).length?'<ul class="small">'+JLs.smalltalk.tips.map(function(t){return '<li>'+esc(t)+'</li>'}).join('')+'</ul>':''):'')+
         ((JLs.native||[]).length?more('Why this sounds like a local',JLs.native.map(function(n){return '<div class="jnat"><div class="small">Textbook</div>'+jl(n.textbook)+'<div class="small">What people actually say</div>'+jl(n.native)+(n.why?'<p class="small">'+esc(n.why)+'</p>':'')+'</div>'}).join('')):'')+
         ((JLs.swap||[]).length?more('Swap it: say it other ways',JLs.swap.map(jl).join('')):'')+
         ((JLs.tips||[]).length?more('Good to know','<ul>'+JLs.tips.map(function(t){return '<li>'+esc(t)+'</li>'}).join('')+'</ul>'):'')+
